@@ -37,7 +37,12 @@ const Row: FC<{ label: string; children?: unknown }> = ({ label, children }) => 
 );
 
 /** What just happened, if the visitor arrived here from a form post. */
-export type DetailNotice = 'reported' | 'reported-deprecated' | 'rate-limited' | null;
+export type DetailNotice =
+  | 'reported'
+  | 'reported-deprecated'
+  | 'reported-revived'
+  | 'rate-limited'
+  | null;
 
 const NOTICES: Record<Exclude<DetailNotice, null>, { tone: string; text: string }> = {
   reported: {
@@ -47,6 +52,10 @@ const NOTICES: Record<Exclude<DetailNotice, null>, { tone: string; text: string 
   'reported-deprecated': {
     tone: 'notice-ok',
     text: "Thanks — we've logged this as deprecated. A moderator will check it and flag the listing.",
+  },
+  'reported-revived': {
+    tone: 'notice-ok',
+    text: "Thanks — we've logged that this one is working again. A moderator will check and lift the flag.",
   },
   'rate-limited': {
     tone: 'notice-warn',
@@ -102,9 +111,26 @@ export const Detail: FC<{ listing: Listing; related: Listing[]; notice?: DetailN
     */}
     {listing.deprecated && (
       <aside class="banner banner-dead" role="note">
-        <strong>This one is no longer maintained.</strong>{' '}
-        {listing.deprecated_note ??
-          'It is kept here so the trail does not go cold, but do not build anything new on it.'}
+        <p>
+          <strong>Not live any more.</strong>{' '}
+          {listing.deprecated_note ??
+            'This project is no longer maintained. It is kept here so the trail does not go cold, but do not build anything new on it.'}
+        </p>
+
+        {/*
+          The way back. Projects do come back — a maintainer returns, someone
+          forks it, a domain gets renewed — and a directory that can mark
+          things dead but never undo it is just a slower kind of wrong.
+        */}
+        <form method="post" action={`${path}/report`} class="banner-action">
+          <input type="hidden" name="kind" value="revived" />
+          <button type="submit" class="btn btn-revive">
+            ↺ It's working again
+          </button>
+          <span class="muted small">
+            One click. A moderator will check and lift the flag.
+          </span>
+        </form>
       </aside>
     )}
 

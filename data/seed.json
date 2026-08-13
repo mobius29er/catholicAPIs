@@ -488,29 +488,6 @@
       ]
     },
     {
-      "slug": "liturgical-calendar-mcp",
-      "name": "liturgical-calendar-mcp",
-      "tagline": "MCP server that lets AI agents query the liturgical calendar.",
-      "description": "A Model Context Protocol server wrapping the Liturgical Calendar API, so an assistant can answer 'what colour are the vestments on the third Sunday of Advent 2027?' by calling a tool instead of guessing. Drop it into any MCP-capable client.",
-      "homepage_url": "https://github.com/CatholicOS/liturgical-calendar-mcp",
-      "docs_url": null,
-      "repo_url": "https://github.com/CatholicOS/liturgical-calendar-mcp",
-      "kind": "mcp",
-      "pricing": "free",
-      "pricing_note": null,
-      "open_source": 1,
-      "auth": "none",
-      "cors": "unknown",
-      "official": 0,
-      "categories": [
-        "Liturgical Calendar",
-        "AI & Search"
-      ],
-      "languages": [
-        "en"
-      ]
-    },
-    {
       "slug": "romcal",
       "name": "romcal",
       "tagline": "Generate the Roman Rite calendar locally, no network call.",
@@ -708,6 +685,38 @@
         "de",
         "hu",
         "pl"
+      ]
+    },
+    {
+      "slug": "liturgical-calendar-api",
+      "name": "Liturgical Calendar API",
+      "tagline": "The Roman Rite calendar for any year, nation or diocese.",
+      "description": "John Romano D'Orazio's calendar service, and the most complete implementation going: the General Roman Calendar plus national and diocesan propers, from 1970 to any year you ask for, in several languages and with an OpenAPI schema. The Catholic Digital Commons Foundation's Martyrology API and MCP server are both built against it, which makes it the de facto backbone of the Catholic liturgical data stack.",
+      "homepage_url": "https://github.com/Liturgical-Calendar/LiturgicalCalendarAPI",
+      "docs_url": "https://github.com/Liturgical-Calendar/LiturgicalCalendarAPI/blob/master/jsondata/schemas/openapi.json",
+      "repo_url": "https://github.com/Liturgical-Calendar/LiturgicalCalendarAPI",
+      "kind": "api",
+      "pricing": "free",
+      "pricing_note": "Open source; a public instance is run by the maintainer.",
+      "open_source": 1,
+      "auth": "none",
+      "cors": "unknown",
+      "official": 0,
+      "categories": [
+        "Liturgical Calendar",
+        "Daily Readings"
+      ],
+      "languages": [
+        "en",
+        "it",
+        "la",
+        "fr",
+        "es",
+        "de",
+        "pt",
+        "nl",
+        "hu",
+        "sk"
       ]
     }
   ]

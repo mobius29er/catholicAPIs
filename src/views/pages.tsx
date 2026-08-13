@@ -64,18 +64,31 @@ export const About: FC<{ siteUrl: string }> = ({ siteUrl }) => (
 
     <h2 id="sources">Sources and prior art</h2>
     <p>
-      This directory did not start from nothing. Two community lists were compiling Catholic
-      software long before it existed, and a large part of what you see here came from them:
+      This directory did not start from nothing. Most of it came from people who were cataloguing
+      Catholic software long before it existed, and every listing they gave us says so and links
+      back.
     </p>
     <ul>
+      <li>
+        <a href="https://catholicdigitalcommons.org/" rel="noopener" target="_blank">
+          The Catholic Digital Commons Foundation
+        </a>{' '}
+        publishes under the{' '}
+        <a href="https://github.com/CatholicOS" rel="noopener" target="_blank">
+          CatholicOS
+        </a>{' '}
+        organisation — including its canonical-identifier registries for the fixed sets Catholic
+        software keeps re-keying by hand: dioceses, popes, councils, Doctors, liturgical books,
+        magisterial documents. Those are here as first-party listings, mostly under Apache 2.0.
+      </li>
       <li>
         <a href="https://github.com/CatholicOS/awesome-catholic" rel="noopener" target="_blank">
           CatholicOS/awesome-catholic
         </a>{' '}
-        — the larger of the two, and the source of the idea that dead projects belong in an
-        &ldquo;Attic&rdquo; rather than the bin. No licence is stated on the repository, so we took
-        only the facts — what a project is called, where it lives, which section it sat in — and
-        wrote our own descriptions.
+        — the foundation's curated list of everyone else's work, and the source of the idea that
+        dead projects belong in an &ldquo;Attic&rdquo; rather than the bin. No licence is stated on
+        the repository, so we took only the facts — what a project is called, where it lives, which
+        section it sat in — and wrote our own descriptions.
       </li>
       <li>
         <a href="https://github.com/servusdei2018/awesome-catholic" rel="noopener" target="_blank">
@@ -89,10 +102,9 @@ export const About: FC<{ siteUrl: string }> = ({ siteUrl }) => (
       </li>
     </ul>
     <p>
-      Every listing that came from one of them says so, and links back. Where the two lists
-      disagreed — one retiring a project the other still recommends — we kept the retirement and
-      recorded the disagreement on the listing, because a false <em>alive</em> costs more than a
-      false <em>dead</em>.
+      Where the two lists disagreed — one retiring a project the other still recommends — we kept
+      the retirement and recorded the disagreement on the listing, because a false <em>alive</em>{' '}
+      costs more than a false <em>dead</em>.
     </p>
     <p>
       If you maintain a list we've missed, or you'd rather your entries weren't here,{' '}
@@ -109,9 +121,15 @@ export const About: FC<{ siteUrl: string }> = ({ siteUrl }) => (
     </p>
     <p>
       Deprecation is a separate, human judgement. Anything abandoned, superseded or plainly dead is
-      flagged <strong>deprecated</strong> — and then <em>stays published</em>. Deleting it would
-      only send the next person round the same search you just finished. Every listing has a
+      flagged <strong>not live any more</strong> — and then <em>stays published</em>. Deleting it
+      would only send the next person round the same search you just finished. Every listing has a
       one-click <strong>report as deprecated</strong> button; enough reports and a moderator looks.
+    </p>
+    <p>
+      It runs the other way too. Projects come back — a maintainer returns, someone forks it, a
+      domain gets renewed — so every flagged listing carries an{' '}
+      <strong>it's working again</strong> button, and a moderator can lift the flag. A directory
+      that can mark things dead but never undo it is just a slower kind of wrong.
     </p>
 
     <h2 id="data">Data and corrections</h2>
@@ -331,12 +349,13 @@ export const Admin: FC<{
     </section>
 
     {/*
-      Everything the machine thinks is dead, in one place. It never flags a
-      listing on its own — three failed probes and a pile of reports are
-      evidence, not a verdict — so each row ends in a button a human presses.
+      Everything the evidence points at, in one place, pointing both ways. The
+      machine never flags or un-flags on its own — failed probes and reader
+      reports are evidence, not a verdict — so each row ends in a button a
+      human presses.
     */}
     <section>
-      <h2>Possibly dead ({signals.length})</h2>
+      <h2>Needs a decision ({signals.length})</h2>
       <form method="post" action="/admin/health" class="admin-inline">
         <input type="hidden" name="token" value={token} />
         <button class="btn btn-quiet" type="submit">
@@ -348,23 +367,27 @@ export const Admin: FC<{
       </form>
 
       {signals.length === 0 ? (
-        <p class="muted">Nothing looks dead.</p>
+        <p class="muted">Nothing to decide.</p>
       ) : (
         <ul class="admin-list">
-          {signals.map((signal) => (
-            <li>
+          {signals.map((signal) => {
+            const evidence = [
+              signal.revive_reports > 0 &&
+                `${signal.revive_reports} says it's back`,
+              signal.dead_reports > 0 &&
+                `${signal.dead_reports} open ${signal.dead_reports === 1 ? 'report' : 'reports'}`,
+              signal.health_state === 'down' &&
+                `${signal.health_fails} failed ${signal.health_fails === 1 ? 'probe' : 'probes'}`,
+            ].filter(Boolean);
+
+            return (
+            <li class={signal.revive_reports > 0 ? 'is-contested' : undefined}>
               <div>
                 <h3>
                   <a href={listingPath(signal)}>{signal.name}</a>
                   {signal.deprecated === 1 && <span class="flash flash-dead">Deprecated</span>}
                 </h3>
-                <p class="muted small">
-                  {signal.reports > 0 &&
-                    `${signal.reports} open ${signal.reports === 1 ? 'report' : 'reports'}`}
-                  {signal.reports > 0 && signal.health_state === 'down' && ' · '}
-                  {signal.health_state === 'down' &&
-                    `${signal.health_fails} failed ${signal.health_fails === 1 ? 'probe' : 'probes'}`}
-                </p>
+                <p class="muted small">{evidence.join(' · ')}</p>
               </div>
               <div class="admin-actions">
                 <form method="post" action="/admin/deprecate">
@@ -383,15 +406,16 @@ export const Admin: FC<{
                     hidden={signal.deprecated === 1}
                   />
                   <button
-                    class={signal.deprecated === 1 ? 'btn btn-quiet' : 'btn btn-warn'}
+                    class={signal.deprecated === 1 ? 'btn btn-revive' : 'btn btn-warn'}
                     type="submit"
                   >
-                    {signal.deprecated === 1 ? 'Un-flag' : 'Flag deprecated'}
+                    {signal.deprecated === 1 ? '↺ Mark live again' : 'Flag deprecated'}
                   </button>
                 </form>
               </div>
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
     </section>

@@ -461,22 +461,41 @@ export async function resolveReport(env: Env, id: number): Promise<void> {
   await env.DB.prepare('UPDATE reports SET resolved = 1 WHERE id = ?1').bind(id).run();
 }
 
-/** Flags a listing as dead or superseded without hiding it. */
+/**
+ * Flags a listing as dead or superseded — without hiding it — or lifts the
+ * flag again.
+ *
+ * Acting on the evidence also clears it: the reports that argued for this
+ * decision are resolved in the same breath, so the row drops out of the queue
+ * instead of sitting there asking to be decided a second time. Reports arguing
+ * the *other* way are left open on purpose — if someone still says it's dead
+ * after a moderator called it alive, that disagreement should stay visible.
+ */
 export async function setDeprecated(
   env: Env,
   slug: string,
   deprecated: boolean,
   note: string | null,
 ): Promise<void> {
-  await env.DB.prepare(
-    `UPDATE apis
-        SET deprecated = ?2,
-            deprecated_note = ?3,
-            updated_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now')
-      WHERE slug = ?1`,
-  )
-    .bind(slug, deprecated ? 1 : 0, note)
-    .run();
+  const settled = deprecated ? ['deprecated', 'dead-link'] : ['revived'];
+
+  await env.DB.batch([
+    env.DB.prepare(
+      `UPDATE apis
+          SET deprecated = ?2,
+              deprecated_note = ?3,
+              updated_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now')
+        WHERE slug = ?1`,
+    ).bind(slug, deprecated ? 1 : 0, note),
+
+    env.DB.prepare(
+      `UPDATE reports
+          SET resolved = 1
+        WHERE resolved = 0
+          AND kind IN (${settled.map((_, i) => `?${i + 2}`).join(', ')})
+          AND api_id = (SELECT id FROM apis WHERE slug = ?1)`,
+    ).bind(slug, ...settled),
+  ]);
 }
 
 export interface DeprecationSignal {
@@ -487,28 +506,33 @@ export interface DeprecationSignal {
   health_state: HealthState;
   health_fails: number;
   /** Open reports saying this thing is dead. */
-  reports: number;
+  dead_reports: number;
+  /** Open reports saying a flagged listing is working again. */
+  revive_reports: number;
 }
 
 /**
- * Listings the evidence says are dead: readers reporting them, or the uptime
- * probe failing on them. This is the queue a moderator actually works from —
- * flagging something deprecated is a judgement call, so the machine collects
- * the signal and a human makes the call.
+ * The evidence queue, pointing both ways: listings readers say are dead or the
+ * probe cannot reach, and flagged listings readers say have come back. A
+ * moderator works from this — the machine gathers signal, a human decides,
+ * because "abandoned" is a judgement no status code can make.
  */
 export async function deprecationSignals(env: Env, limit = 50): Promise<DeprecationSignal[]> {
   const { results } = await env.DB.prepare(
     `SELECT a.slug, a.name, a.track, a.deprecated, a.health_state, a.health_fails,
-            COUNT(r.id) AS reports
+            COUNT(CASE WHEN r.kind IN ('deprecated', 'dead-link') THEN 1 END) AS dead_reports,
+            COUNT(CASE WHEN r.kind = 'revived'                    THEN 1 END) AS revive_reports
        FROM apis a
        LEFT JOIN reports r
               ON r.api_id = a.id
              AND r.resolved = 0
-             AND r.kind IN ('deprecated', 'dead-link')
+             AND r.kind IN ('deprecated', 'dead-link', 'revived')
       WHERE a.status = 'published'
         AND (r.id IS NOT NULL OR a.health_state = 'down')
       GROUP BY a.id
-      ORDER BY reports DESC, a.health_fails DESC, a.name ASC
+      -- A project reported back from the dead is the most interesting row on
+      -- the page: it is the one where the directory is currently wrong.
+      ORDER BY revive_reports DESC, dead_reports DESC, a.health_fails DESC, a.name ASC
       LIMIT ?1`,
   )
     .bind(limit)

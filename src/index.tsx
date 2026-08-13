@@ -239,9 +239,11 @@ function detailRoute(track: Track) {
         ? 'rate-limited'
         : reported === 'deprecated'
           ? 'reported-deprecated'
-          : reported
-            ? 'reported'
-            : null;
+          : reported === 'revived'
+            ? 'reported-revived'
+            : reported
+              ? 'reported'
+              : null;
 
     const jsonLd = {
       '@context': 'https://schema.org',
@@ -334,6 +336,21 @@ app.post('/products/:slug/vote', voteHandler);
 // reports
 // ---------------------------------------------------------------------------
 
+/**
+ * Must stay in step with the CHECK constraint on `reports.kind`. Exported so a
+ * test can hold the two against each other — drift here fails at INSERT time,
+ * in production, on a form a reader just submitted.
+ */
+export const REPORT_KINDS = new Set([
+  'dead-link',
+  'deprecated',
+  'moved',
+  'wrong-info',
+  'duplicate',
+  'revived',
+  'other',
+]);
+
 const reportHandler = async (c: Context<{ Bindings: Env }>) => {
   const slug = c.req.param('slug') ?? '';
   const body = await c.req.parseBody();
@@ -348,15 +365,15 @@ const reportHandler = async (c: Context<{ Bindings: Env }>) => {
   if (!allowed) return c.redirect(`${back}?error=rate-limited`, 303);
 
   const kind = String(body.kind ?? 'other');
-  const valid = ['dead-link', 'deprecated', 'moved', 'wrong-info', 'duplicate', 'other'].includes(
-    kind,
-  )
-    ? kind
-    : 'other';
+  const valid = REPORT_KINDS.has(kind) ? kind : 'other';
 
   await createReport(c.env, listing.id, valid, String(body.message ?? ''), hash);
 
-  return c.redirect(`${back}?reported=${valid === 'deprecated' ? 'deprecated' : '1'}`, 303);
+  // The two one-click reports get their own confirmation, because "thanks,
+  // logged" reads oddly when what you just said was "this one is fine again".
+  const acknowledgement =
+    valid === 'deprecated' || valid === 'revived' ? valid : '1';
+  return c.redirect(`${back}?reported=${acknowledgement}`, 303);
 };
 
 app.post('/apis/:slug/report', reportHandler);

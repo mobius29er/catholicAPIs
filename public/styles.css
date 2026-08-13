@@ -1636,6 +1636,19 @@ fieldset {
   color: var(--orange);
 }
 
+/* The other direction: a project reported back from the dead. */
+.btn-revive {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--green) 60%, var(--line));
+  color: var(--green);
+}
+
+.btn-revive:hover {
+  background: color-mix(in srgb, var(--green) 12%, transparent);
+  border-color: var(--green);
+  color: var(--green);
+}
+
 .btn-link {
   border-color: transparent;
   background: none;
@@ -1860,6 +1873,21 @@ fieldset {
 
 .banner strong {
   color: var(--cream);
+}
+
+.banner p {
+  margin: 0;
+}
+
+/* The "it's working again" escape hatch, under the explanation it answers. */
+.banner-action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px dashed color-mix(in srgb, var(--orange) 30%, var(--line));
 }
 
 .banner-dead {
@@ -2294,6 +2322,12 @@ textarea::placeholder {
 .admin-list h3 .flash {
   margin-left: 0.5rem;
   vertical-align: middle;
+}
+
+/* A listing flagged dead that readers say is alive — the row where the
+   directory is currently wrong, so it earns an edge. */
+.admin-list li.is-contested {
+  border-left: 4px solid var(--green);
 }
 
 /* ------------------------------------------------------------- footer ---- */

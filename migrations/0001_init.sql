@@ -154,11 +154,18 @@ CREATE INDEX idx_rate_limits_window ON rate_limits (bucket, window_key);
 -- "Something's wrong with this listing" reports from readers. 'deprecated' and
 -- 'moved' are the two this directory receives most, so both are first-class
 -- rather than folded into 'other' where nobody would ever count them.
+--
+-- 'revived' runs the other way: a flagged project that turns out to be alive
+-- again. Without it a listing could only ever rot, and a directory that can
+-- mark things dead but never undo it is just a slower kind of wrong.
 CREATE TABLE reports (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   api_id     INTEGER NOT NULL REFERENCES apis (id) ON DELETE CASCADE,
   kind       TEXT    NOT NULL CHECK (
-               kind IN ('dead-link', 'deprecated', 'moved', 'wrong-info', 'duplicate', 'other')
+               kind IN (
+                 'dead-link', 'deprecated', 'moved', 'wrong-info',
+                 'duplicate', 'revived', 'other'
+               )
              ),
   message    TEXT    NOT NULL DEFAULT '',
   ip_hash    TEXT,

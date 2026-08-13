@@ -20,6 +20,7 @@ const DEFAULT_JOBS = [
   { input: 'data/seed.json', output: 'migrations/0002_seed.sql' },
   { input: 'data/products.json', output: 'migrations/0003_products.sql' },
   { input: 'data/imported.json', output: 'migrations/0004_imported.sql' },
+  { input: 'data/cdcf.json', output: 'migrations/0005_cdcf.sql' },
 ];
 
 const KINDS = new Set(['api', 'dataset', 'library', 'mcp']);

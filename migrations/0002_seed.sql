@@ -537,34 +537,6 @@ ON CONFLICT(slug) DO UPDATE SET
   updated_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now');
 
 INSERT INTO apis (slug, name, tagline, description, homepage_url, docs_url, repo_url, kind, track, launched_at, platforms, pricing, pricing_note, open_source, license, auth, cors, official, categories, languages, status, deprecated, deprecated_note, source, source_url)
-VALUES ('liturgical-calendar-mcp', 'liturgical-calendar-mcp', 'MCP server that lets AI agents query the liturgical calendar.', 'A Model Context Protocol server wrapping the Liturgical Calendar API, so an assistant can answer ''what colour are the vestments on the third Sunday of Advent 2027?'' by calling a tool instead of guessing. Drop it into any MCP-capable client.', 'https://github.com/CatholicOS/liturgical-calendar-mcp', NULL, 'https://github.com/CatholicOS/liturgical-calendar-mcp', 'mcp', 'api', NULL, '[]', 'free', NULL, 1, NULL, 'none', 'unknown', 0, '["Liturgical Calendar","AI & Search"]', '["en"]', 'published', 0, NULL, NULL, NULL)
-ON CONFLICT(slug) DO UPDATE SET
-  name = excluded.name,
-  tagline = excluded.tagline,
-  description = excluded.description,
-  homepage_url = excluded.homepage_url,
-  docs_url = excluded.docs_url,
-  repo_url = excluded.repo_url,
-  kind = excluded.kind,
-  track = excluded.track,
-  launched_at = excluded.launched_at,
-  platforms = excluded.platforms,
-  pricing = excluded.pricing,
-  pricing_note = excluded.pricing_note,
-  open_source = excluded.open_source,
-  license = excluded.license,
-  auth = excluded.auth,
-  cors = excluded.cors,
-  official = excluded.official,
-  categories = excluded.categories,
-  languages = excluded.languages,
-  deprecated = excluded.deprecated,
-  deprecated_note = excluded.deprecated_note,
-  source = excluded.source,
-  source_url = excluded.source_url,
-  updated_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now');
-
-INSERT INTO apis (slug, name, tagline, description, homepage_url, docs_url, repo_url, kind, track, launched_at, platforms, pricing, pricing_note, open_source, license, auth, cors, official, categories, languages, status, deprecated, deprecated_note, source, source_url)
 VALUES ('romcal', 'romcal', 'Generate the Roman Rite calendar locally, no network call.', 'A JavaScript and TypeScript library that computes the liturgical calendar in-process: seasons, ranks, colours, national propers, for any year. Because it runs locally it works offline, inside a Worker, or at build time — a different trade-off from calling a calendar API, and usually the better one for a frontend.', 'https://github.com/romcal/romcal', 'https://github.com/romcal/romcal#readme', 'https://github.com/romcal/romcal', 'library', 'api', NULL, '[]', 'free', 'MIT-licensed npm package.', 1, NULL, 'none', 'unknown', 0, '["Liturgical Calendar"]', '["en","fr","es","it","pt","pl","cs","sk"]', 'published', 0, NULL, NULL, NULL)
 ON CONFLICT(slug) DO UPDATE SET
   name = excluded.name,
@@ -762,6 +734,34 @@ ON CONFLICT(slug) DO UPDATE SET
 
 INSERT INTO apis (slug, name, tagline, description, homepage_url, docs_url, repo_url, kind, track, launched_at, platforms, pricing, pricing_note, open_source, license, auth, cors, official, categories, languages, status, deprecated, deprecated_note, source, source_url)
 VALUES ('divinum-officium', 'Divinum Officium', 'The traditional Divine Office and Missal, source and all.', 'The project behind divinumofficium.com: the complete pre-conciliar breviary and missal across multiple editions, with the text files that generate them in the open. Not a REST API, but the canonical machine-readable source for the traditional office, and self-hostable.', 'https://www.divinumofficium.com/', NULL, 'https://github.com/DivinumOfficium/divinum-officium', 'dataset', 'api', NULL, '[]', 'free', NULL, 1, NULL, 'none', 'unknown', 0, '["Liturgy of the Hours","Traditional Latin Mass"]', '["la","en","it","de","hu","pl"]', 'published', 0, NULL, NULL, NULL)
+ON CONFLICT(slug) DO UPDATE SET
+  name = excluded.name,
+  tagline = excluded.tagline,
+  description = excluded.description,
+  homepage_url = excluded.homepage_url,
+  docs_url = excluded.docs_url,
+  repo_url = excluded.repo_url,
+  kind = excluded.kind,
+  track = excluded.track,
+  launched_at = excluded.launched_at,
+  platforms = excluded.platforms,
+  pricing = excluded.pricing,
+  pricing_note = excluded.pricing_note,
+  open_source = excluded.open_source,
+  license = excluded.license,
+  auth = excluded.auth,
+  cors = excluded.cors,
+  official = excluded.official,
+  categories = excluded.categories,
+  languages = excluded.languages,
+  deprecated = excluded.deprecated,
+  deprecated_note = excluded.deprecated_note,
+  source = excluded.source,
+  source_url = excluded.source_url,
+  updated_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now');
+
+INSERT INTO apis (slug, name, tagline, description, homepage_url, docs_url, repo_url, kind, track, launched_at, platforms, pricing, pricing_note, open_source, license, auth, cors, official, categories, languages, status, deprecated, deprecated_note, source, source_url)
+VALUES ('liturgical-calendar-api', 'Liturgical Calendar API', 'The Roman Rite calendar for any year, nation or diocese.', 'John Romano D''Orazio''s calendar service, and the most complete implementation going: the General Roman Calendar plus national and diocesan propers, from 1970 to any year you ask for, in several languages and with an OpenAPI schema. The Catholic Digital Commons Foundation''s Martyrology API and MCP server are both built against it, which makes it the de facto backbone of the Catholic liturgical data stack.', 'https://github.com/Liturgical-Calendar/LiturgicalCalendarAPI', 'https://github.com/Liturgical-Calendar/LiturgicalCalendarAPI/blob/master/jsondata/schemas/openapi.json', 'https://github.com/Liturgical-Calendar/LiturgicalCalendarAPI', 'api', 'api', NULL, '[]', 'free', 'Open source; a public instance is run by the maintainer.', 1, NULL, 'none', 'unknown', 0, '["Liturgical Calendar","Daily Readings"]', '["en","it","la","fr","es","de","pt","nl","hu","sk"]', 'published', 0, NULL, NULL, NULL)
 ON CONFLICT(slug) DO UPDATE SET
   name = excluded.name,
   tagline = excluded.tagline,

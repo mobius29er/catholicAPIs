@@ -64,6 +64,15 @@ export const Layout: FC<LayoutProps> = ({
         title={`${siteName} — newest listings`}
         href="/feed.xml"
       />
+      {/* The headline is the first thing painted, so fetch its face alongside
+          the stylesheet rather than after it. */}
+      <link
+        rel="preload"
+        href="/fonts/anton-latin.woff2"
+        as="font"
+        type="font/woff2"
+        crossorigin="anonymous"
+      />
       {/* Earlier design directions are kept at /styles-v1.css and /styles-v2.css. */}
       <link rel="stylesheet" href="/styles.css" />
 

@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Seed migrations are in sync with data/
+        run: |
+          npm run seed:build
+          git diff --exit-code migrations/ \
+            || { echo "::error::a seed migration is stale — run 'npm run seed:build' and commit the result."; exit 1; }

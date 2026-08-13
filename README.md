@@ -29,38 +29,51 @@ Static assets (public/) served from the edge, never touching the Worker.
 
 ## Design
 
-**Golden-age comic × neo-noir**, built to a reference mockup.
+Built from a reference mockup — a Product Hunt style leaderboard in golden-age comic × neo-noir.
+The page follows the mockup's anatomy top to bottom:
 
-Warm, not cold: cream text on a blue-black night, lit by amber and a hot orange-red. Colour and
-construction come from the same place rather than being split between the two references.
+| Band | Contents |
+| --- | --- |
+| Masthead | Brand · nav · pill search · Submit, on one line |
+| Hero | Yellow caption box, cream condensed headline, two CTAs, illustration at right, angled red stamp across its corner |
+| Columns | Leaderboard left (~64%), rail right (~34%) |
+| Row | Rank · coloured logo tile · details and tag pills · publisher · outlined orange vote box |
+| Rail | Spotlight · trending topics · subscribe · cross-track link |
+| Footer | Brand · link columns · red starburst |
 
-What reads as golden-age comic: the yellow caption box in heavy caps, the angled stamp across the
-corner of the hero, the starburst in the footer, Ben-Day dots in the art, and heavy condensed
-uppercase display type. What reads as neo-noir: a blue-black ground with a single warm light
-source, and an illustrated rain-slicked street in silhouette.
+Warm noir throughout: cream on blue-black, amber for action, orange-red for votes and ornament,
+teal for tags. Light mode swaps the night for aged newsprint and keeps the same inks.
 
-The hero illustration is hand-authored inline SVG ([`src/views/art.tsx`](src/views/art.tsx)) rather
-than a bitmap — the CSP blocks every external host, and painting it from the same custom properties
-as the rest of the page means it re-inks itself for light mode instead of shipping two files.
+Two things the mockup has that we cannot honestly reproduce, and what stands in for them:
 
-The chrome around the ornament is a calm, conventional card UI — rounded panels, hairline borders,
-a two-column grid — because the ornament is doing enough work and the reader still has to scan a
-list. Catholic identity is deliberately quiet: no crosses in the chrome, no gold leaf, no
-liturgical colour coding.
+- **Product logos.** Real products have logos we can't host, so each listing gets a stable
+  generated tile — initials on a colour derived from a hash of the slug. Same shape and weight in
+  the layout, no invented branding.
+- **Maker names and a newsletter.** We have neither. The "by <maker>" slot shows the publisher's
+  own domain, which is real information in the same shape; the newsletter panel offers the RSS and
+  JSON feeds that actually exist, because a signup field that goes nowhere is a lie.
+
+The hero illustration is hand-authored inline SVG ([`src/views/art.tsx`](src/views/art.tsx)) — the
+CSP blocks every external host, and painting it from the same custom properties as the page means
+it re-inks itself for light mode instead of shipping two files.
+
+Catholic identity stays out of the chrome and in the content: no crosses in the interface, no gold
+leaf, no liturgical colour coding. The cathedral in the skyline is the one exception, and it is
+scenery.
 
 ### Earlier directions
 
-Both are kept as stylesheets rather than deleted. Point the `<link>` in
+Kept as stylesheets rather than deleted. Point the `<link>` in
 [`src/views/layout.tsx`](src/views/layout.tsx) at one to compare, and delete them once a direction
 is settled.
 
 | File | Direction |
 | --- | --- |
-| [`public/styles-v1.css`](public/styles-v1.css) | Comic *construction* (neubrutalist panels, hard offset shadows, caption boxes) in a noir *palette* — cold near-black, one amber accent. |
+| [`public/styles-v1.css`](public/styles-v1.css) | Comic *construction* — neubrutalist panels, hard offset shadows, caption boxes — in a cold noir *palette*. |
 | [`public/styles-v2.css`](public/styles-v2.css) | The inverse: Scandinavian *structure* (hairlines, no boxes, no shadows) carrying a four-colour comic *palette* on newsprint. |
 
-Worth knowing that v1's construction is essentially
-[neubrutalism](https://www.nngroup.com/articles/neobrutalism/), a well-established trend.
+Neither matched the mockup, which is warmer than both, treats illustration as a primary component,
+and wraps its ornament in ordinary rounded card UI.
 
 ## Quick start
 

@@ -197,6 +197,7 @@ function directoryRoute(track: Track) {
         jsonLd={jsonLd}
         noindex={!isLanding && result.total === 0}
         active={root}
+        searchAction={root}
       >
         <Home result={result} filters={filters} stats={counts} />
       </Layout>,

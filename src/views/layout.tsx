@@ -12,12 +12,17 @@ export interface SeoProps {
   noindex?: boolean;
 }
 
-export type LayoutProps = PropsWithChildren<SeoProps & { active?: string }>;
+export type LayoutProps = PropsWithChildren<
+  SeoProps & {
+    active?: string;
+    /** Where the masthead search posts. Defaults to the product track. */
+    searchAction?: string;
+  }
+>;
 
 const NAV = [
   { href: '/', label: 'Products' },
   { href: '/apis', label: 'APIs' },
-  { href: '/submit', label: 'Submit' },
   { href: '/about', label: 'About' },
   { href: '/api/v1', label: 'JSON API' },
 ];
@@ -30,6 +35,7 @@ export const Layout: FC<LayoutProps> = ({
   jsonLd,
   noindex,
   active,
+  searchAction = '/',
   children,
 }) => (
   <html lang="en">
@@ -48,14 +54,17 @@ export const Layout: FC<LayoutProps> = ({
       <meta property="og:url" content={canonical} />
       <meta name="twitter:card" content="summary_large_image" />
 
-      <meta name="theme-color" content="#f2ead8" media="(prefers-color-scheme: light)" />
-      <meta name="theme-color" content="#0b1017" media="(prefers-color-scheme: dark)" />
+      <meta name="theme-color" content="#f3ecdd" media="(prefers-color-scheme: light)" />
+      <meta name="theme-color" content="#0a0f16" media="(prefers-color-scheme: dark)" />
 
       <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-      <link rel="alternate" type="application/rss+xml" title={`${siteName} — newest listings`} href="/feed.xml" />
-      {/* Earlier directions are archived at /styles-v1.css (comic structure,
-          noir palette) and /styles-v2.css (Scandinavian structure, comic
-          palette). Swap this href to compare them. */}
+      <link
+        rel="alternate"
+        type="application/rss+xml"
+        title={`${siteName} — newest listings`}
+        href="/feed.xml"
+      />
+      {/* Earlier design directions are kept at /styles-v1.css and /styles-v2.css. */}
       <link rel="stylesheet" href="/styles.css" />
 
       {/*
@@ -81,19 +90,20 @@ export const Layout: FC<LayoutProps> = ({
         Skip to content
       </a>
 
-      <header class="site-header">
-        <div class="wrap header-inner">
+      {/* Masthead: brand · nav · search · actions, all on one line. */}
+      <header class="masthead">
+        <div class="masthead-inner">
           <a class="brand" href="/">
             <span class="brand-mark" aria-hidden="true">
               CA
             </span>
             <span class="brand-text">
               <strong>Catholic APIs</strong>
-              <small>Ranked by the people who use them</small>
+              <small>Discover what's already built</small>
             </span>
           </a>
 
-          <nav class="site-nav" aria-label="Main">
+          <nav class="masthead-nav" aria-label="Main">
             {NAV.map((item) => (
               <a href={item.href} aria-current={active === item.href ? 'page' : undefined}>
                 {item.label}
@@ -101,27 +111,60 @@ export const Layout: FC<LayoutProps> = ({
             ))}
           </nav>
 
-          <button
-            type="button"
-            class="theme-toggle"
-            data-theme-toggle
-            aria-label="Switch between light and dark theme"
-            title="Switch theme"
-          >
-            <span class="theme-toggle-icon" aria-hidden="true" />
-          </button>
+          <form class="masthead-search" method="get" action={searchAction} role="search">
+            <label class="visually-hidden" for="masthead-q">
+              Search the directory
+            </label>
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+              <circle cx="9" cy="9" r="6" fill="none" stroke="currentColor" stroke-width="2" />
+              <line
+                x1="13.5"
+                y1="13.5"
+                x2="18"
+                y2="18"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+            <input
+              type="search"
+              id="masthead-q"
+              name="q"
+              placeholder="Search apps, APIs, or topics"
+              autocomplete="off"
+            />
+          </form>
+
+          <div class="masthead-actions">
+            <button
+              type="button"
+              class="theme-toggle"
+              data-theme-toggle
+              aria-label="Switch between light and dark theme"
+              title="Switch theme"
+            >
+              <span class="theme-toggle-icon" aria-hidden="true" />
+            </button>
+            <a class="btn btn-primary" href="/submit">
+              Submit
+            </a>
+          </div>
         </div>
       </header>
 
       <main id="main">{children}</main>
 
       <footer class="site-footer">
-        <div class="wrap footer-inner">
-          <div>
-            <p class="footer-title">Catholic APIs</p>
-            <p class="muted">
-              An open directory of Catholic software — the apps people use and the APIs they're
-              built from. Community-ranked; corrections welcome.
+        <div class="footer-inner">
+          <div class="footer-brand">
+            <span class="footer-mark" aria-hidden="true">
+              CA
+            </span>
+            <p class="muted small">
+              Catholic APIs
+              <br />
+              An open, community-ranked directory.
             </p>
           </div>
 
@@ -134,22 +177,29 @@ export const Layout: FC<LayoutProps> = ({
           </div>
 
           <div class="footer-links">
-            <p class="footer-title">For developers</p>
+            <p class="footer-title">Developers</p>
             <a href="/api/v1">JSON API</a>
             <a href="/feed.xml">RSS feed</a>
             <a href="/submit">Submit a listing</a>
             <a href="/about#data">Data &amp; corrections</a>
           </div>
+
+          <div class="footer-links">
+            <p class="footer-title">About</p>
+            <a href="/about">What this is</a>
+            <a href="/about">How ranking works</a>
+            <a href="/about#data">Report a problem</a>
+          </div>
+
+          <div class="footer-burst">
+            <Burst>Vote honestly.</Burst>
+          </div>
         </div>
 
-        <div class="wrap footer-burst">
-          <Burst>Vote honestly.</Burst>
-        </div>
-
-        <div class="wrap footer-legal">
+        <div class="footer-legal">
           <p class="muted">
-            Not affiliated with the Holy See or any diocese. Every listing links to its own
-            publisher — check their terms before shipping.
+            Not affiliated with the Holy See, any bishops' conference, or any diocese. Every
+            listing links to its own publisher — check their terms before shipping.
           </p>
         </div>
       </footer>

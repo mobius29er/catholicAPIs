@@ -3,11 +3,14 @@ import type { Filters, Track } from '../types';
 import { PAGE_SIZE } from '../db';
 import type { DirectoryResult, Stats } from '../db';
 import {
+  FeedPanel,
   FilterPanel,
-  ListingCard,
+  ListingRow,
   Pagination,
   SortTabs,
+  Spotlight,
   TrackTabs,
+  TrendingTopics,
   buildQuery,
 } from './components';
 import { NoirScene } from './art';
@@ -17,28 +20,28 @@ interface Copy {
   caption: string;
   headline: string;
   sub: string;
-  search: string;
-  /** The angled stamp in the corner of the hero. */
+  /** The angled stamp across the corner of the art. */
   stamp: string;
-  cta: { href: string; label: string };
+  listHeading: string;
+  secondary: { href: string; label: string };
 }
 
 const COPY: Record<Track, Copy> = {
   product: {
     caption: 'New is worth finding.',
-    headline: 'What Catholics\nare actually building.',
-    sub: 'Prayer apps, breviaries, formation, parish tools, journalism, AI that cites its sources. Upvote what earned a place on your phone. Downvote what wasted your evening.',
-    search: 'Search apps, services, media…',
+    headline: 'Discover the software\nCatholics actually use',
+    sub: 'Catholic APIs is a directory of the apps, services and tools people pray, study and run parishes with — ranked by the people who use them.',
     stamp: 'Good work deserves users.',
-    cta: { href: '/submit?track=product', label: 'Submit a product' },
+    listHeading: 'Top products',
+    secondary: { href: '/submit?track=product', label: 'Submit a product' },
   },
   api: {
     caption: 'Stop rebuilding the calendar.',
-    headline: 'Every Catholic API,\nrated by developers.',
-    sub: 'Liturgical calendars, daily readings, scripture, the Catechism, canon law, prayers and saints — free and paid. Upvote what works, downvote what\'s abandoned, and add anything we\'re missing.',
-    search: 'Search for readings, calendar, Vulgate, Catechism…',
+    headline: 'Every Catholic API\nin one place',
+    sub: 'Liturgical calendars, daily readings, scripture, the Catechism, canon law, prayers and saints — free and paid, rated by the developers who ship on them.',
     stamp: 'Someone already solved this.',
-    cta: { href: '/submit', label: 'Submit an API' },
+    listHeading: 'Top APIs',
+    secondary: { href: '/submit', label: 'Submit an API' },
   },
 };
 
@@ -48,6 +51,7 @@ export const Home: FC<{
   stats: Stats;
 }> = ({ result, filters, stats }) => {
   const copy = COPY[filters.track];
+  const root = filters.track === 'product' ? '/' : '/apis';
 
   const isLanding =
     !filters.q &&
@@ -68,7 +72,7 @@ export const Home: FC<{
             <NoirScene />
           </div>
 
-          <div class="wrap hero-inner">
+          <div class="hero-inner">
             <p class="caption-box">{copy.caption}</p>
 
             <h1>
@@ -83,87 +87,45 @@ export const Home: FC<{
             <p class="hero-sub">{copy.sub}</p>
 
             <div class="hero-cta">
-              <a class="btn btn-primary" href="#listings">
-                Browse the list
+              <a class="btn btn-primary btn-lg" href="#listings">
+                Explore top listings
               </a>
-              <a class="btn btn-outline" href={copy.cta.href}>
-                {copy.cta.label}
+              <a class="btn btn-outline btn-lg" href={copy.secondary.href}>
+                {copy.secondary.label}
               </a>
             </div>
-
-            <dl class="hero-stats">
-              <div>
-                <dt>Listings</dt>
-                <dd>{stats.total}</dd>
-              </div>
-              <div>
-                <dt>Free to start</dt>
-                <dd>{stats.free}</dd>
-              </div>
-              <div>
-                <dt>Votes cast</dt>
-                <dd>{stats.votes}</dd>
-              </div>
-            </dl>
           </div>
 
           <p class="stamp">{copy.stamp}</p>
         </section>
       )}
 
-      <div class="wrap directory" id="listings">
-        <TrackTabs active={filters.track} counts={{ apis: stats.apis, products: stats.products }} />
-
-        <form class="searchbar" method="get" action={filters.track === 'product' ? '/' : '/apis'} role="search">
-          <label class="visually-hidden" for="q">
-            Search the directory
-          </label>
-          <input
-            type="search"
-            id="q"
-            name="q"
-            value={filters.q}
-            placeholder={copy.search}
-            autocomplete="off"
-          />
-          {filters.sort !== 'top' && <input type="hidden" name="sort" value={filters.sort} />}
-          {filters.pricing.map((p) => (
-            <input type="hidden" name="pricing" value={p} />
-          ))}
-          {filters.kind.map((k) => (
-            <input type="hidden" name="kind" value={k} />
-          ))}
-          {filters.platforms.map((p) => (
-            <input type="hidden" name="platform" value={p} />
-          ))}
-          {filters.categories.map((c) => (
-            <input type="hidden" name="category" value={c} />
-          ))}
-          {filters.languages.map((l) => (
-            <input type="hidden" name="lang" value={l} />
-          ))}
-          {filters.openSource && <input type="hidden" name="open_source" value="1" />}
-          {filters.noAuth && <input type="hidden" name="no_auth" value="1" />}
-          <button type="submit" class="btn btn-primary">
-            Search
-          </button>
-        </form>
-
-        <div class="directory-grid">
-          <FilterPanel filters={filters} facets={result.facets} />
-
-          <section class="results" aria-label="Results">
-            <div class="results-head">
-              <p class="results-count">
-                <strong>{result.total}</strong> {result.total === 1 ? 'listing' : 'listings'}
-                {filters.q && (
+      <div class="shell" id="listings">
+        <div class="columns">
+          {/* ------------------------------------------------------ list --- */}
+          <section class="feed" aria-label="Listings">
+            <div class="feed-head">
+              <h2 class="feed-title">
+                {filters.q ? (
                   <>
-                    {' for '}
-                    <em>{filters.q}</em>
+                    Results for <em>{filters.q}</em>
                   </>
+                ) : (
+                  copy.listHeading
                 )}
-              </p>
+              </h2>
               <SortTabs filters={filters} />
+            </div>
+
+            <div class="feed-controls">
+              <TrackTabs
+                active={filters.track}
+                counts={{ apis: stats.apis, products: stats.products }}
+              />
+              <FilterPanel filters={filters} facets={result.facets} />
+              <p class="feed-count">
+                {result.total} {result.total === 1 ? 'listing' : 'listings'}
+              </p>
             </div>
 
             {result.listings.length === 0 ? (
@@ -174,7 +136,7 @@ export const Home: FC<{
                   <a href="/submit">add it to the directory</a> — that's how the list grows.
                 </p>
                 <a
-                  class="btn btn-quiet"
+                  class="btn btn-outline"
                   href={buildQuery(filters, {
                     pricing: [],
                     kind: [],
@@ -191,58 +153,50 @@ export const Home: FC<{
                 </a>
               </div>
             ) : (
-              <ul class="cards">
+              <ol class="listings">
                 {result.listings.map((listing, index) => (
-                  <ListingCard
+                  <ListingRow
                     listing={listing}
-                    rank={
-                      filters.sort === 'name'
-                        ? undefined
-                        : (result.page - 1) * PAGE_SIZE + index + 1
-                    }
+                    rank={(result.page - 1) * PAGE_SIZE + index + 1}
                     rankNote={
                       filters.sort === 'top' && result.page === 1 && index === 0
-                        ? 'Most recommended'
+                        ? '#1 most recommended'
                         : undefined
                     }
                   />
                 ))}
-              </ul>
+              </ol>
             )}
 
             <Pagination filters={filters} page={result.page} pageCount={result.pageCount} />
           </section>
+
+          {/* ------------------------------------------------------ rail --- */}
+          <aside class="rail" aria-label="More from the directory">
+            {result.listings.length > 0 && <Spotlight listing={result.listings[0]} />}
+            <TrendingTopics filters={filters} categories={result.facets.categories} />
+            <FeedPanel />
+
+            <section class="rail-panel rail-cross">
+              <p class="rail-title">
+                {filters.track === 'product' ? 'For builders' : 'For everyone else'}
+              </p>
+              <p>
+                {filters.track === 'product'
+                  ? `The other half of this directory is ${stats.apis} APIs, datasets and libraries — so you don't have to scrape a diocesan website at 2am.`
+                  : `The other half of this directory is ${stats.products} finished Catholic apps and services, ranked the same way.`}
+              </p>
+              <a class="rail-link" href={filters.track === 'product' ? '/apis' : '/'}>
+                {filters.track === 'product' ? 'Browse the APIs →' : 'Browse the products →'}
+              </a>
+            </section>
+          </aside>
         </div>
 
-        {isLanding && (
-          <aside class="crossover">
-            {filters.track === 'product' ? (
-              <>
-                <h2>Building one of these?</h2>
-                <p>
-                  The other half of this directory is {stats.apis} APIs, datasets and libraries —
-                  liturgical calendars, scripture, the Catechism — so you don't have to scrape a
-                  diocesan website at 2am.
-                </p>
-                <a class="btn btn-primary" href="/apis">
-                  Browse the APIs →
-                </a>
-              </>
-            ) : (
-              <>
-                <h2>Shipped something with these?</h2>
-                <p>
-                  The product side of the directory lists {stats.products} Catholic apps and
-                  services. Add yours, and let people vote on whether it earned a place on their
-                  phone.
-                </p>
-                <a class="btn btn-primary" href="/submit?track=product">
-                  Submit a product →
-                </a>
-              </>
-            )}
-          </aside>
-        )}
+        <p class="shell-note muted small">
+          Showing {result.total} of {stats.total} listings across both tracks.{' '}
+          <a href={root}>Clear everything</a> · <a href="/about">How ranking works</a>
+        </p>
       </div>
     </>
   );

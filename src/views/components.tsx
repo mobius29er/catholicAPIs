@@ -2,6 +2,7 @@ import type { FC } from 'hono/jsx';
 import type { Filters, Listing, Sort, Track } from '../types';
 import { listingPath } from '../types';
 import type { FacetCount } from '../db';
+import { LogoMark, Monogram, SpotlightBeam } from './art';
 
 export const KIND_LABELS: Record<string, string> = {
   api: 'Hosted API',
@@ -49,6 +50,15 @@ export const LANGUAGE_NAMES: Record<string, string> = {
 
 export const languageName = (code: string): string => LANGUAGE_NAMES[code] ?? code.toUpperCase();
 
+/** The publisher, as far as we can honestly know it: the host it lives on. */
+export const publisherOf = (url: string): string => {
+  try {
+    return new URL(url).host.replace(/^www\./, '');
+  } catch {
+    return url;
+  }
+};
+
 /** Where each track's index lives. Filter links must stay inside their track. */
 export const trackRoot = (track: Track): string => (track === 'product' ? '/' : '/apis');
 
@@ -94,6 +104,8 @@ function toggleUrl(filters: Filters, key: string, current: string[], value: stri
   const next = current.includes(value) ? current.filter((v) => v !== value) : [...current, value];
   return buildQuery(filters, { [key]: next, page: 1 });
 }
+
+/* ----------------------------------------------------------------- vote --- */
 
 export const VoteWidget: FC<{ listing: Listing; large?: boolean }> = ({ listing, large }) => {
   const noun = listing.track === 'product' ? 'this' : 'this API';
@@ -146,6 +158,8 @@ export const VoteWidget: FC<{ listing: Listing; large?: boolean }> = ({ listing,
   );
 };
 
+/* ---------------------------------------------------------------- badges -- */
+
 export const Badges: FC<{ listing: Listing }> = ({ listing }) => (
   <ul class="badges">
     <li class={`badge badge-${listing.pricing}`}>{PRICING_LABELS[listing.pricing]}</li>
@@ -153,69 +167,84 @@ export const Badges: FC<{ listing: Listing }> = ({ listing }) => (
     {listing.track === 'api' ? (
       <>
         {listing.kind !== 'api' && <li class="badge">{KIND_LABELS[listing.kind]}</li>}
-        {listing.auth === 'none' && <li class="badge badge-quiet">No key</li>}
+        {listing.auth === 'none' && <li class="badge">No key</li>}
       </>
     ) : (
-      listing.platforms.slice(0, 3).map((platform) => (
-        <li class="badge badge-quiet">{PLATFORM_LABELS[platform] ?? platform}</li>
-      ))
+      listing.platforms
+        .slice(0, 3)
+        .map((platform) => <li class="badge">{PLATFORM_LABELS[platform] ?? platform}</li>)
     )}
 
-    {listing.open_source && <li class="badge badge-quiet">Open source</li>}
+    {listing.open_source && <li class="badge">Open source</li>}
     {listing.official && <li class="badge badge-official">Official</li>}
   </ul>
 );
 
-export const ListingCard: FC<{ listing: Listing; rank?: number; rankNote?: string }> = ({
+/* ------------------------------------------------------------------ row --- */
+
+/**
+ * One row of the leaderboard: rank · logo · details · publisher · vote.
+ *
+ * The publisher column is the reference's "by <maker>" slot. We have no maker
+ * names and will not invent them, so it shows the host the listing actually
+ * lives on — real information in the same shape.
+ */
+export const ListingRow: FC<{ listing: Listing; rank: number; rankNote?: string }> = ({
   listing,
   rank,
   rankNote,
 }) => {
   const href = listingPath(listing);
+  const publisher = publisherOf(listing.homepage_url);
 
   return (
-    <li class="card">
-      {rank !== undefined && (
-        <div class="card-rank" aria-hidden="true">
-          <span class="card-rank-number">{rank}</span>
-          {rankNote && <span class="card-rank-note">#1 {rankNote}</span>}
-        </div>
-      )}
+    <li class="row">
+      <div class="row-rank" aria-hidden="true">
+        <span class="row-rank-number">{rank}</span>
+        {rankNote && <span class="row-rank-note">{rankNote}</span>}
+      </div>
 
-      <VoteWidget listing={listing} />
+      <a class="row-logo" href={href} tabindex={-1} aria-hidden="true">
+        <LogoMark name={listing.name} slug={listing.slug} />
+      </a>
 
-      <div class="card-body">
-        <h3 class="card-title">
+      <div class="row-body">
+        <h3 class="row-name">
           <a href={href}>{listing.name}</a>
           {listing.isNew && <span class="flash">Just launched</span>}
         </h3>
-        <p class="card-tagline">{listing.tagline}</p>
-
-        <Badges listing={listing} />
+        <p class="row-tagline">{listing.tagline}</p>
 
         <ul class="pills">
           {listing.categories.slice(0, 2).map((category) => (
             <li class="pill">{category}</li>
           ))}
+          {listing.track === 'api' && listing.auth === 'none' && (
+            <li class="pill pill-quiet">No key</li>
+          )}
+          {listing.open_source && <li class="pill pill-quiet">Open source</li>}
         </ul>
-
-        <p class="card-meta">
-          {listing.languages.slice(0, 4).map(languageName).join(', ')}
-          {listing.languages.length > 4 && ` +${listing.languages.length - 4}`}
-        </p>
       </div>
 
-      <div class="card-actions">
-        <a class="btn btn-quiet" href={listing.homepage_url} rel="nofollow noopener" target="_blank">
-          Visit ↗
-        </a>
-        <a class="btn btn-link" href={href}>
-          Details
-        </a>
+      <div class="row-by">
+        <Monogram label={publisher} />
+        <span>
+          <small>from</small>
+          <a href={listing.homepage_url} rel="nofollow noopener" target="_blank">
+            {publisher}
+          </a>
+          <small class={`row-price price-${listing.pricing}`}>
+            {PRICING_LABELS[listing.pricing]}
+          </small>
+        </span>
       </div>
+
+      <VoteWidget listing={listing} />
     </li>
   );
 };
+
+/* ----------------------------------------------------------- list header -- */
 
 const SORTS: Array<{ value: Sort; label: string; hint: string }> = [
   { value: 'top', label: 'Top rated', hint: 'Highest confidence approval, not just raw votes' },
@@ -224,8 +253,9 @@ const SORTS: Array<{ value: Sort; label: string; hint: string }> = [
   { value: 'name', label: 'A–Z', hint: 'Alphabetical' },
 ];
 
+/** The "Today ▾" control from the reference, as a row of links. */
 export const SortTabs: FC<{ filters: Filters }> = ({ filters }) => (
-  <div class="sort-tabs" role="tablist" aria-label="Sort listings">
+  <div class="sorts" role="tablist" aria-label="Sort listings">
     {SORTS.map((sort) => (
       <a
         role="tab"
@@ -239,24 +269,22 @@ export const SortTabs: FC<{ filters: Filters }> = ({ filters }) => (
   </div>
 );
 
-/** The two-track switch. Present on both index pages so neither is a dead end. */
+/** The two-track switch, as a pair of pills above the list. */
 export const TrackTabs: FC<{ active: Track; counts: { apis: number; products: number } }> = ({
   active,
   counts,
 }) => (
-  <nav class="track-tabs" aria-label="Directory section">
+  <nav class="tracks" aria-label="Directory section">
     <a href="/" aria-current={active === 'product' ? 'page' : undefined}>
-      <span class="track-label">Products</span>
-      <span class="track-desc">Catholic apps &amp; services</span>
-      <span class="track-count">{counts.products}</span>
+      Products <span>{counts.products}</span>
     </a>
     <a href="/apis" aria-current={active === 'api' ? 'page' : undefined}>
-      <span class="track-label">APIs</span>
-      <span class="track-desc">Developer building blocks</span>
-      <span class="track-count">{counts.apis}</span>
+      APIs <span>{counts.apis}</span>
     </a>
   </nav>
 );
+
+/* -------------------------------------------------------------- filters --- */
 
 const FacetGroup: FC<{
   legend: string;
@@ -318,132 +346,206 @@ export const FilterPanel: FC<{
     (filters.openSource ? 1 : 0) +
     (filters.noAuth ? 1 : 0);
 
-  const clearHref = buildQuery(filters, {
-    pricing: [],
-    kind: [],
-    platform: [],
-    category: [],
-    lang: [],
-    auth: [],
-    open_source: false,
-    no_auth: false,
-    page: 1,
-  });
+  /*
+    A <details> collects everything after its <summary> into one anonymous box,
+    so laying out the <details> itself gives you summary-plus-one-blob and any
+    gap between the facet groups silently never happens. Hence `.filter-body`.
 
+    Closed unless something is filtered: <summary> toggles natively, so this
+    costs nothing with JavaScript off and keeps the list where the eye is.
+  */
   return (
-    /*
-      A <details> so narrow screens can collapse the whole panel behind one
-      control instead of burying the results under two screens of checkboxes.
-      It ships open: on desktop CSS hides the summary and it simply stays open,
-      and on mobile app.js closes it at load. With JavaScript off, a mobile
-      reader gets an expanded panel — verbose, but nothing is unreachable.
-    */
-    <details class="filters" open data-filters>
-      <summary class="filters-summary">
-        <span>Filters</span>
-        {activeCount > 0 && <span class="filters-badge">{activeCount}</span>}
+    <details class="filter" open={activeCount > 0}>
+      <summary class="filter-summary">
+        <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+          <path
+            d="M2 4h12M4.5 8h7M7 12h2"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            fill="none"
+          />
+        </svg>
+        Filters
+        {activeCount > 0 && <span class="filter-badge">{activeCount}</span>}
       </summary>
 
-      {/*
-        A real wrapper, not just the summary's siblings. A <details> puts
-        everything after the summary into one anonymous box, so `display: flex`
-        with a gap on the <details> itself lays out summary-plus-one-blob and
-        the gap between the facet groups silently never happens. Laying out
-        this div instead is the fix.
-      */}
-      <div class="filters-body">
-      <div class="filters-head">
-        <h2>Filters</h2>
-        {activeCount > 0 && (
-          <a class="btn btn-link" href={clearHref} rel="nofollow">
-            Clear all
-          </a>
+      <div class="filter-body">
+        <FacetGroup
+          legend="Cost"
+          filters={filters}
+          paramKey="pricing"
+          selected={filters.pricing}
+          options={facets.pricing}
+          labels={PRICING_LABELS}
+        />
+
+        {isApiTrack ? (
+          <FacetGroup
+            legend="Type"
+            filters={filters}
+            paramKey="kind"
+            selected={filters.kind}
+            options={facets.kind}
+            labels={KIND_LABELS}
+          />
+        ) : (
+          <FacetGroup
+            legend="Platform"
+            filters={filters}
+            paramKey="platform"
+            selected={filters.platforms}
+            options={facets.platforms}
+            labels={PLATFORM_LABELS}
+          />
         )}
-      </div>
 
-      <FacetGroup
-        legend="Cost"
-        filters={filters}
-        paramKey="pricing"
-        selected={filters.pricing}
-        options={facets.pricing}
-        labels={PRICING_LABELS}
-      />
-
-      {isApiTrack ? (
         <FacetGroup
-          legend="Type"
+          legend="Category"
           filters={filters}
-          paramKey="kind"
-          selected={filters.kind}
-          options={facets.kind}
-          labels={KIND_LABELS}
+          paramKey="category"
+          selected={filters.categories}
+          options={facets.categories}
+          limit={10}
         />
-      ) : (
-        <FacetGroup
-          legend="Platform"
-          filters={filters}
-          paramKey="platform"
-          selected={filters.platforms}
-          options={facets.platforms}
-          labels={PLATFORM_LABELS}
-        />
-      )}
 
-      <fieldset class="facet">
-        <legend>Quick filters</legend>
-        <ul>
-          <li>
-            <a
-              class={filters.openSource ? 'facet-option is-on' : 'facet-option'}
-              href={buildQuery(filters, { open_source: !filters.openSource, page: 1 })}
-              rel="nofollow"
-            >
-              <span class="facet-check" aria-hidden="true">
-                {filters.openSource ? '✓' : ''}
-              </span>
-              <span class="facet-label">Open source only</span>
-            </a>
-          </li>
-          {isApiTrack && (
+        <FacetGroup
+          legend="Language"
+          filters={filters}
+          paramKey="lang"
+          selected={filters.languages}
+          options={facets.languages}
+          labels={LANGUAGE_NAMES}
+          limit={8}
+        />
+
+        <fieldset class="facet">
+          <legend>Quick filters</legend>
+          <ul>
             <li>
               <a
-                class={filters.noAuth ? 'facet-option is-on' : 'facet-option'}
-                href={buildQuery(filters, { no_auth: !filters.noAuth, page: 1 })}
+                class={filters.openSource ? 'facet-option is-on' : 'facet-option'}
+                href={buildQuery(filters, { open_source: !filters.openSource, page: 1 })}
                 rel="nofollow"
               >
                 <span class="facet-check" aria-hidden="true">
-                  {filters.noAuth ? '✓' : ''}
+                  {filters.openSource ? '✓' : ''}
                 </span>
-                <span class="facet-label">No API key required</span>
+                <span class="facet-label">Open source only</span>
               </a>
             </li>
-          )}
-        </ul>
-      </fieldset>
+            {isApiTrack && (
+              <li>
+                <a
+                  class={filters.noAuth ? 'facet-option is-on' : 'facet-option'}
+                  href={buildQuery(filters, { no_auth: !filters.noAuth, page: 1 })}
+                  rel="nofollow"
+                >
+                  <span class="facet-check" aria-hidden="true">
+                    {filters.noAuth ? '✓' : ''}
+                  </span>
+                  <span class="facet-label">No API key required</span>
+                </a>
+              </li>
+            )}
+          </ul>
+        </fieldset>
 
-      <FacetGroup
-        legend="Category"
-        filters={filters}
-        paramKey="category"
-        selected={filters.categories}
-        options={facets.categories}
-        limit={14}
-      />
-
-      <FacetGroup
-        legend="Language"
-        filters={filters}
-        paramKey="lang"
-        selected={filters.languages}
-        options={facets.languages}
-        labels={LANGUAGE_NAMES}
-        limit={10}
-      />
+        {activeCount > 0 && (
+          <p class="filter-clear">
+            <a
+              href={buildQuery(filters, {
+                pricing: [],
+                kind: [],
+                platform: [],
+                category: [],
+                lang: [],
+                auth: [],
+                open_source: false,
+                no_auth: false,
+                page: 1,
+              })}
+              rel="nofollow"
+            >
+              Clear all filters
+            </a>
+          </p>
+        )}
       </div>
     </details>
   );
 };
+
+/* ----------------------------------------------------------------- rail --- */
+
+export const Spotlight: FC<{ listing: Listing }> = ({ listing }) => (
+  <section class="rail-panel rail-spotlight">
+    <SpotlightBeam />
+    <p class="rail-title">Spotlight</p>
+
+    <div class="spotlight-head">
+      <LogoMark name={listing.name} slug={listing.slug} />
+      <div>
+        <p class="spotlight-name">{listing.name}</p>
+        <p class="spotlight-from">{publisherOf(listing.homepage_url)}</p>
+      </div>
+    </div>
+
+    <p class="spotlight-blurb">{listing.tagline}</p>
+
+    <a class="rail-link" href={listingPath(listing)}>
+      Read the details →
+    </a>
+  </section>
+);
+
+export const TrendingTopics: FC<{ filters: Filters; categories: FacetCount[] }> = ({
+  filters,
+  categories,
+}) => (
+  <section class="rail-panel">
+    <div class="rail-head">
+      <p class="rail-title">Trending topics</p>
+      <a class="rail-see-all" href={buildQuery(filters, { page: 1 })}>
+        See all
+      </a>
+    </div>
+
+    <ul class="topics">
+      {categories.slice(0, 6).map((category) => (
+        <li>
+          <a href={buildQuery(filters, { category: [category.value], page: 1 })}>
+            <span class="topic-dot" aria-hidden="true" />
+            <span class="topic-name">{category.value}</span>
+            <span class="topic-count">{category.count}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+);
+
+/**
+ * The reference has a newsletter box here. There is no mailing list behind this
+ * site, and a signup field that goes nowhere is a lie — so the same slot offers
+ * the feeds that do exist.
+ */
+export const FeedPanel: FC = () => (
+  <section class="rail-panel rail-feed">
+    <p class="rail-title">Stay in the loop</p>
+    <p>New listings as they are published. No account, no mailing list.</p>
+    <div class="rail-actions">
+      <a class="btn btn-primary" href="/feed.xml">
+        RSS feed
+      </a>
+      <a class="btn btn-outline" href="/api/v1">
+        JSON API
+      </a>
+    </div>
+  </section>
+);
+
+/* ----------------------------------------------------------- pagination --- */
 
 export const Pagination: FC<{ filters: Filters; page: number; pageCount: number }> = ({
   filters,
@@ -455,25 +557,25 @@ export const Pagination: FC<{ filters: Filters; page: number; pageCount: number 
   return (
     <nav class="pagination" aria-label="Pagination">
       {page > 1 ? (
-        <a class="btn btn-quiet" href={buildQuery(filters, { page: page - 1 })} rel="prev">
+        <a class="btn btn-outline" href={buildQuery(filters, { page: page - 1 })} rel="prev">
           ← Previous
         </a>
       ) : (
-        <span class="btn btn-quiet is-disabled" aria-hidden="true">
+        <span class="btn btn-outline is-disabled" aria-hidden="true">
           ← Previous
         </span>
       )}
 
-      <span class="muted">
+      <span class="muted small">
         Page {page} of {pageCount}
       </span>
 
       {page < pageCount ? (
-        <a class="btn btn-quiet" href={buildQuery(filters, { page: page + 1 })} rel="next">
+        <a class="btn btn-outline" href={buildQuery(filters, { page: page + 1 })} rel="next">
           Next →
         </a>
       ) : (
-        <span class="btn btn-quiet is-disabled" aria-hidden="true">
+        <span class="btn btn-outline is-disabled" aria-hidden="true">
           Next →
         </span>
       )}

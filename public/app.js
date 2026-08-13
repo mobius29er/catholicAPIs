@@ -120,17 +120,6 @@
       });
   }
 
-  // ----------------------------------------------------------- filters ---
-
-  // The filter panel ships open so it works with JavaScript off. On a narrow
-  // screen that buries the results, so collapse it here — unless the reader
-  // arrived with filters already applied, in which case hiding them would hide
-  // why the result set looks the way it does.
-  var filters = document.querySelector('[data-filters]');
-  if (filters && window.matchMedia('(max-width: 900px)').matches) {
-    if (!filters.querySelector('.filters-badge')) filters.open = false;
-  }
-
   // ------------------------------------------------- submit form track ---
 
   // The submit form asks for different things depending on the track. Both

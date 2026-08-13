@@ -1,5 +1,7 @@
 import type { FC } from 'hono/jsx';
 import type { Listing } from '../types';
+import { listingPath } from '../types';
+import type { DeprecationSignal, OpenReport, Stats } from '../db';
 
 export const About: FC<{ siteUrl: string }> = ({ siteUrl }) => (
   <div class="wrap narrow page prose">
@@ -58,6 +60,58 @@ export const About: FC<{ siteUrl: string }> = ({ siteUrl }) => (
     <p>
       Vote on whether the thing is <em>good</em>: does it work, is it maintained, is it
       documented, does it do what it claims? Not on whether you like the maker's theology.
+    </p>
+
+    <h2 id="sources">Sources and prior art</h2>
+    <p>
+      This directory did not start from nothing. Two community lists were compiling Catholic
+      software long before it existed, and a large part of what you see here came from them:
+    </p>
+    <ul>
+      <li>
+        <a href="https://github.com/CatholicOS/awesome-catholic" rel="noopener" target="_blank">
+          CatholicOS/awesome-catholic
+        </a>{' '}
+        — the larger of the two, and the source of the idea that dead projects belong in an
+        &ldquo;Attic&rdquo; rather than the bin. No licence is stated on the repository, so we took
+        only the facts — what a project is called, where it lives, which section it sat in — and
+        wrote our own descriptions.
+      </li>
+      <li>
+        <a href="https://github.com/servusdei2018/awesome-catholic" rel="noopener" target="_blank">
+          servusdei2018/awesome-catholic
+        </a>{' '}
+        — released under{' '}
+        <a href="https://creativecommons.org/publicdomain/zero/1.0/" rel="noopener" target="_blank">
+          CC0 1.0
+        </a>
+        , which makes reuse unambiguous. More lists should do this.
+      </li>
+    </ul>
+    <p>
+      Every listing that came from one of them says so, and links back. Where the two lists
+      disagreed — one retiring a project the other still recommends — we kept the retirement and
+      recorded the disagreement on the listing, because a false <em>alive</em> costs more than a
+      false <em>dead</em>.
+    </p>
+    <p>
+      If you maintain a list we've missed, or you'd rather your entries weren't here,{' '}
+      <a href="/submit">tell us</a>.
+    </p>
+
+    <h2 id="status">Deprecation and uptime</h2>
+    <p>
+      A scheduled job walks the directory every few hours, least-recently-checked first, and asks
+      each listing's homepage whether it is still there. One failure is not a verdict — sites time
+      out and firewalls get twitchy — so a listing is only shown as <strong>not responding</strong>{' '}
+      after three consecutive failures. A 403 or 405 doesn't count against it at all: that is a
+      server refusing <em>us</em>, not a server that is down.
+    </p>
+    <p>
+      Deprecation is a separate, human judgement. Anything abandoned, superseded or plainly dead is
+      flagged <strong>deprecated</strong> — and then <em>stays published</em>. Deleting it would
+      only send the next person round the same search you just finished. Every listing has a
+      one-click <strong>report as deprecated</strong> button; enough reports and a moderator looks.
     </p>
 
     <h2 id="data">Data and corrections</h2>
@@ -218,11 +272,17 @@ export const Message: FC<{ title: string; body: string; cta?: { href: string; la
 
 export const Admin: FC<{
   pending: Listing[];
-  reports: Array<{ id: number; kind: string; message: string; created_at: string; slug: string; name: string }>;
+  reports: OpenReport[];
+  signals: DeprecationSignal[];
+  stats: Stats;
   token: string;
-}> = ({ pending, reports, token }) => (
+}> = ({ pending, reports, signals, stats, token }) => (
   <div class="wrap page">
     <h1>Moderation</h1>
+
+    <p class="muted small">
+      {stats.total} published · {stats.down} not responding · {reports.length} open reports
+    </p>
 
     <section>
       <h2>Pending submissions ({pending.length})</h2>
@@ -270,6 +330,72 @@ export const Admin: FC<{
       )}
     </section>
 
+    {/*
+      Everything the machine thinks is dead, in one place. It never flags a
+      listing on its own — three failed probes and a pile of reports are
+      evidence, not a verdict — so each row ends in a button a human presses.
+    */}
+    <section>
+      <h2>Possibly dead ({signals.length})</h2>
+      <form method="post" action="/admin/health" class="admin-inline">
+        <input type="hidden" name="token" value={token} />
+        <button class="btn btn-quiet" type="submit">
+          Run uptime checks now
+        </button>
+        <span class="muted small">
+          Probes a batch of the least-recently-checked listings. The cron does this every six hours.
+        </span>
+      </form>
+
+      {signals.length === 0 ? (
+        <p class="muted">Nothing looks dead.</p>
+      ) : (
+        <ul class="admin-list">
+          {signals.map((signal) => (
+            <li>
+              <div>
+                <h3>
+                  <a href={listingPath(signal)}>{signal.name}</a>
+                  {signal.deprecated === 1 && <span class="flash flash-dead">Deprecated</span>}
+                </h3>
+                <p class="muted small">
+                  {signal.reports > 0 &&
+                    `${signal.reports} open ${signal.reports === 1 ? 'report' : 'reports'}`}
+                  {signal.reports > 0 && signal.health_state === 'down' && ' · '}
+                  {signal.health_state === 'down' &&
+                    `${signal.health_fails} failed ${signal.health_fails === 1 ? 'probe' : 'probes'}`}
+                </p>
+              </div>
+              <div class="admin-actions">
+                <form method="post" action="/admin/deprecate">
+                  <input type="hidden" name="token" value={token} />
+                  <input type="hidden" name="slug" value={signal.slug} />
+                  <input
+                    type="hidden"
+                    name="deprecated"
+                    value={signal.deprecated === 1 ? '0' : '1'}
+                  />
+                  <input
+                    type="text"
+                    name="note"
+                    maxlength={500}
+                    placeholder="Why, and what replaced it"
+                    hidden={signal.deprecated === 1}
+                  />
+                  <button
+                    class={signal.deprecated === 1 ? 'btn btn-quiet' : 'btn btn-warn'}
+                    type="submit"
+                  >
+                    {signal.deprecated === 1 ? 'Un-flag' : 'Flag deprecated'}
+                  </button>
+                </form>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+
     <section>
       <h2>Open reports ({reports.length})</h2>
       {reports.length === 0 ? (
@@ -280,7 +406,7 @@ export const Admin: FC<{
             <li>
               <div>
                 <h3>
-                  <a href={`/apis/${report.slug}`}>{report.name}</a>
+                  <a href={listingPath(report)}>{report.name}</a>
                 </h3>
                 <p>
                   <strong>{report.kind}</strong> · <span class="muted small">{report.created_at}</span>

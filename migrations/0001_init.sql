@@ -54,6 +54,30 @@ CREATE TABLE apis (
   languages      TEXT    NOT NULL DEFAULT '[]',
 
   status         TEXT    NOT NULL DEFAULT 'published' CHECK (status IN ('pending', 'published', 'rejected')),
+
+  -- Which upstream list a listing came from, if any, so credit travels with the
+  -- row rather than living only on an About page.
+  source         TEXT,
+  source_url     TEXT,
+
+  -- Deliberately separate from `status`. A deprecated listing stays *published*
+  -- and visibly flagged rather than disappearing: someone searching for a
+  -- project that died learns that it died, which is more use than a blank page.
+  -- Borrowed from the "Attic" section the awesome-catholic lists keep.
+  deprecated     INTEGER NOT NULL DEFAULT 0 CHECK (deprecated IN (0, 1)),
+  deprecated_note TEXT,
+
+  -- Filled in by the scheduled uptime check (src/health.ts).
+  --   unknown  never probed, or the last probe could not complete
+  --   up       last probe returned a non-error status
+  --   down     `health_fails` probes in a row failed
+  health_state   TEXT    NOT NULL DEFAULT 'unknown' CHECK (health_state IN ('unknown', 'up', 'down')),
+  health_code    INTEGER,
+  health_checked_at TEXT,
+  -- Consecutive failures. One timeout is a blip; three is a dead site, so the
+  -- state only flips to 'down' once this passes the threshold in src/health.ts.
+  health_fails   INTEGER NOT NULL DEFAULT 0,
+
   submitter      TEXT,
   submitter_note TEXT,
   moderator_note TEXT,
@@ -71,6 +95,9 @@ CREATE INDEX idx_apis_status_created ON apis (status, created_at DESC);
 CREATE INDEX idx_apis_status_score   ON apis (status, (upvotes - downvotes) DESC);
 CREATE INDEX idx_apis_track          ON apis (track, status);
 CREATE INDEX idx_apis_launched       ON apis (track, launched_at DESC);
+CREATE INDEX idx_apis_deprecated     ON apis (deprecated, status);
+-- The uptime checker walks listings oldest-probe-first; this is that ordering.
+CREATE INDEX idx_apis_health_checked ON apis (health_checked_at);
 
 -- One row per (api, voter). Re-voting the same direction deletes the row,
 -- voting the other way updates it in place.
@@ -124,11 +151,15 @@ CREATE TABLE rate_limits (
 
 CREATE INDEX idx_rate_limits_window ON rate_limits (bucket, window_key);
 
--- "Something's wrong with this listing" reports from readers.
+-- "Something's wrong with this listing" reports from readers. 'deprecated' and
+-- 'moved' are the two this directory receives most, so both are first-class
+-- rather than folded into 'other' where nobody would ever count them.
 CREATE TABLE reports (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   api_id     INTEGER NOT NULL REFERENCES apis (id) ON DELETE CASCADE,
-  kind       TEXT    NOT NULL CHECK (kind IN ('dead-link', 'wrong-info', 'duplicate', 'other')),
+  kind       TEXT    NOT NULL CHECK (
+               kind IN ('dead-link', 'deprecated', 'moved', 'wrong-info', 'duplicate', 'other')
+             ),
   message    TEXT    NOT NULL DEFAULT '',
   ip_hash    TEXT,
   resolved   INTEGER NOT NULL DEFAULT 0 CHECK (resolved IN (0, 1)),
@@ -136,3 +167,5 @@ CREATE TABLE reports (
 );
 
 CREATE INDEX idx_reports_open ON reports (resolved, created_at DESC);
+-- The moderation queue groups open reports by listing and kind.
+CREATE INDEX idx_reports_api  ON reports (api_id, kind);

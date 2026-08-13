@@ -11,6 +11,7 @@ import {
   castVote,
   createReport,
   createSubmission,
+  deprecationSignals,
   getListing,
   getRelated,
   listByStatus,
@@ -19,13 +20,16 @@ import {
   queryDirectory,
   recentlyAdded,
   resolveReport,
+  setDeprecated,
   setStatus,
   stats,
 } from './db';
+import { runHealthCheck } from './health';
 import { checkRateLimit, ipHash, pruneRateLimits, readVoterId, requireVoterId } from './voter';
 import { Layout } from './views/layout';
 import { Home } from './views/home';
 import { Detail } from './views/detail';
+import type { DetailNotice } from './views/detail';
 import { Submit } from './views/submit';
 import { About, Admin, ApiDocs, Message } from './views/pages';
 
@@ -125,6 +129,14 @@ function publicListing(env: Env, listing: Listing) {
       score: listing.score,
       confidence: Number(listing.confidence.toFixed(6)),
     },
+    deprecated: listing.deprecated,
+    deprecated_note: listing.deprecated_note,
+    health: {
+      state: listing.health_state,
+      status_code: listing.health_code,
+      checked_at: listing.health_checked_at,
+    },
+    listed_via: listing.source ? { name: listing.source, url: listing.source_url } : null,
     added_at: listing.created_at,
     launched_at: listing.launched_at,
     verified_at: listing.verified_at,
@@ -221,6 +233,16 @@ function detailRoute(track: Track) {
 
     const related = await getRelated(c.env, listing);
 
+    const reported = c.req.query('reported');
+    const notice: DetailNotice =
+      c.req.query('error') === 'rate-limited'
+        ? 'rate-limited'
+        : reported === 'deprecated'
+          ? 'reported-deprecated'
+          : reported
+            ? 'reported'
+            : null;
+
     const jsonLd = {
       '@context': 'https://schema.org',
       '@type': listing.track === 'api' ? 'WebAPI' : 'SoftwareApplication',
@@ -257,7 +279,7 @@ function detailRoute(track: Track) {
         siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
         jsonLd={jsonLd}
       >
-        <Detail listing={listing} related={related} />
+        <Detail listing={listing} related={related} notice={notice} />
       </Layout>,
     );
   };
@@ -326,11 +348,15 @@ const reportHandler = async (c: Context<{ Bindings: Env }>) => {
   if (!allowed) return c.redirect(`${back}?error=rate-limited`, 303);
 
   const kind = String(body.kind ?? 'other');
-  const valid = ['dead-link', 'wrong-info', 'duplicate', 'other'].includes(kind) ? kind : 'other';
+  const valid = ['dead-link', 'deprecated', 'moved', 'wrong-info', 'duplicate', 'other'].includes(
+    kind,
+  )
+    ? kind
+    : 'other';
 
   await createReport(c.env, listing.id, valid, String(body.message ?? ''), hash);
 
-  return c.redirect(`${back}?reported=1`, 303);
+  return c.redirect(`${back}?reported=${valid === 'deprecated' ? 'deprecated' : '1'}`, 303);
 };
 
 app.post('/apis/:slug/report', reportHandler);
@@ -765,9 +791,11 @@ app.get('/admin', async (c) => {
   const token = adminToken(c);
   if (!adminOk(c.env, token)) return c.text('Not authorised', 401);
 
-  const [pending, reports] = await Promise.all([
+  const [pending, reports, signals, counts] = await Promise.all([
     listByStatus(c.env, 'pending'),
     listOpenReports(c.env),
+    deprecationSignals(c.env),
+    stats(c.env),
   ]);
 
   return c.html(
@@ -778,7 +806,13 @@ app.get('/admin', async (c) => {
       siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
       noindex
     >
-      <Admin pending={pending} reports={reports} token={token} />
+      <Admin
+        pending={pending}
+        reports={reports}
+        signals={signals}
+        stats={counts}
+        token={token}
+      />
     </Layout>,
   );
 });
@@ -801,6 +835,31 @@ app.post('/admin/verify', async (c) => {
   if (!adminOk(c.env, token)) return c.text('Not authorised', 401);
 
   await markVerified(c.env, String(body.slug ?? ''));
+  return c.redirect(`/admin?token=${encodeURIComponent(token)}`, 303);
+});
+
+app.post('/admin/deprecate', async (c) => {
+  const body = await c.req.parseBody();
+  const token = String(body.token ?? '') || adminToken(c);
+  if (!adminOk(c.env, token)) return c.text('Not authorised', 401);
+
+  await setDeprecated(
+    c.env,
+    String(body.slug ?? ''),
+    body.deprecated === '1',
+    String(body.note ?? '').slice(0, 500) || null,
+  );
+  return c.redirect(`/admin?token=${encodeURIComponent(token)}`, 303);
+});
+
+/** Runs a batch of uptime probes on demand; the cron does the same on a timer. */
+app.post('/admin/health', async (c) => {
+  const body = await c.req.parseBody();
+  const token = String(body.token ?? '') || adminToken(c);
+  if (!adminOk(c.env, token)) return c.text('Not authorised', 401);
+
+  const outcome = await runHealthCheck(c.env);
+  if (wantsJson(c)) return c.json(outcome);
   return c.redirect(`/admin?token=${encodeURIComponent(token)}`, 303);
 });
 
@@ -862,4 +921,22 @@ app.onError((err, c) => {
   );
 });
 
-export default app;
+export default {
+  fetch: app.fetch,
+
+  /**
+   * Cron entry point. Probes a batch of listings so the directory notices when
+   * something it points at stops answering — see src/health.ts for why one
+   * failed probe is not treated as an outage.
+   */
+  async scheduled(_event: ScheduledController, env: Env, ctx: ExecutionContext) {
+    ctx.waitUntil(
+      (async () => {
+        const outcome = await runHealthCheck(env);
+        console.log(
+          `health: checked ${outcome.checked}, up ${outcome.up}, down ${outcome.down}, unknown ${outcome.unknown}`,
+        );
+      })(),
+    );
+  },
+} satisfies ExportedHandler<Env>;

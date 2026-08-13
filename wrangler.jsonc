@@ -27,6 +27,13 @@
     }
   ],
 
+  // Uptime checks. Every six hours, offset off the hour so it does not land in
+  // the same minute as everyone else's cron. Each run probes a batch of the
+  // least-recently-checked listings; see src/health.ts.
+  "triggers": {
+    "crons": ["17 */6 * * *"]
+  },
+
   "vars": {
     "SITE_URL": "https://catholicapis.com",
     "SITE_NAME": "Catholic APIs"

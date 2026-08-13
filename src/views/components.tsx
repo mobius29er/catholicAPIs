@@ -1,5 +1,5 @@
 import type { FC } from 'hono/jsx';
-import type { Filters, Listing, Sort, Track } from '../types';
+import type { Filters, HealthState, Listing, Sort, Track } from '../types';
 import { listingPath } from '../types';
 import type { FacetCount } from '../db';
 import { LogoMark, Monogram, SpotlightBeam, TopicIcon } from './art';
@@ -105,6 +105,90 @@ function toggleUrl(filters: Filters, key: string, current: string[], value: stri
   return buildQuery(filters, { [key]: next, page: 1 });
 }
 
+/* --------------------------------------------------------------- health --- */
+
+export const HEALTH_LABELS: Record<HealthState, string> = {
+  up: 'Responding',
+  down: 'Not responding',
+  unknown: 'Not checked yet',
+};
+
+/** Coarse "N ago", in the largest unit that is still true. */
+export function timeAgo(iso: string | null, now: number = Date.now()): string | null {
+  if (!iso) return null;
+  const then = new Date(iso.endsWith('Z') ? iso : `${iso}Z`).getTime();
+  if (Number.isNaN(then)) return null;
+
+  const seconds = Math.max(0, Math.round((now - then) / 1000));
+  const units: Array<[number, string]> = [
+    [86_400 * 30, 'month'],
+    [86_400 * 7, 'week'],
+    [86_400, 'day'],
+    [3_600, 'hour'],
+    [60, 'minute'],
+  ];
+
+  for (const [size, name] of units) {
+    const n = Math.floor(seconds / size);
+    if (n >= 1) return `${n} ${name}${n === 1 ? '' : 's'} ago`;
+  }
+  return 'just now';
+}
+
+/**
+ * The uptime indicator.
+ *
+ * On a dense list we only draw the dot when we actually know something. Most
+ * listings sit at `unknown` until the cron has walked round to them, and a
+ * column of grey rings claiming nothing would be pure noise — so rows stay
+ * silent and the detail page (`verbose`) is where "not checked yet" is said
+ * out loud.
+ */
+export const HealthDot: FC<{ listing: Listing; verbose?: boolean }> = ({ listing, verbose }) => {
+  const state = listing.health_state;
+  if (!verbose && state !== 'down' && state !== 'up') return null;
+
+  const checked = timeAgo(listing.health_checked_at);
+  const detail =
+    state === 'unknown'
+      ? 'No successful check yet'
+      : `${HEALTH_LABELS[state]}${listing.health_code ? ` · HTTP ${listing.health_code}` : ''}${
+          checked ? ` · checked ${checked}` : ''
+        }`;
+
+  return (
+    <span class={`health health-${state}`} title={detail}>
+      <span class="health-dot" aria-hidden="true" />
+      <span class={verbose ? undefined : 'visually-hidden'}>{HEALTH_LABELS[state]}</span>
+      {verbose && checked && <small class="health-when">checked {checked}</small>}
+    </span>
+  );
+};
+
+/* ---------------------------------------------------------- attribution --- */
+
+/**
+ * Credit for the list a listing was imported from. These directories did the
+ * legwork years before this site existed; the least we can do is say so on the
+ * listing itself rather than burying it on an about page.
+ */
+export const SourceCredit: FC<{ listing: Listing }> = ({ listing }) => {
+  if (!listing.source) return null;
+
+  return (
+    <span class="credit">
+      Listed via{' '}
+      {listing.source_url ? (
+        <a href={listing.source_url} rel="nofollow noopener" target="_blank">
+          {listing.source}
+        </a>
+      ) : (
+        listing.source
+      )}
+    </span>
+  );
+};
+
 /* ----------------------------------------------------------------- vote --- */
 
 export const VoteWidget: FC<{ listing: Listing; large?: boolean }> = ({ listing, large }) => {
@@ -198,7 +282,7 @@ export const ListingRow: FC<{ listing: Listing; rank: number; rankNote?: string 
   const publisher = publisherOf(listing.homepage_url);
 
   return (
-    <li class="row">
+    <li class={listing.deprecated ? 'row is-deprecated' : 'row'}>
       <div class="row-rank" aria-hidden="true">
         <span class="row-rank-number">{rank}</span>
         {rankNote && <span class="row-rank-note">{rankNote}</span>}
@@ -212,6 +296,7 @@ export const ListingRow: FC<{ listing: Listing; rank: number; rankNote?: string 
         <h3 class="row-name">
           <a href={href}>{listing.name}</a>
           {listing.isNew && <span class="flash">Just launched</span>}
+          {listing.deprecated && <span class="flash flash-dead">Deprecated</span>}
         </h3>
         <p class="row-tagline">{listing.tagline}</p>
 
@@ -235,6 +320,7 @@ export const ListingRow: FC<{ listing: Listing; rank: number; rankNote?: string 
           </a>
           <small class={`row-price price-${listing.pricing}`}>
             {PRICING_LABELS[listing.pricing]}
+            <HealthDot listing={listing} />
           </small>
         </span>
       </div>

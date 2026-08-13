@@ -9,7 +9,7 @@
 // migration number: the statements are upserts keyed on `slug`, so they patch
 // existing rows in place and leave votes, status and timestamps alone.
 
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -19,6 +19,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DEFAULT_JOBS = [
   { input: 'data/seed.json', output: 'migrations/0002_seed.sql' },
   { input: 'data/products.json', output: 'migrations/0003_products.sql' },
+  { input: 'data/imported.json', output: 'migrations/0004_imported.sql' },
 ];
 
 const KINDS = new Set(['api', 'dataset', 'library', 'mcp']);
@@ -90,6 +91,10 @@ const COLUMNS = [
   'categories',
   'languages',
   'status',
+  'deprecated',
+  'deprecated_note',
+  'source',
+  'source_url',
 ];
 
 // Everything except identity and moderation state gets refreshed on conflict.
@@ -99,6 +104,11 @@ const UPDATABLE = COLUMNS.filter((c) => c !== 'slug' && c !== 'status');
 function buildMigration(job) {
   const inputPath = resolve(root, job.input);
   const outPath = resolve(root, job.output);
+
+  if (!existsSync(inputPath)) {
+    console.log(`   skipped ${job.input} (not present)`);
+    return;
+  }
 
   const parsed = JSON.parse(readFileSync(inputPath, 'utf8'));
   // `apis` is the original key; `listings` is the general one. Accept either.
@@ -134,6 +144,10 @@ function buildMigration(job) {
       categories: JSON.stringify(listing.categories),
       languages: JSON.stringify(listing.languages ?? []),
       status: 'published',
+      deprecated: listing.deprecated ? 1 : 0,
+      deprecated_note: listing.deprecated_note ?? null,
+      source: listing.source ?? null,
+      source_url: listing.source_url ?? null,
     };
 
     const values = COLUMNS.map((c) => sql(row[c])).join(', ');

@@ -4,11 +4,14 @@ import { listingPath } from '../types';
 import {
   AUTH_LABELS,
   Badges,
+  HealthDot,
   KIND_LABELS,
   PLATFORM_LABELS,
   PRICING_LABELS,
+  SourceCredit,
   VoteWidget,
   languageName,
+  timeAgo,
 } from './components';
 
 const formatDate = (iso: string | null): string => {
@@ -33,10 +36,33 @@ const Row: FC<{ label: string; children?: unknown }> = ({ label, children }) => 
   </div>
 );
 
-export const Detail: FC<{ listing: Listing; related: Listing[] }> = ({ listing, related }) => {
+/** What just happened, if the visitor arrived here from a form post. */
+export type DetailNotice = 'reported' | 'reported-deprecated' | 'rate-limited' | null;
+
+const NOTICES: Record<Exclude<DetailNotice, null>, { tone: string; text: string }> = {
+  reported: {
+    tone: 'notice-ok',
+    text: 'Thanks — the report is in the moderation queue.',
+  },
+  'reported-deprecated': {
+    tone: 'notice-ok',
+    text: "Thanks — we've logged this as deprecated. A moderator will check it and flag the listing.",
+  },
+  'rate-limited': {
+    tone: 'notice-warn',
+    text: 'Too many requests from your address just now. Try again in a little while.',
+  },
+};
+
+export const Detail: FC<{ listing: Listing; related: Listing[]; notice?: DetailNotice }> = ({
+  listing,
+  related,
+  notice,
+}) => {
   const isApi = listing.track === 'api';
   const root = isApi ? '/apis' : '/';
   const path = listingPath(listing);
+  const noticeCopy = notice ? NOTICES[notice] : null;
 
   return (
   <article class="wrap detail">
@@ -49,6 +75,12 @@ export const Detail: FC<{ listing: Listing; related: Listing[] }> = ({ listing, 
       <span aria-hidden="true">/</span>
       <span aria-current="page">{listing.name}</span>
     </nav>
+
+    {noticeCopy && (
+      <p class={`notice ${noticeCopy.tone}`} role="status">
+        {noticeCopy.text}
+      </p>
+    )}
 
     <header class="detail-head">
       <VoteWidget listing={listing} large />
@@ -63,12 +95,43 @@ export const Detail: FC<{ listing: Listing; related: Listing[] }> = ({ listing, 
       </div>
     </header>
 
+    {/*
+      Deprecated listings stay published on purpose. Someone searching for a
+      project that died deserves to find out that it died, and what replaced it
+      — deleting the page would just send them round the same loop again.
+    */}
+    {listing.deprecated && (
+      <aside class="banner banner-dead" role="note">
+        <strong>This one is no longer maintained.</strong>{' '}
+        {listing.deprecated_note ??
+          'It is kept here so the trail does not go cold, but do not build anything new on it.'}
+      </aside>
+    )}
+
+    {!listing.deprecated && listing.health_state === 'down' && (
+      <aside class="banner banner-down" role="note">
+        <strong>Not responding.</strong> The last {' '}
+        {listing.health_fails === 1 ? 'check' : `${listing.health_fails} checks`} of{' '}
+        {hostOf(listing.homepage_url)} failed
+        {listing.health_code ? ` (HTTP ${listing.health_code})` : ''}
+        {timeAgo(listing.health_checked_at) ? `, most recently ${timeAgo(listing.health_checked_at)}` : ''}
+        . It may be a temporary outage — or the project may be gone.
+      </aside>
+    )}
+
     <div class="detail-grid">
       <div class="detail-main">
-        <section>
-          <h2 class="visually-hidden">Description</h2>
-          <p class="prose">{listing.description || listing.tagline}</p>
-        </section>
+        {/*
+          Imported listings often arrive with a one-line description identical
+          to the tagline. Printing it twice reads as a rendering bug, so the
+          section only appears when it has something new to say.
+        */}
+        {listing.description && listing.description !== listing.tagline && (
+          <section>
+            <h2 class="visually-hidden">Description</h2>
+            <p class="prose">{listing.description}</p>
+          </section>
+        )}
 
         <section class="cta-row">
           <a class="btn btn-primary" href={listing.homepage_url} rel="nofollow noopener" target="_blank">
@@ -98,13 +161,34 @@ export const Detail: FC<{ listing: Listing; related: Listing[] }> = ({ listing, 
         <section class="report">
           <h2>Something wrong?</h2>
           <p class="muted">
-            Links rot and projects get abandoned. Tell us and we'll fix or unpublish the listing.
+            Links rot and projects get abandoned. Tell us and we'll flag, fix or unpublish the
+            listing.
           </p>
+
+          {/*
+            The one-click path. Knowing a project is dead is the single most
+            common correction, and making someone fill in a form to say so is
+            how directories end up full of ghosts.
+          */}
+          {!listing.deprecated && (
+            <form method="post" action={`${path}/report`} class="report-quick">
+              <input type="hidden" name="kind" value="deprecated" />
+              <button type="submit" class="btn btn-warn">
+                ⚑ Report as deprecated
+              </button>
+              <span class="muted small">
+                One click. Use this if {listing.name} is abandoned, dead or has been superseded.
+              </span>
+            </form>
+          )}
+
           <form method="post" action={`${path}/report`} class="report-form">
             <div class="field">
               <label for="report-kind">What's wrong</label>
               <select id="report-kind" name="kind" required>
                 <option value="dead-link">The link is dead</option>
+                <option value="deprecated">Abandoned or no longer maintained</option>
+                <option value="moved">It has moved somewhere else</option>
                 <option value="wrong-info">Details are wrong or out of date</option>
                 <option value="duplicate">Duplicate of another listing</option>
                 <option value="other">Something else</option>
@@ -189,6 +273,21 @@ export const Detail: FC<{ listing: Listing; related: Listing[] }> = ({ listing, 
               <span class="muted">Not yet verified by a maintainer</span>
             )}
           </Row>
+          <Row label="Status">
+            {listing.deprecated ? (
+              <span class="health health-down">
+                <span class="health-dot" aria-hidden="true" />
+                Deprecated
+              </span>
+            ) : (
+              <HealthDot listing={listing} verbose />
+            )}
+          </Row>
+          {listing.source && (
+            <Row label="Found in">
+              <SourceCredit listing={listing} />
+            </Row>
+          )}
         </dl>
 
         <p class="muted small">

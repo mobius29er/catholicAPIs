@@ -24,6 +24,7 @@ Cloudflare Worker (Hono, SSR)  ──  D1 (SQLite)
         ├─ /submit  moderated queue
         ├─ /admin   moderation
         └─ /api/v1  public JSON API
+Cron (every 6h) ──────────────▶  uptime probes, oldest check first
 Static assets (public/) served from the edge, never touching the Worker.
 ```
 
@@ -80,7 +81,7 @@ and wraps its ornament in ordinary rounded card UI.
 ```bash
 npm install
 npx wrangler d1 create catholic-apis     # paste the printed id into wrangler.jsonc
-npm run db:migrate:local                 # schema + 44 seed listings across both tracks
+npm run db:migrate:local                 # schema + 218 seed listings across both tracks
 cp .dev.vars.example .dev.vars
 npm run dev                              # http://127.0.0.1:8787
 ```
@@ -157,7 +158,7 @@ while leaving votes and moderation state alone.
 
 > D1 runs each migration exactly once, so editing an already-applied migration does nothing. To
 > correct a listing after launch: edit the source file, then
-> `node scripts/build-seed.mjs data/seed.json migrations/0004_fix.sql` and apply that.
+> `node scripts/build-seed.mjs data/seed.json migrations/0005_fix.sql` and apply that.
 
 `launched_at` is null on every seeded product. We know roughly when most of them appeared but not
 precisely, and a launch feed built on invented dates is worse than one built on when a listing
@@ -170,6 +171,57 @@ page shows it, and every listing has a report button because links rot.
 ```bash
 npm run links:check   # probes every URL in both source files, exits 1 on any dead link
 ```
+
+### Imported lists, and crediting them
+
+Most of the directory did not start here. Two community lists were compiling Catholic software
+long before this site existed, and 174 of the listings came from them:
+
+| List | Entries used | Licence |
+| --- | --- | --- |
+| [CatholicOS/awesome-catholic](https://github.com/CatholicOS/awesome-catholic) | the larger share, incl. its "Attic" of retired projects | **none stated** |
+| [servusdei2018/awesome-catholic](https://github.com/servusdei2018/awesome-catholic) | the remainder | CC0-1.0 |
+
+CC0 makes reuse unambiguous. CatholicOS ships no `LICENSE`, so we took only the facts — name, URL,
+which section it sat in — credited the list on every row it gave us, and wrote our own wording.
+Worth asking them to add CC0; it would settle the question for everyone downstream.
+
+```bash
+node scripts/import-awesome.mjs           # fetch, parse, merge, report — writes nothing
+node scripts/import-awesome.mjs --write   # write data/imported.json
+npm run seed:build                        # -> migrations/0004_imported.sql
+```
+
+The importer keys entries by identity rather than by name (`gh:owner/repo` for GitHub, host+path
+for app stores, host otherwise), so the same project listed twice under different titles merges
+into one row. Where the lists disagree — one retiring a project the other still recommends — the
+retirement wins and the disagreement is recorded in `deprecated_note`. A false *alive* costs a
+reader more than a false *dead*.
+
+### Deprecation and uptime
+
+Two different questions, deliberately kept apart from `status`:
+
+**`deprecated`** is a human judgement, and a deprecated listing stays **published**. Hiding it
+would only send the next person round the same search that just brought them here; instead the row
+is struck through in the list and the detail page opens with a banner saying what happened. The
+idea is borrowed straight from the upstream "Attic". Readers flag candidates with a one-click
+**report as deprecated** button; a moderator makes the call.
+
+**`health_state`** is machine-measured. A cron trigger (`triggers.crons` in `wrangler.jsonc`, every
+six hours) runs `runHealthCheck()` over a batch of 25 listings, least-recently-checked first, and
+probes each homepage — `HEAD`, falling back to `GET`, since plenty of hosts reject `HEAD` outright.
+Two rules keep it honest:
+
+- **One failure is not an outage.** State only flips to `down` after three consecutive failures;
+  below that it reads `unknown`, not `up` — we genuinely don't know, and saying "fine" would be the
+  same overconfidence the threshold exists to prevent.
+- **401/403/405/406/429 don't count.** That is a server refusing *us*, not a server that is down.
+  Counting bot protection as an outage would paint healthy sites red.
+
+In the list, the dot only appears once we know something; `unknown` stays silent rather than
+printing a column of grey rings that claim nothing. The detail page says "not checked yet" out
+loud. `POST /admin/health` runs a batch on demand.
 
 ## The directory is itself an API
 
@@ -188,6 +240,11 @@ Submissions land as `status = 'pending'` and are invisible everywhere public —
 JSON API, the sitemap, and their own detail page all 404. Review at `/admin?token=$ADMIN_TOKEN`:
 publish, reject, mark verified, or dismiss a report.
 
+The same screen carries a **possibly dead** queue — everything readers have reported as dead plus
+everything the uptime probe has given up on — with a flag/un-flag button per row and a button to
+run a batch of probes on the spot. The machine never flags anything on its own; three failed probes
+and a pile of reports are evidence, not a verdict.
+
 ## Layout
 
 | Path | What's in it |
@@ -195,11 +252,13 @@ publish, reject, mark verified, or dismiss a report.
 | `src/index.tsx` | Every route: pages, voting, submissions, JSON API, feeds, moderation |
 | `src/db.ts` | D1 queries, track filtering, faceting, vote transactions |
 | `src/ranking.ts` | Wilson score, gravity decay, sort orders — pure and tested |
+| `src/health.ts` | Uptime probing and the down/unknown escalation rule |
 | `src/voter.ts` | Signed voter cookies, IP hashing, rate limits |
 | `src/views/` | Server-rendered JSX, shared by both tracks |
 | `public/styles.css` | The whole design system, hand-written |
 | `migrations/` | D1 schema and seed |
-| `data/*.json` | The listings themselves |
+| `data/*.json` | The listings themselves, incl. `imported.json` from the awesome lists |
+| `scripts/import-awesome.mjs` | Fetches and merges the upstream awesome-catholic lists |
 
 ## Notes on the implementation
 
@@ -224,10 +283,10 @@ before first paint so the theme never flashes.
 
 ```bash
 npm run dev              # local Worker + local D1
-npm test                 # vitest — ranking and query-string round-trips
+npm test                 # vitest — ranking, query strings, uptime escalation
 npm run typecheck        # tsc --noEmit
 npm run db:reset:local   # wipe local D1 and re-migrate
-npm run seed:build       # data/seed.json -> migrations/0002_seed.sql
+npm run seed:build       # data/*.json -> migrations/0002-0004
 npm run links:check      # check every seed URL still resolves
 ```
 

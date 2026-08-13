@@ -10,6 +10,8 @@ export type Pricing = 'free' | 'freemium' | 'paid';
 export type Auth = 'none' | 'api-key' | 'oauth' | 'unknown';
 export type Cors = 'yes' | 'no' | 'unknown';
 export type Status = 'pending' | 'published' | 'rejected';
+/** Result of the scheduled uptime probe. See src/health.ts. */
+export type HealthState = 'unknown' | 'up' | 'down';
 export type Sort = 'top' | 'trending' | 'new' | 'name';
 
 /** A row of `apis` exactly as D1 returns it. JSON columns are still strings. */
@@ -45,14 +47,25 @@ export interface ApiRow {
   created_at: string;
   updated_at: string;
   verified_at: string | null;
+  /** Which upstream list this came from, if any. Credited on the listing. */
+  source: string | null;
+  source_url: string | null;
+  /** Still published, but visibly flagged as dead or superseded. */
+  deprecated: number;
+  deprecated_note: string | null;
+  health_state: HealthState;
+  health_code: number | null;
+  health_checked_at: string | null;
+  health_fails: number;
 }
 
 /** An `ApiRow` with JSON columns parsed and derived vote figures attached. */
 export interface Listing
   extends Omit<
     ApiRow,
-    'categories' | 'languages' | 'platforms' | 'open_source' | 'official'
+    'categories' | 'languages' | 'platforms' | 'open_source' | 'official' | 'deprecated'
   > {
+  deprecated: boolean;
   categories: string[];
   languages: string[];
   platforms: Platform[];

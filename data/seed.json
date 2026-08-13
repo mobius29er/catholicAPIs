@@ -11,7 +11,9 @@
     "before stamping verified_at via the admin queue.",
     "",
     "Fields left null mean 'we have not confirmed this', not 'no'. Please keep it",
-    "that way: a wrong 'free' label is worse for a reader than an honest blank."
+    "that way: a wrong 'free' label is worse for a reader than an honest blank.",
+    "",
+    "Some entries carry deprecated: 1 because an upstream awesome-catholic list moved them to its Attic. They stay published and visibly flagged rather than vanishing — someone searching for a dead project should learn that it died."
   ],
   "apis": [
     {
@@ -29,8 +31,17 @@
       "auth": "none",
       "cors": "unknown",
       "official": 0,
-      "categories": ["Liturgical Calendar", "Saints"],
-      "languages": ["en", "cs", "fr", "it", "la"]
+      "categories": [
+        "Liturgical Calendar",
+        "Saints"
+      ],
+      "languages": [
+        "en",
+        "cs",
+        "fr",
+        "it",
+        "la"
+      ]
     },
     {
       "slug": "litcal-api",
@@ -47,8 +58,19 @@
       "auth": "none",
       "cors": "unknown",
       "official": 0,
-      "categories": ["Liturgical Calendar"],
-      "languages": ["en", "it", "la", "es", "fr", "de", "pt", "nl"]
+      "categories": [
+        "Liturgical Calendar"
+      ],
+      "languages": [
+        "en",
+        "it",
+        "la",
+        "es",
+        "fr",
+        "de",
+        "pt",
+        "nl"
+      ]
     },
     {
       "slug": "catholic-readings-api",
@@ -65,8 +87,14 @@
       "auth": "none",
       "cors": "yes",
       "official": 0,
-      "categories": ["Daily Readings", "Saints", "Liturgical Calendar"],
-      "languages": ["en"]
+      "categories": [
+        "Daily Readings",
+        "Saints",
+        "Liturgical Calendar"
+      ],
+      "languages": [
+        "en"
+      ]
     },
     {
       "slug": "aelf-api",
@@ -83,8 +111,13 @@
       "auth": "none",
       "cors": "unknown",
       "official": 1,
-      "categories": ["Daily Readings", "Liturgy of the Hours"],
-      "languages": ["fr"]
+      "categories": [
+        "Daily Readings",
+        "Liturgy of the Hours"
+      ],
+      "languages": [
+        "fr"
+      ]
     },
     {
       "slug": "divine-office-json",
@@ -101,8 +134,13 @@
       "auth": "unknown",
       "cors": "unknown",
       "official": 0,
-      "categories": ["Liturgy of the Hours", "Daily Readings"],
-      "languages": ["en"]
+      "categories": [
+        "Liturgy of the Hours",
+        "Daily Readings"
+      ],
+      "languages": [
+        "en"
+      ]
     },
     {
       "slug": "magisterium-ai-api",
@@ -119,8 +157,20 @@
       "auth": "api-key",
       "cors": "unknown",
       "official": 0,
-      "categories": ["AI & Search", "Church Documents", "Catechism & Doctrine"],
-      "languages": ["en", "es", "fr", "it", "pt", "de", "pl"]
+      "categories": [
+        "AI & Search",
+        "Church Documents",
+        "Catechism & Doctrine"
+      ],
+      "languages": [
+        "en",
+        "es",
+        "fr",
+        "it",
+        "pt",
+        "de",
+        "pl"
+      ]
     },
     {
       "slug": "api-bible",
@@ -137,8 +187,18 @@
       "auth": "api-key",
       "cors": "unknown",
       "official": 1,
-      "categories": ["Bible"],
-      "languages": ["en", "es", "fr", "pt", "de", "it", "la"]
+      "categories": [
+        "Bible"
+      ],
+      "languages": [
+        "en",
+        "es",
+        "fr",
+        "pt",
+        "de",
+        "it",
+        "la"
+      ]
     },
     {
       "slug": "bibleget-io",
@@ -155,8 +215,18 @@
       "auth": "none",
       "cors": "unknown",
       "official": 0,
-      "categories": ["Bible"],
-      "languages": ["en", "it", "es", "fr", "pt", "de", "la"]
+      "categories": [
+        "Bible"
+      ],
+      "languages": [
+        "en",
+        "it",
+        "es",
+        "fr",
+        "pt",
+        "de",
+        "la"
+      ]
     },
     {
       "slug": "biblia-sacra-vulgata",
@@ -173,8 +243,15 @@
       "auth": "none",
       "cors": "unknown",
       "official": 0,
-      "categories": ["Bible"],
-      "languages": ["la", "en"]
+      "categories": [
+        "Bible"
+      ],
+      "languages": [
+        "la",
+        "en"
+      ],
+      "deprecated": 1,
+      "deprecated_note": "Moved to the Attic of Awesome-Catholic (CatholicOS), which considers it dead or superseded. Still carried by the servusdei2018 list, so treat with caution rather than as confirmed dead."
     },
     {
       "slug": "wldeh-bible-api",
@@ -191,8 +268,17 @@
       "auth": "none",
       "cors": "yes",
       "official": 0,
-      "categories": ["Bible"],
-      "languages": ["en", "es", "fr", "pt", "de", "la"]
+      "categories": [
+        "Bible"
+      ],
+      "languages": [
+        "en",
+        "es",
+        "fr",
+        "pt",
+        "de",
+        "la"
+      ]
     },
     {
       "slug": "matos-soares-biblia-api",
@@ -209,8 +295,12 @@
       "auth": "none",
       "cors": "unknown",
       "official": 0,
-      "categories": ["Bible"],
-      "languages": ["pt"]
+      "categories": [
+        "Bible"
+      ],
+      "languages": [
+        "pt"
+      ]
     },
     {
       "slug": "liturgia-diaria",
@@ -227,8 +317,12 @@
       "auth": "none",
       "cors": "unknown",
       "official": 0,
-      "categories": ["Daily Readings"],
-      "languages": ["pt"]
+      "categories": [
+        "Daily Readings"
+      ],
+      "languages": [
+        "pt"
+      ]
     },
     {
       "slug": "lumen-impulse",
@@ -245,8 +339,15 @@
       "auth": "none",
       "cors": "unknown",
       "official": 0,
-      "categories": ["Daily Readings", "AI & Search"],
-      "languages": ["de", "en", "pl"]
+      "categories": [
+        "Daily Readings",
+        "AI & Search"
+      ],
+      "languages": [
+        "de",
+        "en",
+        "pl"
+      ]
     },
     {
       "slug": "catholic-prayers-api",
@@ -263,8 +364,12 @@
       "auth": "none",
       "cors": "unknown",
       "official": 0,
-      "categories": ["Prayers"],
-      "languages": ["en"]
+      "categories": [
+        "Prayers"
+      ],
+      "languages": [
+        "en"
+      ]
     },
     {
       "slug": "caminho-api",
@@ -281,8 +386,12 @@
       "auth": "none",
       "cors": "unknown",
       "official": 0,
-      "categories": ["Spiritual Reading"],
-      "languages": ["pt"]
+      "categories": [
+        "Spiritual Reading"
+      ],
+      "languages": [
+        "pt"
+      ]
     },
     {
       "slug": "geomesse-api",
@@ -299,8 +408,15 @@
       "auth": "unknown",
       "cors": "unknown",
       "official": 0,
-      "categories": ["Mass Times"],
-      "languages": ["fr", "en"]
+      "categories": [
+        "Mass Times"
+      ],
+      "languages": [
+        "fr",
+        "en"
+      ],
+      "deprecated": 1,
+      "deprecated_note": "Moved to the Attic of Awesome-Catholic (CatholicOS), which considers it dead or superseded. Still carried by the servusdei2018 list, so treat with caution rather than as confirmed dead."
     },
     {
       "slug": "motivational-api",
@@ -317,8 +433,13 @@
       "auth": "none",
       "cors": "unknown",
       "official": 0,
-      "categories": ["Quotes"],
-      "languages": ["en", "es"]
+      "categories": [
+        "Quotes"
+      ],
+      "languages": [
+        "en",
+        "es"
+      ]
     },
     {
       "slug": "sanctum-ipsum",
@@ -335,8 +456,14 @@
       "auth": "none",
       "cors": "unknown",
       "official": 0,
-      "categories": ["Developer Tools", "Quotes"],
-      "languages": ["en", "la"]
+      "categories": [
+        "Developer Tools",
+        "Quotes"
+      ],
+      "languages": [
+        "en",
+        "la"
+      ]
     },
     {
       "slug": "tamil-bible-database",
@@ -353,8 +480,12 @@
       "auth": "none",
       "cors": "unknown",
       "official": 0,
-      "categories": ["Bible"],
-      "languages": ["ta"]
+      "categories": [
+        "Bible"
+      ],
+      "languages": [
+        "ta"
+      ]
     },
     {
       "slug": "liturgical-calendar-mcp",
@@ -371,8 +502,13 @@
       "auth": "none",
       "cors": "unknown",
       "official": 0,
-      "categories": ["Liturgical Calendar", "AI & Search"],
-      "languages": ["en"]
+      "categories": [
+        "Liturgical Calendar",
+        "AI & Search"
+      ],
+      "languages": [
+        "en"
+      ]
     },
     {
       "slug": "romcal",
@@ -389,8 +525,19 @@
       "auth": "none",
       "cors": "unknown",
       "official": 0,
-      "categories": ["Liturgical Calendar"],
-      "languages": ["en", "fr", "es", "it", "pt", "pl", "cs", "sk"]
+      "categories": [
+        "Liturgical Calendar"
+      ],
+      "languages": [
+        "en",
+        "fr",
+        "es",
+        "it",
+        "pt",
+        "pl",
+        "cs",
+        "sk"
+      ]
     },
     {
       "slug": "catechism-ccc-json",
@@ -407,8 +554,14 @@
       "auth": "none",
       "cors": "unknown",
       "official": 0,
-      "categories": ["Catechism & Doctrine"],
-      "languages": ["en"]
+      "categories": [
+        "Catechism & Doctrine"
+      ],
+      "languages": [
+        "en"
+      ],
+      "deprecated": 1,
+      "deprecated_note": "Moved to the Attic of Awesome-Catholic (CatholicOS), which considers it dead or superseded. Still carried by the servusdei2018 list, so treat with caution rather than as confirmed dead."
     },
     {
       "slug": "catholicism-in-json",
@@ -425,8 +578,16 @@
       "auth": "none",
       "cors": "unknown",
       "official": 0,
-      "categories": ["Catechism & Doctrine", "Canon Law", "Church Documents"],
-      "languages": ["en"]
+      "categories": [
+        "Catechism & Doctrine",
+        "Canon Law",
+        "Church Documents"
+      ],
+      "languages": [
+        "en"
+      ],
+      "deprecated": 1,
+      "deprecated_note": "Moved to the Attic of Awesome-Catholic (CatholicOS), which considers it dead or superseded. Still carried by the servusdei2018 list, so treat with caution rather than as confirmed dead."
     },
     {
       "slug": "vulgata-dataset",
@@ -443,8 +604,15 @@
       "auth": "none",
       "cors": "unknown",
       "official": 0,
-      "categories": ["Bible"],
-      "languages": ["la", "en"]
+      "categories": [
+        "Bible"
+      ],
+      "languages": [
+        "la",
+        "en"
+      ],
+      "deprecated": 1,
+      "deprecated_note": "Moved to the Attic of Awesome-Catholic (CatholicOS), which considers it dead or superseded. Still carried by the servusdei2018 list, so treat with caution rather than as confirmed dead."
     },
     {
       "slug": "cardinals-json",
@@ -461,8 +629,12 @@
       "auth": "none",
       "cors": "unknown",
       "official": 0,
-      "categories": ["Church Data"],
-      "languages": ["en"]
+      "categories": [
+        "Church Data"
+      ],
+      "languages": [
+        "en"
+      ]
     },
     {
       "slug": "aquinas-opera-omnia",
@@ -479,8 +651,14 @@
       "auth": "none",
       "cors": "unknown",
       "official": 0,
-      "categories": ["Spiritual Reading", "Catechism & Doctrine"],
-      "languages": ["la", "en"]
+      "categories": [
+        "Spiritual Reading",
+        "Catechism & Doctrine"
+      ],
+      "languages": [
+        "la",
+        "en"
+      ]
     },
     {
       "slug": "romanus-roman-catechism",
@@ -497,8 +675,12 @@
       "auth": "none",
       "cors": "unknown",
       "official": 0,
-      "categories": ["Catechism & Doctrine"],
-      "languages": ["en"]
+      "categories": [
+        "Catechism & Doctrine"
+      ],
+      "languages": [
+        "en"
+      ]
     },
     {
       "slug": "divinum-officium",
@@ -515,8 +697,18 @@
       "auth": "none",
       "cors": "unknown",
       "official": 0,
-      "categories": ["Liturgy of the Hours", "Traditional Latin Mass"],
-      "languages": ["la", "en", "it", "de", "hu", "pl"]
+      "categories": [
+        "Liturgy of the Hours",
+        "Traditional Latin Mass"
+      ],
+      "languages": [
+        "la",
+        "en",
+        "it",
+        "de",
+        "hu",
+        "pl"
+      ]
     }
   ]
 }

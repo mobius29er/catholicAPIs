@@ -1,5 +1,14 @@
 import { sortListings, wilsonLowerBound } from './ranking';
-import type { ApiRow, Env, Filters, Listing, Platform, Status, Track } from './types';
+import type {
+  ApiRow,
+  Env,
+  Filters,
+  HealthState,
+  Listing,
+  Platform,
+  Status,
+  Track,
+} from './types';
 
 /** How far back "trending" looks when counting votes. */
 const TRENDING_WINDOW_DAYS = 14;
@@ -42,6 +51,7 @@ export function toListing(
     platforms: parseJsonArray(row.platforms) as Platform[],
     open_source: row.open_source === 1,
     official: row.official === 1,
+    deprecated: row.deprecated === 1,
     score: row.upvotes - row.downvotes,
     confidence: wilsonLowerBound(row.upvotes, row.downvotes),
     recent: votes.recent ?? 0,
@@ -400,17 +410,28 @@ export async function recentlyAdded(env: Env, track: Track, limit: number): Prom
   return sortListings(all, 'new').slice(0, limit);
 }
 
-export async function listOpenReports(
-  env: Env,
-): Promise<Array<{ id: number; kind: string; message: string; created_at: string; slug: string; name: string }>> {
+export interface OpenReport {
+  id: number;
+  kind: string;
+  message: string;
+  created_at: string;
+  slug: string;
+  name: string;
+  track: Track;
+  /** 1 when the listing is already flagged — so the queue can offer "un-flag". */
+  deprecated: number;
+}
+
+export async function listOpenReports(env: Env): Promise<OpenReport[]> {
   const { results } = await env.DB.prepare(
-    `SELECT r.id, r.kind, r.message, r.created_at, a.slug, a.name
+    `SELECT r.id, r.kind, r.message, r.created_at,
+            a.slug, a.name, a.track, a.deprecated
        FROM reports r
        JOIN apis a ON a.id = r.api_id
       WHERE r.resolved = 0
       ORDER BY r.created_at DESC
       LIMIT 100`,
-  ).all<{ id: number; kind: string; message: string; created_at: string; slug: string; name: string }>();
+  ).all<OpenReport>();
 
   return results;
 }
@@ -440,12 +461,69 @@ export async function resolveReport(env: Env, id: number): Promise<void> {
   await env.DB.prepare('UPDATE reports SET resolved = 1 WHERE id = ?1').bind(id).run();
 }
 
+/** Flags a listing as dead or superseded without hiding it. */
+export async function setDeprecated(
+  env: Env,
+  slug: string,
+  deprecated: boolean,
+  note: string | null,
+): Promise<void> {
+  await env.DB.prepare(
+    `UPDATE apis
+        SET deprecated = ?2,
+            deprecated_note = ?3,
+            updated_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now')
+      WHERE slug = ?1`,
+  )
+    .bind(slug, deprecated ? 1 : 0, note)
+    .run();
+}
+
+export interface DeprecationSignal {
+  slug: string;
+  name: string;
+  track: Track;
+  deprecated: number;
+  health_state: HealthState;
+  health_fails: number;
+  /** Open reports saying this thing is dead. */
+  reports: number;
+}
+
+/**
+ * Listings the evidence says are dead: readers reporting them, or the uptime
+ * probe failing on them. This is the queue a moderator actually works from —
+ * flagging something deprecated is a judgement call, so the machine collects
+ * the signal and a human makes the call.
+ */
+export async function deprecationSignals(env: Env, limit = 50): Promise<DeprecationSignal[]> {
+  const { results } = await env.DB.prepare(
+    `SELECT a.slug, a.name, a.track, a.deprecated, a.health_state, a.health_fails,
+            COUNT(r.id) AS reports
+       FROM apis a
+       LEFT JOIN reports r
+              ON r.api_id = a.id
+             AND r.resolved = 0
+             AND r.kind IN ('deprecated', 'dead-link')
+      WHERE a.status = 'published'
+        AND (r.id IS NOT NULL OR a.health_state = 'down')
+      GROUP BY a.id
+      ORDER BY reports DESC, a.health_fails DESC, a.name ASC
+      LIMIT ?1`,
+  )
+    .bind(limit)
+    .all<DeprecationSignal>();
+
+  return results;
+}
+
 export interface Stats {
   total: number;
   apis: number;
   products: number;
   free: number;
   votes: number;
+  down: number;
 }
 
 export async function stats(env: Env): Promise<Stats> {
@@ -455,8 +533,9 @@ export async function stats(env: Env): Promise<Stats> {
        (SELECT COUNT(*) FROM apis WHERE status = 'published' AND track = 'api')          AS apis,
        (SELECT COUNT(*) FROM apis WHERE status = 'published' AND track = 'product')      AS products,
        (SELECT COUNT(*) FROM apis WHERE status = 'published' AND pricing != 'paid')      AS free,
-       (SELECT COUNT(*) FROM votes)                                                      AS votes`,
+       (SELECT COUNT(*) FROM votes)                                                      AS votes,
+       (SELECT COUNT(*) FROM apis WHERE status = 'published' AND health_state = 'down')   AS down`,
   ).first<Stats>();
 
-  return row ?? { total: 0, apis: 0, products: 0, free: 0, votes: 0 };
+  return row ?? { total: 0, apis: 0, products: 0, free: 0, votes: 0, down: 0 };
 }

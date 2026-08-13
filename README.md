@@ -80,32 +80,55 @@ and wraps its ornament in ordinary rounded card UI.
 
 ```bash
 npm install
-npx wrangler d1 create catholic-apis     # paste the printed id into wrangler.jsonc
-npm run db:migrate:local                 # schema + 237 seed listings across both tracks
+npm run db:migrate:local     # schema + 237 seed listings across both tracks
 cp .dev.vars.example .dev.vars
-npm run dev                              # http://127.0.0.1:8787
+npm run dev                  # http://127.0.0.1:8787
 ```
+
+No Cloudflare account needed for this: local D1 is a SQLite file under `.wrangler/`, and the
+placeholder `database_id` in `wrangler.jsonc` is only read when deploying. An account is needed
+the first time you [deploy](#deploying).
 
 ## Deploying
 
 ```bash
-# 1. Create the database and put its id in wrangler.jsonc under d1_databases[0].database_id
-npx wrangler d1 create catholic-apis
-
-# 2. Set the secrets. Only VOTE_SECRET really matters; see .dev.vars.example.
-openssl rand -base64 32 | npx wrangler secret put VOTE_SECRET
-openssl rand -base64 32 | npx wrangler secret put ADMIN_TOKEN
-
-# 3. Point SITE_URL at your domain (wrangler.jsonc "vars") — it feeds canonical
-#    URLs, the sitemap, the RSS feed and JSON-LD, so a stale value costs you SEO.
-
-# 4. Ship it
-npm run db:migrate:remote
-npm run deploy
+npx wrangler login       # once, opens a browser
+npm run deploy:setup
 ```
 
-Then add your domain under **Workers & Pages → your worker → Settings → Domains & Routes**, and
-submit `https://yourdomain/sitemap.xml` to Search Console.
+That creates the D1 database and writes its id into `wrangler.jsonc`, generates `VOTE_SECRET` and
+`ADMIN_TOKEN` and prints the admin token once, applies the migrations remotely, and deploys. It
+prints a `*.workers.dev` URL that is live immediately — no custom domain required. Re-running it
+is safe: it creates nothing that exists, never rotates a secret that is already set, and applies
+only migrations D1 has not seen.
+
+On a machine with no browser, make an API token at
+[dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens) using the
+**Edit Cloudflare Workers** template plus **D1:Edit**, then
+`export CLOUDFLARE_API_TOKEN=… CLOUDFLARE_ACCOUNT_ID=…` and run the same command.
+
+The five underlying steps are in [`scripts/deploy.mjs`](scripts/deploy.mjs) if you would rather
+run them yourself. The one worth knowing about is the second: `wrangler d1 create` prints a UUID
+that must be pasted into `wrangler.jsonc` before anything else works, and skipping it fails several
+steps later as an unrelated-looking binding error. The script does that pasting — commit the
+result.
+
+### Custom domain, later
+
+`SITE_URL` is deliberately **unset**. Without it the Worker uses whatever origin the request
+arrived on, so a `workers.dev` preview is correct about itself: canonical tags, the sitemap, the
+feed and the JSON-LD all point at the preview rather than at a domain that is not serving yet.
+
+When a custom domain is live and is the one canonical address, set it in `wrangler.jsonc` and
+redeploy — at that point you *want* it pinned, so a request arriving on the `workers.dev` hostname
+still points search engines home:
+
+```jsonc
+"vars": { "SITE_URL": "https://catholicapis.com", "SITE_NAME": "Catholic APIs" }
+```
+
+Add the domain under **Workers & Pages → your worker → Settings → Domains & Routes**, then submit
+`https://yourdomain/sitemap.xml` to Search Console.
 
 ### Secrets
 
@@ -293,6 +316,7 @@ and a pile of reports are evidence, not a verdict.
 | `data/*.json` | The listings: `seed`/`products` curated here, `imported` from the awesome lists, `cdcf` from the foundation |
 | `scripts/import-awesome.mjs` | Fetches and merges the upstream awesome-catholic lists |
 | `scripts/import-cdcf.mjs` | Verifies and imports the CDCF's own projects from the CatholicOS org |
+| `scripts/deploy.mjs` | First deploy end to end: database, secrets, migrations, ship |
 
 ## Notes on the implementation
 
@@ -325,6 +349,7 @@ before first paint so the theme never flashes.
 
 ```bash
 npm run dev              # local Worker + local D1
+npm run deploy:setup     # first deploy: database, secrets, migrations, ship
 npm test                 # vitest — ranking, query strings, uptime, schema drift
 npm run typecheck        # tsc --noEmit
 npm run db:reset:local   # wipe local D1 and re-migrate

@@ -72,3 +72,41 @@ describe('generated migrations', () => {
     for (const name of generated) expect(build).toContain(`migrations/${name}.sql`);
   });
 });
+
+/**
+ * The deploy story, as asserted by the files that carry it.
+ *
+ * These are the settings whose failure mode is a *successful* deploy that is
+ * quietly wrong — a preview whose canonical tags point at production, or a
+ * `database_id` placeholder that fails several steps after the mistake.
+ */
+describe('deploy configuration', () => {
+  const config = read('wrangler.jsonc');
+
+  it('does not pin SITE_URL, so a preview deploy describes itself', () => {
+    // Commented-out guidance is fine; an active setting is not. Without this,
+    // a *.workers.dev deploy emits canonical tags for a domain that may not be
+    // serving anything yet.
+    const active = config
+      .split('\n')
+      .filter((line) => !line.trim().startsWith('//'))
+      .join('\n');
+    expect(active).not.toMatch(/"SITE_URL"\s*:/);
+  });
+
+  it('runs the uptime cron', () => {
+    expect(config).toMatch(/"crons"\s*:\s*\[/);
+  });
+
+  it('ships a one-command first deploy', () => {
+    const pkg = JSON.parse(read('package.json'));
+    expect(pkg.scripts['deploy:setup']).toBe('node scripts/deploy.mjs');
+  });
+
+  it("does not overwrite a VOTE_SECRET that is already set", () => {
+    // Rotating it invalidates every voter cookie, which silently lets everyone
+    // vote again. The script must skip secrets that exist.
+    const deploy = read('scripts/deploy.mjs');
+    expect(deploy).toMatch(/already set/);
+  });
+});

@@ -35,7 +35,13 @@
   },
 
   "vars": {
-    "SITE_URL": "https://catholicapis.com",
+    // SITE_URL is deliberately unset. Without it the Worker uses the origin the
+    // request arrived on, so a `*.workers.dev` deploy is correct about itself —
+    // canonical tags, sitemap, feed and JSON-LD all point at the preview rather
+    // than at a domain that is not serving yet.
+    //
+    // Set it once a custom domain is live and is the ONE canonical hostname:
+    //   "SITE_URL": "https://catholicapis.com",
     "SITE_NAME": "Catholic APIs"
   }
 

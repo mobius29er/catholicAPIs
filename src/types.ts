@@ -104,8 +104,10 @@ export const listingPath = (listing: Pick<Listing, 'track' | 'slug'>): string =>
 export interface Env {
   DB: D1Database;
   ASSETS: Fetcher;
-  SITE_URL: string;
-  SITE_NAME: string;
+  /** Canonical origin. Unset is fine: the site falls back to the request's own
+   * origin, which is what makes a bare *.workers.dev deploy correct. */
+  SITE_URL?: string;
+  SITE_NAME?: string;
   /** HMAC key for anonymous voter cookies. Falls back to a dev-only constant. */
   VOTE_SECRET?: string;
   /** When set, unlocks /admin via bearer token or ?token=. */

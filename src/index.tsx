@@ -98,11 +98,28 @@ function parseFilters(url: URL, track: Track = 'api'): Filters {
   };
 }
 
-const absolute = (env: Env, path: string): string =>
-  `${(env.SITE_URL ?? 'https://catholicapis.com').replace(/\/$/, '')}${path}`;
+/**
+ * Where this site says it lives.
+ *
+ * `SITE_URL` wins when set, because production has exactly one canonical
+ * hostname and requests arriving on any other one must still point home. But a
+ * deploy that has not been given a SITE_URL is not therefore lost: it is
+ * serving this request from somewhere, and that somewhere is the honest
+ * answer.
+ *
+ * Which is what makes a bare `*.workers.dev` preview correct with no
+ * configuration at all — canonical tags, the sitemap, the feed and the JSON-LD
+ * all point at the preview, instead of at a production domain that may not be
+ * serving anything yet.
+ */
+const siteOrigin = (c: Context<{ Bindings: Env }>): string =>
+  (c.env.SITE_URL || new URL(c.req.url).origin).replace(/\/$/, '');
+
+const absolute = (c: Context<{ Bindings: Env }>, path: string): string =>
+  `${siteOrigin(c)}${path}`;
 
 /** Public shape of a listing in the JSON API — stable, unlike the DB row. */
-function publicListing(env: Env, listing: Listing) {
+function publicListing(c: Context<{ Bindings: Env }>, listing: Listing) {
   return {
     slug: listing.slug,
     name: listing.name,
@@ -140,7 +157,7 @@ function publicListing(env: Env, listing: Listing) {
     added_at: listing.created_at,
     launched_at: listing.launched_at,
     verified_at: listing.verified_at,
-    permalink: absolute(env, listingPath(listing)),
+    permalink: absolute(c, listingPath(listing)),
   };
 }
 
@@ -194,7 +211,7 @@ function directoryRoute(track: Track) {
       itemListElement: result.listings.map((listing, index) => ({
         '@type': 'ListItem',
         position: (result.page - 1) * PAGE_SIZE + index + 1,
-        url: absolute(c.env, listingPath(listing)),
+        url: absolute(c, listingPath(listing)),
         name: listing.name,
         description: listing.tagline,
       })),
@@ -204,7 +221,7 @@ function directoryRoute(track: Track) {
       <Layout
         title={title}
         description={description}
-        canonical={absolute(c.env, isLanding ? root : `${root}${url.search}`)}
+        canonical={absolute(c, isLanding ? root : `${root}${url.search}`)}
         siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
         jsonLd={jsonLd}
         noindex={!isLanding && result.total === 0}
@@ -277,7 +294,7 @@ function detailRoute(track: Track) {
       <Layout
         title={`${listing.name} — ${listing.tagline}`}
         description={listing.tagline}
-        canonical={absolute(c.env, listingPath(listing))}
+        canonical={absolute(c, listingPath(listing))}
         siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
         jsonLd={jsonLd}
       >
@@ -325,7 +342,7 @@ const voteHandler = async (c: Context<{ Bindings: Env }>) => {
 
   // Without JavaScript, come back to where the vote was cast.
   const referer = c.req.header('referer');
-  const target = referer?.startsWith(absolute(c.env, '/')) ? referer : back;
+  const target = referer?.startsWith(absolute(c, '/')) ? referer : back;
   return c.redirect(target, 303);
 };
 
@@ -390,7 +407,7 @@ app.get('/submit', (c) => {
     <Layout
       title="Submit to the Catholic APIs directory"
       description="Add an app, service, API, dataset or library to the directory. Reviewed by hand before publishing."
-      canonical={absolute(c.env, '/submit')}
+      canonical={absolute(c, '/submit')}
       siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
       active="/submit"
     >
@@ -434,7 +451,7 @@ app.post('/submit', async (c) => {
       <Layout
         title="Thank you"
         description="Submission received."
-        canonical={absolute(c.env, '/submit')}
+        canonical={absolute(c, '/submit')}
         siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
         noindex
       >
@@ -487,7 +504,7 @@ app.post('/submit', async (c) => {
       <Layout
         title="Submit a Catholic API"
         description="Add an API to the Catholic APIs directory."
-        canonical={absolute(c.env, '/submit')}
+        canonical={absolute(c, '/submit')}
         siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
         noindex
         active="/submit"
@@ -533,7 +550,7 @@ app.post('/submit', async (c) => {
     <Layout
       title="Submission received"
       description="Thank you for adding to the directory."
-      canonical={absolute(c.env, '/submit')}
+      canonical={absolute(c, '/submit')}
       siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
       noindex
     >
@@ -555,11 +572,11 @@ app.get('/about', (c) =>
     <Layout
       title="About the Catholic APIs directory"
       description="What gets listed, how the Wilson-score ranking works, how voting works, and how to correct a listing."
-      canonical={absolute(c.env, '/about')}
+      canonical={absolute(c, '/about')}
       siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
       active="/about"
     >
-      <About siteUrl={(c.env.SITE_URL ?? '').replace(/\/$/, '')} />
+      <About siteUrl={siteOrigin(c)} />
     </Layout>,
   ),
 );
@@ -569,11 +586,11 @@ app.get('/api/v1', (c) =>
     <Layout
       title="JSON API — Catholic APIs"
       description="The directory is itself a free JSON API: list, filter and sort every Catholic API listing. No key, CORS open."
-      canonical={absolute(c.env, '/api/v1')}
+      canonical={absolute(c, '/api/v1')}
       siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
       active="/api/v1"
     >
-      <ApiDocs siteUrl={(c.env.SITE_URL ?? '').replace(/\/$/, '')} />
+      <ApiDocs siteUrl={siteOrigin(c)} />
     </Layout>,
   ),
 );
@@ -598,9 +615,9 @@ function listEndpoint(track: Track) {
         page_count: result.pageCount,
         page_size: PAGE_SIZE,
         sort: filters.sort,
-        docs: absolute(c.env, '/api/v1'),
+        docs: absolute(c, '/api/v1'),
       },
-      data: result.listings.map((listing) => publicListing(c.env, listing)),
+      data: result.listings.map((listing) => publicListing(c, listing)),
     });
   };
 }
@@ -621,12 +638,12 @@ const lookupEndpoint = async (c: Context<{ Bindings: Env }>) => {
   c.header('cache-control', 'public, max-age=60, stale-while-revalidate=600');
 
   return c.json({
-    data: publicListing(c.env, listing),
+    data: publicListing(c, listing),
     related: related.map((item) => ({
       slug: item.slug,
       name: item.name,
       tagline: item.tagline,
-      permalink: absolute(c.env, listingPath(item)),
+      permalink: absolute(c, listingPath(item)),
     })),
   });
 };
@@ -648,12 +665,12 @@ app.get('/api/v1/categories', async (c) => {
       api: apis.facets.categories.map((facet) => ({
         name: facet.value,
         count: facet.count,
-        url: absolute(c.env, `/apis?category=${encodeURIComponent(facet.value)}`),
+        url: absolute(c, `/apis?category=${encodeURIComponent(facet.value)}`),
       })),
       product: products.facets.categories.map((facet) => ({
         name: facet.value,
         count: facet.count,
-        url: absolute(c.env, `/?category=${encodeURIComponent(facet.value)}`),
+        url: absolute(c, `/?category=${encodeURIComponent(facet.value)}`),
       })),
     },
   });
@@ -675,7 +692,7 @@ app.get('/feed.xml', async (c) => {
     .sort((a, b) => b.created_at.localeCompare(a.created_at))
     .slice(0, 30);
 
-  const site = (c.env.SITE_URL ?? '').replace(/\/$/, '');
+  const site = siteOrigin(c);
 
   const body = html`<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
@@ -708,7 +725,7 @@ app.get('/feed.xml', async (c) => {
 });
 
 app.get('/sitemap.xml', async (c) => {
-  const site = (c.env.SITE_URL ?? '').replace(/\/$/, '');
+  const site = siteOrigin(c);
 
   /** Walks every page of a track so no listing is left out of the sitemap. */
   async function allOf(track: Track) {
@@ -766,7 +783,7 @@ ${listings
 });
 
 app.get('/robots.txt', (c) => {
-  const site = (c.env.SITE_URL ?? '').replace(/\/$/, '');
+  const site = siteOrigin(c);
   c.header('content-type', 'text/plain; charset=utf-8');
   return c.body(
     [
@@ -819,7 +836,7 @@ app.get('/admin', async (c) => {
     <Layout
       title="Moderation"
       description="Moderation queue"
-      canonical={absolute(c.env, '/admin')}
+      canonical={absolute(c, '/admin')}
       siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
       noindex
     >
@@ -899,7 +916,7 @@ function notFound(c: Context<{ Bindings: Env }>) {
     <Layout
       title="Not found — Catholic APIs"
       description="That page doesn't exist."
-      canonical={absolute(c.env, '/')}
+      canonical={absolute(c, '/')}
       siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
       noindex
     >
@@ -924,7 +941,7 @@ app.onError((err, c) => {
     <Layout
       title="Something went wrong — Catholic APIs"
       description="An unexpected error occurred."
-      canonical={absolute(c.env, '/')}
+      canonical={absolute(c, '/')}
       siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
       noindex
     >

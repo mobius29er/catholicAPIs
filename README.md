@@ -107,11 +107,17 @@ On a machine with no browser, make an API token at
 **Edit Cloudflare Workers** template plus **D1:Edit**, then
 `export CLOUDFLARE_API_TOKEN=… CLOUDFLARE_ACCOUNT_ID=…` and run the same command.
 
-The five underlying steps are in [`scripts/deploy.mjs`](scripts/deploy.mjs) if you would rather
-run them yourself. The one worth knowing about is the second: `wrangler d1 create` prints a UUID
-that must be pasted into `wrangler.jsonc` before anything else works, and skipping it fails several
-steps later as an unrelated-looking binding error. The script does that pasting — commit the
-result.
+The five steps are in [`scripts/deploy.mjs`](scripts/deploy.mjs) if you would rather run them
+yourself. Two are worth knowing about:
+
+- `wrangler d1 create` prints a UUID that must be pasted into `wrangler.jsonc` before anything else
+  works. Skipping it fails several steps later as an unrelated-looking binding error. The script
+  does that pasting — commit the result.
+- **Secrets have to come after the first deploy.** `wrangler secret put` against a Worker that does
+  not exist yet asks *"do you want to create a new Worker?"* on stdin — the same stdin the secret is
+  being piped into, so the prompt swallows the secret. Deploy first and the Worker is there to
+  receive them. This costs a few seconds where the site is live with a dev signing key and `/admin`
+  shut, which on a brand-new deployment with no visitors is harmless.
 
 ### Custom domain, later
 

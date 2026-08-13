@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildQuery } from '../src/views/components';
-import { slugify } from '../src/db';
+import { searchTerms, slugify } from '../src/db';
 import type { Filters } from '../src/types';
 
 const base: Filters = {
@@ -112,5 +112,50 @@ describe('slugify', () => {
 
   it('caps length so a pathological name cannot blow up the URL', () => {
     expect(slugify('a'.repeat(500)).length).toBeLessThanOrEqual(60);
+  });
+});
+
+describe('searchTerms', () => {
+  /*
+    Every term has to match, in any order. The literal-phrase behaviour this
+    replaced meant "canonical identifiers" found one listing while "canonical"
+    found fifteen — the registries say "canonical IDs" in the tagline and
+    "identifiers" in the description, and no one field held the phrase.
+  */
+  it('splits a query into terms', () => {
+    expect(searchTerms('canonical identifiers')).toEqual(['canonical', 'identifiers']);
+  });
+
+  it('collapses whitespace of every kind', () => {
+    expect(searchTerms('  daily \t readings\n')).toEqual(['daily', 'readings']);
+  });
+
+  it('lowercases, since the haystack is lowercased too', () => {
+    expect(searchTerms('Liturgy CECDR')).toEqual(['liturgy', 'cecdr']);
+  });
+
+  it('has nothing to do with an empty or blank query', () => {
+    expect(searchTerms('')).toEqual([]);
+    expect(searchTerms('   ')).toEqual([]);
+  });
+
+  // The escape hatch for the exact-phrase search the AND change removes.
+  it('keeps a quoted run together as one term', () => {
+    expect(searchTerms('"liturgy of the hours"')).toEqual(['liturgy of the hours']);
+  });
+
+  it('mixes quoted phrases with bare terms', () => {
+    expect(searchTerms('free "no key" api')).toEqual(['free', 'no key', 'api']);
+  });
+
+  it('ignores an empty pair of quotes', () => {
+    expect(searchTerms('bible ""')).toEqual(['bible']);
+  });
+
+  // A pasted paragraph must not build a query with hundreds of LIKE clauses.
+  it('caps the number of terms', () => {
+    const many = Array.from({ length: 40 }, (_, i) => `term${i}`).join(' ');
+    expect(searchTerms(many)).toHaveLength(8);
+    expect(searchTerms(many)[0]).toBe('term0');
   });
 });

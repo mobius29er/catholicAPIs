@@ -185,7 +185,10 @@ export const ApiDocs: FC<{ siteUrl: string }> = ({ siteUrl }) => (
           <td>
             <code>q</code>
           </td>
-          <td>Free-text search across name, summary, description and categories.</td>
+          <td>
+            Free-text search across name, summary, description and categories. Every word must
+            match, in any order; wrap words in double quotes to search for them as a phrase.
+          </td>
         </tr>
         <tr>
           <td>

@@ -91,6 +91,41 @@ async function myVoteMap(env: Env, voterId: string | null): Promise<Map<number, 
   return new Map(results.map((r) => [r.api_id, r.value]));
 }
 
+/** The fields a reader would expect a search to look at. */
+const SEARCH_HAYSTACK =
+  "lower(name || ' ' || tagline || ' ' || description || ' ' || categories)";
+
+/**
+ * A cap on terms, so a pasted paragraph cannot build a query with four hundred
+ * LIKE clauses in it. Eight is far past the point where an AND search returns
+ * anything anyway.
+ */
+const MAX_SEARCH_TERMS = 8;
+
+/**
+ * Splits a query into the terms a listing must *all* match.
+ *
+ * Quoted runs stay whole: `"liturgy of the hours"` is one term, which is the
+ * escape hatch for the literal-phrase search this otherwise replaces.
+ */
+export function searchTerms(query: string): string[] {
+  const terms: string[] = [];
+
+  for (const match of query.toLowerCase().matchAll(/"([^"]*)"|(\S+)/g)) {
+    const term = (match[1] ?? match[2]).trim();
+    if (term) terms.push(term);
+  }
+
+  return terms.slice(0, MAX_SEARCH_TERMS);
+}
+
+/**
+ * `%` and `_` are wildcards to LIKE, so a reader searching for "100%" or
+ * "snake_case" would otherwise get a query that matches far more than they
+ * asked for. Paired with `ESCAPE '\'` at the call site.
+ */
+const escapeLike = (term: string): string => term.replace(/[\\%_]/g, (c) => `\\${c}`);
+
 async function loadListings(
   env: Env,
   {
@@ -108,13 +143,20 @@ async function loadListings(
     bindings.push(track);
   }
 
-  if (search.trim()) {
-    // Cheap substring match over the fields a reader would search by. Good
-    // enough for a curated list; swap in FTS5 if the corpus grows.
-    clauses.push(
-      `lower(name || ' ' || tagline || ' ' || description || ' ' || categories) LIKE ?${bindings.length + 1}`,
-    );
-    bindings.push(`%${search.trim().toLowerCase()}%`);
+  /*
+    Every term must appear somewhere in the listing, in any order. Matching the
+    query as one literal string meant "canonical identifiers" found a single
+    listing while "canonical" found fifteen — the registries say "canonical IDs"
+    in the tagline and "identifiers" in the description, and no single field
+    contained the phrase. Nobody types a query expecting it to be matched
+    verbatim against concatenated fields.
+
+    Still substring matching per term, so "eucharis" finds "Eucharistic". Good
+    enough for a curated list; swap in FTS5 if the corpus grows.
+  */
+  for (const term of searchTerms(search)) {
+    clauses.push(`${SEARCH_HAYSTACK} LIKE ?${bindings.length + 1} ESCAPE '\\'`);
+    bindings.push(`%${escapeLike(term)}%`);
   }
 
   const [{ results }, recent, mine] = await Promise.all([

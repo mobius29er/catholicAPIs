@@ -296,6 +296,14 @@ and a pile of reports are evidence, not a verdict.
 
 ## Notes on the implementation
 
+**Search matches every term, in any order.** `canonical identifiers` finds anything whose name,
+summary, description or categories contain both words, not the literal phrase — which is what a
+reader means, and which one substring match over concatenated fields got wrong: `canonical` found
+fifteen listings, `canonical identifiers` found one. Quoting a run of words searches it as a
+phrase, which is the escape hatch that behaviour used to be. Terms are capped at eight, `%` and
+`_` are escaped rather than treated as wildcards, and it is still substring matching per term —
+swap in FTS5 if the corpus grows.
+
 **Filtering and ranking happen in the Worker**, not in SQL. Wilson needs a square root and
 faceting needs counts across the whole result set, both awkward in SQLite, and a curated directory
 is hundreds of rows rather than millions. Past a few thousand listings, move ranking into a stored

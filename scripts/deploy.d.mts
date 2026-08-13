@@ -18,3 +18,9 @@ export function withDatabaseId(config: string, id: string): string;
 
 /** Whether `wrangler secret list` output shows a secret of that name. */
 export function hasSecret(listOutput: string | undefined | null, name: string): boolean;
+
+/** Migration filenames not yet in D1's ledger, in the order they must run. */
+export function pendingMigrations(files: string[], applied: string[]): string[];
+
+/** Pulls result rows out of `wrangler d1 execute --json` output. */
+export function parseD1Rows(output: string | undefined | null): Array<Record<string, unknown>>;

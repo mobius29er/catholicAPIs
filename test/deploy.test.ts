@@ -1,9 +1,11 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   PLACEHOLDER,
   configuredDatabaseId,
+  pendingMigrations,
+  parseD1Rows,
   extractDatabaseId,
   hasSecret,
   withDatabaseId,
@@ -104,11 +106,25 @@ describe('withDatabaseId', () => {
     expect(() => withDatabaseId(config, '')).toThrow();
   });
 
-  it('matches the placeholder the real config actually contains', () => {
-    // Guards against the placeholder being renamed in one file and not the other,
-    // which would leave the script silently unable to patch anything.
+  /*
+    The real config is in one of two legitimate states: freshly cloned, still
+    holding the placeholder, or deployed, holding a real id. Both must be
+    readable by the script — that is what stops a renamed or deleted
+    `database_id` key from silently breaking the first deploy.
+  */
+  it('can read the database_id out of the real config, in either state', () => {
     const real = readFileSync(resolve(process.cwd(), 'wrangler.jsonc'), 'utf8');
-    expect(real).toContain(PLACEHOLDER);
+    expect(real).toMatch(/"database_id"\s*:/);
+
+    const id = configuredDatabaseId(real);
+    if (real.includes(PLACEHOLDER)) {
+      expect(id).toBeNull();
+      expect(withDatabaseId(real, 'b1f0a9c2-3d4e-4f5a-8b6c-7d8e9f0a1b2c')).not.toContain(
+        PLACEHOLDER,
+      );
+    } else {
+      expect(id).toMatch(/^[0-9a-f-]{36}$/i);
+    }
   });
 });
 
@@ -146,5 +162,95 @@ describe('hasSecret', () => {
   it('treats empty or missing output as nothing set', () => {
     expect(hasSecret('', 'VOTE_SECRET')).toBe(false);
     expect(hasSecret(undefined, 'VOTE_SECRET')).toBe(false);
+  });
+});
+
+/*
+  Migrations are applied by this script rather than by `wrangler d1 migrations
+  apply --remote`, which fails on this schema with "incomplete input" because
+  0001 contains CREATE TRIGGER. Establishing that took a statement-by-statement
+  bisect against a real database; these cover the ordering and parsing that
+  replaced it, so nobody has to repeat the bisect.
+*/
+describe('pendingMigrations', () => {
+  const files = [
+    '0003_products.sql',
+    '0001_init.sql',
+    '0005_cdcf.sql',
+    '0002_seed.sql',
+    '0004_imported.sql',
+  ];
+
+  it('returns everything, in order, against an empty ledger', () => {
+    expect(pendingMigrations(files, [])).toEqual([
+      '0001_init.sql',
+      '0002_seed.sql',
+      '0003_products.sql',
+      '0004_imported.sql',
+      '0005_cdcf.sql',
+    ]);
+  });
+
+  // Order is the whole game: 0002 inserts rows into tables 0001 creates.
+  it('sorts even when the directory listing arrives shuffled', () => {
+    expect(pendingMigrations(files, [])[0]).toBe('0001_init.sql');
+  });
+
+  it('skips what the ledger already records', () => {
+    expect(pendingMigrations(files, ['0001_init.sql', '0002_seed.sql'])).toEqual([
+      '0003_products.sql',
+      '0004_imported.sql',
+      '0005_cdcf.sql',
+    ]);
+  });
+
+  it('is empty when everything is applied, so a re-run is a no-op', () => {
+    expect(pendingMigrations(files, files)).toEqual([]);
+  });
+
+  it('ignores non-SQL files sitting in the migrations directory', () => {
+    expect(pendingMigrations(['0001_init.sql', 'README.md', '.DS_Store'], [])).toEqual([
+      '0001_init.sql',
+    ]);
+  });
+
+  it('matches the migrations this repo actually ships', () => {
+    const real = readdirSync(resolve(process.cwd(), 'migrations'));
+    expect(pendingMigrations(real, [])).toEqual([
+      '0001_init.sql',
+      '0002_seed.sql',
+      '0003_products.sql',
+      '0004_imported.sql',
+      '0005_cdcf.sql',
+    ]);
+  });
+});
+
+describe('parseD1Rows', () => {
+  const envelope = JSON.stringify([
+    { results: [{ name: '0001_init.sql' }, { name: '0002_seed.sql' }], success: true },
+  ]);
+
+  it('reads rows out of the envelope', () => {
+    expect(parseD1Rows(envelope).map((r) => r.name)).toEqual(['0001_init.sql', '0002_seed.sql']);
+  });
+
+  it('copes with wrangler printing a banner first', () => {
+    expect(parseD1Rows(`⛅️ wrangler 4.122.0\n${envelope}`)).toHaveLength(2);
+  });
+
+  it('returns nothing for an empty result set', () => {
+    expect(parseD1Rows(JSON.stringify([{ results: [], success: true }]))).toEqual([]);
+  });
+
+  /*
+    A brand-new database has no ledger table, so the query errors and there is
+    no JSON at all. Reading that as "nothing applied" is exactly right — but it
+    must not throw, or the first deploy dies before it starts.
+  */
+  it('treats unparseable output as nothing applied', () => {
+    expect(parseD1Rows('')).toEqual([]);
+    expect(parseD1Rows(undefined)).toEqual([]);
+    expect(parseD1Rows('X [ERROR] no such table: d1_migrations')).toEqual([]);
   });
 });

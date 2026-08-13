@@ -23,7 +23,7 @@
 
 import { execFileSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -58,6 +58,34 @@ export function withDatabaseId(config, id) {
   return config.replace(`"${PLACEHOLDER}"`, `"${id}"`);
 }
 
+/** Migration filenames not yet in D1's ledger, in the order they must run. */
+export function pendingMigrations(files, applied) {
+  const done = new Set(applied);
+  return files
+    .filter((f) => f.endsWith('.sql') && !done.has(f))
+    .sort((a, b) => a.localeCompare(b, 'en'));
+}
+
+/**
+ * Pulls result rows out of `wrangler d1 execute --json` output.
+ *
+ * Returns nothing rather than throwing when the output is not JSON at all —
+ * which is the normal case on a brand-new database, where the ledger table does
+ * not exist yet and the query errors. "No rows" is the right reading of that,
+ * and note that an error message is not safely distinguishable by looking for a
+ * bracket: `[ERROR]` has one.
+ */
+export function parseD1Rows(output) {
+  const start = output?.indexOf('[') ?? -1;
+  if (start < 0) return [];
+  try {
+    const parsed = JSON.parse(output.slice(start));
+    return (Array.isArray(parsed) ? parsed : [parsed]).flatMap((r) => r?.results ?? []);
+  } catch {
+    return [];
+  }
+}
+
 /**
  * Whether `wrangler secret list` shows a secret.
  *
@@ -85,21 +113,47 @@ if (!RUN_DIRECTLY) {
   const step = (n, text) => console.log(`\n\x1b[1m${n}. ${text}\x1b[0m`);
   const note = (text) => console.log(`   ${text}`);
 
+  /*
+    Run wrangler's script with this same Node binary, rather than shelling out
+    to `npx`.
+
+    On Windows there is no `npx.exe` — only `npx.cmd` — and Node refuses to
+    spawn a .cmd without `shell: true`, so `execFileSync('npx', …)` throws
+    before wrangler ever starts. Caught by the wrapper below, that surfaced as
+    "you are not logged in" to someone who had just logged in successfully.
+
+    `process.execPath` is a real executable on every platform, and calling the
+    package's own entry point skips shell quoting entirely.
+  */
+  const WRANGLER = resolve(root, 'node_modules/wrangler/bin/wrangler.js');
+
+  if (!existsSync(WRANGLER)) {
+    console.error(`
+   Dependencies are not installed — wrangler is missing from node_modules.
+
+   Run:  npm install
+
+   (Using \`npx wrangler\` instead would download a second copy of wrangler on
+   every call, and a different version from the one this project pins.)
+`);
+    process.exit(1);
+  }
+
+  const run = (args, stdio) =>
+    execFileSync(process.execPath, [WRANGLER, ...args], { cwd: root, encoding: 'utf8', stdio });
+
   /** Runs wrangler, streaming its output. */
-  const wrangler = (args) =>
-    execFileSync('npx', ['wrangler', ...args], { cwd: root, encoding: 'utf8', stdio: 'inherit' });
+  const wrangler = (args) => run(args, 'inherit');
 
   /** Runs wrangler and captures stdout, even on failure. */
   const tryWrangler = (args) => {
     try {
-      const out = execFileSync('npx', ['wrangler', ...args], {
-        cwd: root,
-        encoding: 'utf8',
-        stdio: ['inherit', 'pipe', 'pipe'],
-      });
-      return { ok: true, out: out ?? '' };
+      return { ok: true, out: run(args, ['inherit', 'pipe', 'pipe']) ?? '' };
     } catch (error) {
-      return { ok: false, out: `${error.stdout ?? ''}${error.stderr ?? ''}` };
+      return {
+        ok: false,
+        out: `${error.stdout ?? ''}${error.stderr ?? ''}` || String(error.message ?? error),
+      };
     }
   };
 
@@ -154,8 +208,59 @@ if (!RUN_DIRECTLY) {
   // ---------------------------------------------------------- 3. migrations
 
   step(3, 'Applying migrations to the remote database');
-  // Independent of the Worker, so this is safe before the first deploy.
-  wrangler(['d1', 'migrations', 'apply', DB_NAME, '--remote']);
+
+  /*
+    Not `d1 migrations apply --remote`, which fails on this schema with
+    "incomplete input: SQLITE_ERROR". The cause is CREATE TRIGGER: 0001 has
+    three, and that command cannot apply a migration containing one. Proven the
+    slow way — every one of 0001's 19 statements applies individually, the
+    trigger-free migrations 0002-0005 apply through that command without
+    complaint, and `d1 execute --file` applies the whole of 0001 happily.
+
+    So we drive it ourselves through the path that works, keeping D1's own
+    ledger table so `wrangler d1 migrations list` still tells the truth and a
+    later `apply` still skips what is done.
+  */
+  // Bookkeeping runs captured rather than streamed — nobody needs to read D1's
+  // JSON envelope for a CREATE TABLE IF NOT EXISTS.
+  const ledger = tryWrangler([
+    'd1', 'execute', DB_NAME, '--remote', '--command',
+    `CREATE TABLE IF NOT EXISTS d1_migrations (
+       id INTEGER PRIMARY KEY AUTOINCREMENT,
+       name TEXT UNIQUE,
+       applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+     )`,
+  ]);
+  if (!ledger.ok) {
+    console.error(`   Could not reach the database:\n${ledger.out}`);
+    process.exit(1);
+  }
+
+  const applied = parseD1Rows(
+    tryWrangler(['d1', 'execute', DB_NAME, '--remote', '--json', '--command',
+                 'SELECT name FROM d1_migrations']).out,
+  ).map((row) => row.name);
+
+  const pending = pendingMigrations(readdirSync(resolve(root, 'migrations')), applied);
+
+  if (pending.length === 0) {
+    note('nothing pending');
+  } else {
+    for (const name of pending) {
+      if (!/^[\w.-]+\.sql$/.test(name)) throw new Error(`odd migration filename: ${name}`);
+      note(`applying ${name}`);
+      wrangler(['d1', 'execute', DB_NAME, '--remote', '--file', `migrations/${name}`]);
+      // Recorded only once the file has actually applied, so a failure part way
+      // through leaves the migration pending rather than silently skipped.
+      const recorded = tryWrangler(['d1', 'execute', DB_NAME, '--remote', '--command',
+        `INSERT INTO d1_migrations (name) VALUES ('${name}')`]);
+      if (!recorded.ok) {
+        console.error(`   Applied ${name} but could not record it:\n${recorded.out}`);
+        process.exit(1);
+      }
+    }
+    note(`${pending.length} applied`);
+  }
 
   // -------------------------------------------------------------- 4. deploy
 
@@ -185,7 +290,10 @@ if (!RUN_DIRECTLY) {
     }
 
     const value = randomBytes(32).toString('base64');
-    execFileSync('npx', ['wrangler', 'secret', 'put', name], {
+    // Same Node binary, same reason as `run` above — `npx` is not spawnable
+    // without a shell on Windows. stdin carries the secret, so it cannot be
+    // 'inherit' here and the call cannot go through `run`.
+    execFileSync(process.execPath, [WRANGLER, 'secret', 'put', name], {
       cwd: root,
       input: value,
       encoding: 'utf8',

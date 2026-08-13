@@ -92,6 +92,7 @@ the first time you [deploy](#deploying).
 ## Deploying
 
 ```bash
+npm install
 npx wrangler login       # once, opens a browser
 npm run deploy:setup
 ```
@@ -108,7 +109,16 @@ On a machine with no browser, make an API token at
 `export CLOUDFLARE_API_TOKEN=… CLOUDFLARE_ACCOUNT_ID=…` and run the same command.
 
 The five steps are in [`scripts/deploy.mjs`](scripts/deploy.mjs) if you would rather run them
-yourself. Two are worth knowing about:
+yourself. Three are worth knowing about:
+
+- **`wrangler d1 migrations apply --remote` cannot apply this schema.** It fails with
+  `incomplete input: SQLITE_ERROR` on `0001_init.sql`, because that migration contains
+  `CREATE TRIGGER`. Established by bisecting against a real database: all 19 of 0001's statements
+  apply individually, the trigger-free migrations 0002-0005 apply through that command fine, and
+  `d1 execute --file` applies the whole of 0001 without complaint. So the script drives migrations
+  itself through the path that works, keeping D1's own `d1_migrations` ledger so
+  `wrangler d1 migrations list` still tells the truth. Local development is unaffected —
+  `db:migrate:local` uses a different code path and has always worked.
 
 - `wrangler d1 create` prints a UUID that must be pasted into `wrangler.jsonc` before anything else
   works. Skipping it fails several steps later as an unrelated-looking binding error. The script

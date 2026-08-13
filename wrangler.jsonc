@@ -22,7 +22,7 @@
       "binding": "DB",
       "database_name": "catholic-apis",
       // Replace with the id printed by `wrangler d1 create catholic-apis`.
-      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID",
+      "database_id": "6b3c70bd-3424-4627-bc20-a6cc449f2848",
       "migrations_dir": "migrations"
     }
   ],

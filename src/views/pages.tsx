@@ -6,18 +6,32 @@ export const About: FC<{ siteUrl: string }> = ({ siteUrl }) => (
     <h1>About this directory</h1>
 
     <p class="lede">
-      Catholic software gets built over and over by people who never find out the data they need
-      already exists. This is a list of what exists, ranked by the developers who have actually
+      Catholic software gets built over and over by people who never find out that the thing they
+      need already exists. This is a list of what exists, ranked by the people who have actually
       used it.
+    </p>
+
+    <h2>Two tracks</h2>
+    <p>
+      <a href="/">Products</a> are finished software: prayer apps, breviaries, formation
+      programmes, parish tools, journalism, AI assistants. Things you use.
+    </p>
+    <p>
+      <a href="/apis">APIs</a> are what those are built from: liturgical calendars, scripture,
+      the Catechism, canon law, datasets, libraries, MCP servers. Things you build with.
+    </p>
+    <p>
+      They share one voting system, one submission queue and one JSON API, because they are the
+      same question asked twice — is this any good, and is it maintained?
     </p>
 
     <h2>What gets listed</h2>
     <p>
-      Anything a developer can build on: hosted APIs, open datasets, client libraries, and MCP
-      servers for AI agents. Free and paid both qualify — a service that charges honestly is more
-      useful than an abandoned free one. What doesn't qualify: apps with no programmatic access,
-      scrapers of sites that forbid scraping, and endpoints that quietly re-serve someone else's
-      copyrighted translation.
+      On the product side: anything a Catholic actually uses that is software. On the developer
+      side: anything you can build on. Free and paid both qualify — a service that charges
+      honestly is more useful than an abandoned free one. What doesn't qualify: scrapers of sites
+      that forbid scraping, endpoints that quietly re-serve someone else's copyrighted
+      translation, and anything whose only real feature is a landing page.
     </p>
 
     <h2>How ranking works</h2>
@@ -42,8 +56,8 @@ export const About: FC<{ siteUrl: string }> = ({ siteUrl }) => (
       ballot-stuffing tedious, though nothing here is fraud-proof and it isn't trying to be.
     </p>
     <p>
-      Vote on whether an API is <em>good to build on</em>: does it work, is it maintained, is it
-      documented, does it do what it claims? Not on whether you like the project's theology.
+      Vote on whether the thing is <em>good</em>: does it work, is it maintained, is it
+      documented, does it do what it claims? Not on whether you like the maker's theology.
     </p>
 
     <h2 id="data">Data and corrections</h2>
@@ -61,7 +75,7 @@ export const About: FC<{ siteUrl: string }> = ({ siteUrl }) => (
 
     <h2>The directory has an API</h2>
     <p>
-      It would be a poor showing not to. Everything on this site is available as JSON at{' '}
+      It would be a poor showing not to. Both tracks are available as JSON at{' '}
       <a href="/api/v1">
         <code>{siteUrl}/api/v1</code>
       </a>
@@ -81,9 +95,12 @@ export const ApiDocs: FC<{ siteUrl: string }> = ({ siteUrl }) => (
     <h2>Endpoints</h2>
 
     <h3>
-      <code>GET /api/v1/apis</code>
+      <code>GET /api/v1/products</code> · <code>GET /api/v1/apis</code>
     </h3>
-    <p>Every published listing, with vote tallies and ranking scores.</p>
+    <p>
+      Every published listing on that track, with vote tallies and ranking scores. Both take the
+      same parameters.
+    </p>
     <table class="params">
       <thead>
         <tr>
@@ -111,8 +128,17 @@ export const ApiDocs: FC<{ siteUrl: string }> = ({ siteUrl }) => (
             <code>kind</code>
           </td>
           <td>
-            <code>api</code>, <code>dataset</code>, <code>library</code> or <code>mcp</code>.
-            Repeatable.
+            API track only: <code>api</code>, <code>dataset</code>, <code>library</code> or{' '}
+            <code>mcp</code>. Repeatable.
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <code>platform</code>
+          </td>
+          <td>
+            Product track only: <code>ios</code>, <code>android</code>, <code>web</code>,{' '}
+            <code>desktop</code> or <code>parish</code>. Repeatable.
           </td>
         </tr>
         <tr>
@@ -147,24 +173,29 @@ export const ApiDocs: FC<{ siteUrl: string }> = ({ siteUrl }) => (
     </table>
 
     <h3>
-      <code>GET /api/v1/apis/:slug</code>
+      <code>GET /api/v1/listings/:slug</code>
     </h3>
-    <p>A single listing, plus related listings that share its categories.</p>
+    <p>
+      A single listing, plus related listings that share its categories. Slugs are unique across
+      both tracks, so this one endpoint resolves either; <code>/api/v1/apis/:slug</code> and{' '}
+      <code>/api/v1/products/:slug</code> are aliases.
+    </p>
 
     <h3>
       <code>GET /api/v1/categories</code>
     </h3>
-    <p>Every category with a listing count — useful for building your own navigation.</p>
+    <p>Every category with a listing count, grouped by track — enough to build your own nav.</p>
 
     <h2>Example</h2>
     <pre>
-      <code>{`curl '${siteUrl}/api/v1/apis?pricing=free&no_auth=1&sort=top'`}</code>
+      <code>{`curl '${siteUrl}/api/v1/apis?pricing=free&no_auth=1&sort=top'
+curl '${siteUrl}/api/v1/products?platform=ios&sort=trending'`}</code>
     </pre>
 
     <h2>Fair use</h2>
     <p>
       No key and no hard rate limit; please cache rather than polling in a loop. If you need a
-      bulk snapshot, pull <code>/api/v1/apis</code> once and store it — it changes slowly.
+      bulk snapshot, pull each track once and store it — the directory changes slowly.
     </p>
   </div>
 );

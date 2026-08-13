@@ -14,10 +14,11 @@ export interface SeoProps {
 export type LayoutProps = PropsWithChildren<SeoProps & { active?: string }>;
 
 const NAV = [
-  { href: '/', label: 'Directory' },
-  { href: '/submit', label: 'Submit an API' },
+  { href: '/', label: 'Products' },
+  { href: '/apis', label: 'APIs' },
+  { href: '/submit', label: 'Submit' },
   { href: '/about', label: 'About' },
-  { href: '/api/v1', label: 'Our API' },
+  { href: '/api/v1', label: 'JSON API' },
 ];
 
 export const Layout: FC<LayoutProps> = ({
@@ -46,8 +47,8 @@ export const Layout: FC<LayoutProps> = ({
       <meta property="og:url" content={canonical} />
       <meta name="twitter:card" content="summary_large_image" />
 
-      <meta name="theme-color" content="#faf7f2" media="(prefers-color-scheme: light)" />
-      <meta name="theme-color" content="#16130f" media="(prefers-color-scheme: dark)" />
+      <meta name="theme-color" content="#f4f6f8" media="(prefers-color-scheme: light)" />
+      <meta name="theme-color" content="#0b0e12" media="(prefers-color-scheme: dark)" />
 
       <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       <link rel="alternate" type="application/rss+xml" title={`${siteName} — newest listings`} href="/feed.xml" />
@@ -80,11 +81,11 @@ export const Layout: FC<LayoutProps> = ({
         <div class="wrap header-inner">
           <a class="brand" href="/">
             <span class="brand-mark" aria-hidden="true">
-              ✝
+              CA
             </span>
             <span class="brand-text">
               <strong>Catholic APIs</strong>
-              <small>Community-ranked developer directory</small>
+              <small>Ranked by the people who use them</small>
             </span>
           </a>
 
@@ -115,16 +116,16 @@ export const Layout: FC<LayoutProps> = ({
           <div>
             <p class="footer-title">Catholic APIs</p>
             <p class="muted">
-              An open directory of APIs, datasets and libraries for building Catholic software.
-              Listings are community-ranked; corrections are welcome.
+              An open directory of Catholic software — the apps people use and the APIs they're
+              built from. Community-ranked; corrections welcome.
             </p>
           </div>
 
           <div class="footer-links">
             <p class="footer-title">Browse</p>
-            <a href="/?pricing=free">Free APIs</a>
-            <a href="/?pricing=paid&pricing=freemium">Paid &amp; freemium</a>
-            <a href="/?open_source=1">Open source</a>
+            <a href="/">Catholic products</a>
+            <a href="/apis">Developer APIs</a>
+            <a href="/apis?pricing=free&amp;no_auth=1">Free, no key needed</a>
             <a href="/?sort=new">Recently added</a>
           </div>
 

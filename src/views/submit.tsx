@@ -1,5 +1,20 @@
 import type { FC } from 'hono/jsx';
 
+export const PRODUCT_CATEGORY_SUGGESTIONS = [
+  'Prayer',
+  'Devotionals',
+  'Liturgy of the Hours',
+  'Daily Readings',
+  'Bible & Study',
+  'Formation',
+  'Apologetics',
+  'Media',
+  'News',
+  'Parish Tools',
+  'AI & Search',
+  'Community',
+];
+
 export const CATEGORY_SUGGESTIONS = [
   'Liturgical Calendar',
   'Daily Readings',
@@ -26,11 +41,11 @@ export const Submit: FC<{
   turnstileSiteKey?: string;
 }> = ({ errors = [], values = {}, turnstileSiteKey }) => (
   <div class="wrap narrow page">
-    <h1>Submit an API</h1>
+    <h1>Submit a listing</h1>
     <p class="lede">
-      Anything that helps someone build Catholic software belongs here: hosted APIs, open
-      datasets, libraries, MCP servers. Paid services are welcome — just be straight about the
-      pricing. Submissions are reviewed by hand before they appear.
+      Two kinds of thing belong here: finished Catholic software people use, and the building
+      blocks developers make it from. Paid is welcome — just be straight about the pricing.
+      Everything is reviewed by hand before it appears.
     </p>
 
     {errors.length > 0 && (
@@ -46,7 +61,39 @@ export const Submit: FC<{
       </div>
     )}
 
-    <form method="post" action="/submit" class="form">
+    <form method="post" action="/submit" class="form" data-submit-form>
+      <fieldset class="field track-choice">
+        <legend>What are you adding?</legend>
+        <div class="track-options">
+          <label>
+            <input
+              type="radio"
+              name="track"
+              value="product"
+              checked={values.track === 'product'}
+              data-track-radio
+            />
+            <span>
+              <strong>A product</strong>
+              An app, service, or anything a person uses directly.
+            </span>
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="track"
+              value="api"
+              checked={values.track !== 'product'}
+              data-track-radio
+            />
+            <span>
+              <strong>An API or dataset</strong>
+              Something a developer builds on.
+            </span>
+          </label>
+        </div>
+      </fieldset>
+
       <div class="field">
         <label for="name">
           Name <span class="req">required</span>
@@ -107,6 +154,23 @@ export const Submit: FC<{
 
       <div class="field-row">
         <div class="field">
+          <label for="pricing">Cost</label>
+          <select id="pricing" name="pricing">
+            <option value="free" selected={values.pricing !== undefined ? values.pricing === 'free' : true}>
+              Free
+            </option>
+            <option value="freemium" selected={values.pricing === 'freemium'}>
+              Freemium — free tier, paid above it
+            </option>
+            <option value="paid" selected={values.pricing === 'paid'}>
+              Paid
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-row" data-track-only="api">
+        <div class="field">
           <label for="kind">Type</label>
           <select id="kind" name="kind">
             <option value="api" selected={values.kind !== undefined ? values.kind === 'api' : true}>
@@ -120,21 +184,6 @@ export const Submit: FC<{
             </option>
             <option value="mcp" selected={values.kind === 'mcp'}>
               MCP server
-            </option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="pricing">Cost</label>
-          <select id="pricing" name="pricing">
-            <option value="free" selected={values.pricing !== undefined ? values.pricing === 'free' : true}>
-              Free
-            </option>
-            <option value="freemium" selected={values.pricing === 'freemium'}>
-              Freemium — free tier, paid above it
-            </option>
-            <option value="paid" selected={values.pricing === 'paid'}>
-              Paid
             </option>
           </select>
         </div>
@@ -158,6 +207,31 @@ export const Submit: FC<{
         </div>
       </div>
 
+      <div class="field-row" data-track-only="product">
+        <div class="field">
+          <label for="platforms">Runs on</label>
+          <input
+            id="platforms"
+            name="platforms"
+            value={values.platforms ?? ''}
+            placeholder="ios, android, web"
+          />
+          <p class="hint">
+            Comma-separated, from: <code>ios</code>, <code>android</code>, <code>web</code>,{' '}
+            <code>desktop</code>, <code>parish</code>.
+          </p>
+        </div>
+
+        <div class="field">
+          <label for="launched_at">Launch date</label>
+          <input id="launched_at" name="launched_at" type="date" value={values.launched_at ?? ''} />
+          <p class="hint">
+            Only if it launched recently — this drives the "just launched" flash. Leave blank if
+            it has been around a while.
+          </p>
+        </div>
+      </div>
+
       <div class="field field-check">
         <label>
           <input type="checkbox" name="open_source" value="1" checked={values.open_source === '1'} />
@@ -178,7 +252,7 @@ export const Submit: FC<{
           placeholder="Daily Readings, Saints"
         />
         <datalist id="category-suggestions">
-          {CATEGORY_SUGGESTIONS.map((category) => (
+          {[...PRODUCT_CATEGORY_SUGGESTIONS, ...CATEGORY_SUGGESTIONS].map((category) => (
             <option value={category} />
           ))}
         </datalist>

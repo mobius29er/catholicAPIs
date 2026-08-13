@@ -1,6 +1,15 @@
 import type { FC } from 'hono/jsx';
 import type { Listing } from '../types';
-import { AUTH_LABELS, Badges, KIND_LABELS, PRICING_LABELS, VoteWidget, languageName } from './components';
+import { listingPath } from '../types';
+import {
+  AUTH_LABELS,
+  Badges,
+  KIND_LABELS,
+  PLATFORM_LABELS,
+  PRICING_LABELS,
+  VoteWidget,
+  languageName,
+} from './components';
 
 const formatDate = (iso: string | null): string => {
   if (!iso) return '—';
@@ -24,12 +33,17 @@ const Row: FC<{ label: string; children?: unknown }> = ({ label, children }) => 
   </div>
 );
 
-export const Detail: FC<{ listing: Listing; related: Listing[] }> = ({ listing, related }) => (
+export const Detail: FC<{ listing: Listing; related: Listing[] }> = ({ listing, related }) => {
+  const isApi = listing.track === 'api';
+  const root = isApi ? '/apis' : '/';
+  const path = listingPath(listing);
+
+  return (
   <article class="wrap detail">
     <nav class="breadcrumb" aria-label="Breadcrumb">
-      <a href="/">Directory</a>
+      <a href={root}>{isApi ? 'APIs' : 'Products'}</a>
       <span aria-hidden="true">/</span>
-      <a href={`/?category=${encodeURIComponent(listing.categories[0] ?? '')}`}>
+      <a href={`${root}?category=${encodeURIComponent(listing.categories[0] ?? '')}`}>
         {listing.categories[0] ?? 'Listing'}
       </a>
       <span aria-hidden="true">/</span>
@@ -40,7 +54,10 @@ export const Detail: FC<{ listing: Listing; related: Listing[] }> = ({ listing, 
       <VoteWidget listing={listing} large />
 
       <div>
-        <h1>{listing.name}</h1>
+        <h1>
+          {listing.name}
+          {listing.isNew && <span class="flash">Just launched</span>}
+        </h1>
         <p class="detail-tagline">{listing.tagline}</p>
         <Badges listing={listing} />
       </div>
@@ -70,7 +87,7 @@ export const Detail: FC<{ listing: Listing; related: Listing[] }> = ({ listing, 
         </section>
 
         <section class="vote-explainer">
-          <h2>Is this API any good?</h2>
+          <h2>{isApi ? 'Is this API any good?' : 'Is this worth your time?'}</h2>
           <p class="muted">
             {listing.upvotes + listing.downvotes === 0
               ? 'Nobody has voted on this listing yet. If you have used it, you are the best person to say whether it works.'
@@ -83,7 +100,7 @@ export const Detail: FC<{ listing: Listing; related: Listing[] }> = ({ listing, 
           <p class="muted">
             Links rot and projects get abandoned. Tell us and we'll fix or unpublish the listing.
           </p>
-          <form method="post" action={`/apis/${listing.slug}/report`} class="report-form">
+          <form method="post" action={`${path}/report`} class="report-form">
             <div class="field">
               <label for="report-kind">What's wrong</label>
               <select id="report-kind" name="kind" required>
@@ -111,17 +128,39 @@ export const Detail: FC<{ listing: Listing; related: Listing[] }> = ({ listing, 
             {PRICING_LABELS[listing.pricing]}
             {listing.pricing_note && <p class="muted small">{listing.pricing_note}</p>}
           </Row>
-          <Row label="Type">{KIND_LABELS[listing.kind]}</Row>
-          <Row label="Auth">{AUTH_LABELS[listing.auth]}</Row>
-          <Row label="CORS">
-            {listing.cors === 'unknown' ? 'Not confirmed' : listing.cors === 'yes' ? 'Enabled' : 'Not enabled'}
-          </Row>
+          {isApi ? (
+            <>
+              <Row label="Type">{KIND_LABELS[listing.kind]}</Row>
+              <Row label="Auth">{AUTH_LABELS[listing.auth]}</Row>
+              <Row label="CORS">
+                {listing.cors === 'unknown'
+                  ? 'Not confirmed'
+                  : listing.cors === 'yes'
+                    ? 'Enabled'
+                    : 'Not enabled'}
+              </Row>
+            </>
+          ) : (
+            listing.platforms.length > 0 && (
+              <Row label="Runs on">
+                <ul class="tag-list">
+                  {listing.platforms.map((platform) => (
+                    <li>
+                      <a class="tag" href={`/?platform=${encodeURIComponent(platform)}`}>
+                        {PLATFORM_LABELS[platform] ?? platform}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </Row>
+            )
+          )}
           <Row label="Open source">{listing.open_source ? `Yes${listing.license ? ` (${listing.license})` : ''}` : 'No'}</Row>
           <Row label="Categories">
             <ul class="tag-list">
               {listing.categories.map((category) => (
                 <li>
-                  <a class="tag" href={`/?category=${encodeURIComponent(category)}`}>
+                  <a class="tag" href={`${root}?category=${encodeURIComponent(category)}`}>
                     {category}
                   </a>
                 </li>
@@ -133,7 +172,7 @@ export const Detail: FC<{ listing: Listing; related: Listing[] }> = ({ listing, 
               <ul class="tag-list">
                 {listing.languages.map((code) => (
                   <li>
-                    <a class="tag" href={`/?lang=${encodeURIComponent(code)}`}>
+                    <a class="tag" href={`${root}?lang=${encodeURIComponent(code)}`}>
                       {languageName(code)}
                     </a>
                   </li>
@@ -141,7 +180,8 @@ export const Detail: FC<{ listing: Listing; related: Listing[] }> = ({ listing, 
               </ul>
             </Row>
           )}
-          <Row label="Added">{formatDate(listing.created_at)}</Row>
+          {listing.launched_at && <Row label="Launched">{formatDate(listing.launched_at)}</Row>}
+          <Row label="Listed">{formatDate(listing.created_at)}</Row>
           <Row label="Last verified">
             {listing.verified_at ? (
               formatDate(listing.verified_at)
@@ -153,8 +193,8 @@ export const Detail: FC<{ listing: Listing; related: Listing[] }> = ({ listing, 
 
         <p class="muted small">
           Machine-readable version:{' '}
-          <a href={`/api/v1/apis/${listing.slug}`}>
-            <code>/api/v1/apis/{listing.slug}</code>
+          <a href={`/api/v1/listings/${listing.slug}`}>
+            <code>/api/v1/listings/{listing.slug}</code>
           </a>
         </p>
       </aside>
@@ -166,7 +206,7 @@ export const Detail: FC<{ listing: Listing; related: Listing[] }> = ({ listing, 
         <ul class="related-list">
           {related.map((item) => (
             <li>
-              <a href={`/apis/${item.slug}`}>
+              <a href={listingPath(item)}>
                 <strong>{item.name}</strong>
                 <span class="muted">{item.tagline}</span>
               </a>
@@ -177,3 +217,4 @@ export const Detail: FC<{ listing: Listing; related: Listing[] }> = ({ listing, 
     )}
   </article>
 );
+};

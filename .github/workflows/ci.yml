@@ -24,8 +24,8 @@ jobs:
       - name: Test
         run: npm test
 
-      - name: Seed migration is in sync with data/seed.json
+      - name: Seed migrations are in sync with data/
         run: |
           npm run seed:build
-          git diff --exit-code migrations/0002_seed.sql \
-            || { echo "::error::migrations/0002_seed.sql is stale — run 'npm run seed:build' and commit the result."; exit 1; }
+          git diff --exit-code migrations/ \
+            || { echo "::error::a seed migration is stale — run 'npm run seed:build' and commit the result."; exit 1; }

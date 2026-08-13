@@ -5,7 +5,9 @@ import type { Filters } from '../src/types';
 
 const base: Filters = {
   q: '',
+  track: 'api',
   pricing: [],
+  platforms: [],
   kind: [],
   categories: [],
   languages: [],
@@ -17,24 +19,31 @@ const base: Filters = {
 };
 
 describe('buildQuery', () => {
-  it('returns a bare / when nothing is selected', () => {
-    expect(buildQuery(base)).toBe('/');
+  it('returns the track root when nothing is selected', () => {
+    expect(buildQuery(base)).toBe('/apis');
+    expect(buildQuery({ ...base, track: 'product' })).toBe('/');
   });
 
   it('omits defaults so canonical URLs stay clean', () => {
     // sort=top and page=1 are the defaults; emitting them would create a
     // second URL for the same page and split its search ranking.
-    expect(buildQuery({ ...base, sort: 'top', page: 1 })).toBe('/');
+    expect(buildQuery({ ...base, sort: 'top', page: 1 })).toBe('/apis');
   });
 
   it('keeps non-default sort and page', () => {
-    expect(buildQuery({ ...base, sort: 'new' })).toBe('?sort=new');
-    expect(buildQuery({ ...base, page: 3 })).toBe('?page=3');
+    expect(buildQuery({ ...base, sort: 'new' })).toBe('/apis?sort=new');
+    expect(buildQuery({ ...base, page: 3 })).toBe('/apis?page=3');
+  });
+
+  it('keeps a filter link inside its own track', () => {
+    // A product filter must never navigate the reader into the API index.
+    expect(buildQuery({ ...base, track: 'product', pricing: ['free'] })).toBe('/?pricing=free');
+    expect(buildQuery({ ...base, track: 'api', pricing: ['free'] })).toBe('/apis?pricing=free');
   });
 
   it('repeats a key for multi-select facets', () => {
     const qs = buildQuery({ ...base, pricing: ['free', 'freemium'] });
-    expect(qs).toBe('?pricing=free&pricing=freemium');
+    expect(qs).toBe('/apis?pricing=free&pricing=freemium');
   });
 
   it('carries the search term alongside filters', () => {
@@ -45,23 +54,23 @@ describe('buildQuery', () => {
 
   it('applies overrides over the current filters', () => {
     const qs = buildQuery({ ...base, sort: 'new', page: 4 }, { page: 1 });
-    expect(qs).toBe('?sort=new');
+    expect(qs).toBe('/apis?sort=new');
   });
 
   it('drops a facet when overridden with an empty list', () => {
     const qs = buildQuery({ ...base, pricing: ['paid'] }, { pricing: [] });
-    expect(qs).toBe('/');
+    expect(qs).toBe('/apis');
   });
 
   it('encodes categories containing spaces and ampersands', () => {
     const qs = buildQuery({ ...base, categories: ['Catechism & Doctrine'] });
-    expect(qs).toBe('?category=Catechism+%26+Doctrine');
-    expect(new URLSearchParams(qs.slice(1)).get('category')).toBe('Catechism & Doctrine');
+    expect(qs).toBe('/apis?category=Catechism+%26+Doctrine');
+    expect(new URL(qs, 'https://x').searchParams.get('category')).toBe('Catechism & Doctrine');
   });
 
   it('renders booleans as 1 and omits them when false', () => {
-    expect(buildQuery({ ...base, openSource: true })).toBe('?open_source=1');
-    expect(buildQuery({ ...base, openSource: false })).toBe('/');
+    expect(buildQuery({ ...base, openSource: true })).toBe('/apis?open_source=1');
+    expect(buildQuery({ ...base, openSource: false })).toBe('/apis');
   });
 
   it('round-trips through URLSearchParams', () => {
@@ -75,7 +84,7 @@ describe('buildQuery', () => {
       sort: 'trending',
       page: 2,
     };
-    const params = new URLSearchParams(buildQuery(filters).slice(1));
+    const params = new URL(buildQuery(filters), 'https://x').searchParams;
     expect(params.get('q')).toBe('daily readings');
     expect(params.getAll('kind')).toEqual(['api', 'dataset']);
     expect(params.get('sort')).toBe('trending');

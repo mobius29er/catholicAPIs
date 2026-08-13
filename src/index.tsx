@@ -4,7 +4,8 @@ import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
 import { html, raw } from 'hono/html';
 
-import type { Auth, Env, Filters, Kind, Listing, Pricing, Sort } from './types';
+import type { Auth, Env, Filters, Kind, Listing, Platform, Pricing, Sort, Track } from './types';
+import { listingPath } from './types';
 import {
   PAGE_SIZE,
   castVote,
@@ -16,6 +17,7 @@ import {
   listOpenReports,
   markVerified,
   queryDirectory,
+  recentlyAdded,
   resolveReport,
   setStatus,
   stats,
@@ -63,8 +65,9 @@ const PRICING_VALUES = new Set<Pricing>(['free', 'freemium', 'paid']);
 const KIND_VALUES = new Set<Kind>(['api', 'dataset', 'library', 'mcp']);
 const AUTH_VALUES = new Set<Auth>(['none', 'api-key', 'oauth', 'unknown']);
 const SORT_VALUES = new Set<Sort>(['top', 'trending', 'new', 'name']);
+const PLATFORM_VALUES = new Set<Platform>(['ios', 'android', 'web', 'desktop', 'parish']);
 
-function parseFilters(url: URL): Filters {
+function parseFilters(url: URL, track: Track = 'api'): Filters {
   const params = url.searchParams;
   const many = <T extends string>(key: string, allowed?: Set<T>): T[] =>
     params
@@ -77,8 +80,10 @@ function parseFilters(url: URL): Filters {
 
   return {
     q: (params.get('q') ?? '').slice(0, 100),
+    track,
     pricing: many<Pricing>('pricing', PRICING_VALUES),
     kind: many<Kind>('kind', KIND_VALUES),
+    platforms: many<Platform>('platform', PLATFORM_VALUES),
     auth: many<Auth>('auth', AUTH_VALUES),
     categories: many('category').map((c) => c.slice(0, 60)),
     languages: many('lang').map((l) => l.slice(0, 12)),
@@ -102,13 +107,15 @@ function publicListing(env: Env, listing: Listing) {
     url: listing.homepage_url,
     docs_url: listing.docs_url,
     repo_url: listing.repo_url,
-    kind: listing.kind,
+    track: listing.track,
+    kind: listing.track === 'api' ? listing.kind : undefined,
+    platforms: listing.track === 'product' ? listing.platforms : undefined,
     pricing: listing.pricing,
     pricing_note: listing.pricing_note,
     open_source: listing.open_source,
     license: listing.license,
-    auth: listing.auth,
-    cors: listing.cors,
+    auth: listing.track === 'api' ? listing.auth : undefined,
+    cors: listing.track === 'api' ? listing.cors : undefined,
     official: listing.official,
     categories: listing.categories,
     languages: listing.languages,
@@ -119,8 +126,9 @@ function publicListing(env: Env, listing: Listing) {
       confidence: Number(listing.confidence.toFixed(6)),
     },
     added_at: listing.created_at,
+    launched_at: listing.launched_at,
     verified_at: listing.verified_at,
-    permalink: absolute(env, `/apis/${listing.slug}`),
+    permalink: absolute(env, listingPath(listing)),
   };
 }
 
@@ -137,108 +145,141 @@ function wantsJson(c: { req: { header: (name: string) => string | undefined } })
 // directory
 // ---------------------------------------------------------------------------
 
-app.get('/', async (c) => {
-  const url = new URL(c.req.url);
-  const filters = parseFilters(url);
-  const voterId = await readVoterId(c);
+/**
+ * Both tracks render through the same handler — same filters, same ranking,
+ * same markup. Only the copy, the canonical URL and the schema.org type differ.
+ */
+function directoryRoute(track: Track) {
+  return async (c: Context<{ Bindings: Env }>) => {
+    const url = new URL(c.req.url);
+    const filters = parseFilters(url, track);
+    const voterId = await readVoterId(c);
 
-  const [result, counts] = await Promise.all([
-    queryDirectory(c.env, filters, voterId),
-    stats(c.env),
-  ]);
+    const [result, counts] = await Promise.all([
+      queryDirectory(c.env, filters, voterId),
+      stats(c.env),
+    ]);
 
-  const isLanding = url.search === '';
-  const title = isLanding
-    ? 'Catholic APIs — free and paid APIs for Catholic software, ranked by developers'
-    : `${filters.q ? `${filters.q} — ` : ''}Catholic APIs directory`;
+    const root = track === 'product' ? '/' : '/apis';
+    const isLanding = url.search === '';
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'ItemList',
-    name: 'Catholic APIs',
-    numberOfItems: result.total,
-    itemListElement: result.listings.map((listing, index) => ({
-      '@type': 'ListItem',
-      position: (result.page - 1) * PAGE_SIZE + index + 1,
-      url: absolute(c.env, `/apis/${listing.slug}`),
+    const title = isLanding
+      ? track === 'product'
+        ? 'Catholic APIs — Catholic apps and services, ranked by the people who use them'
+        : 'Catholic APIs — free and paid APIs for Catholic software, ranked by developers'
+      : `${filters.q ? `${filters.q} — ` : ''}${track === 'product' ? 'Catholic products' : 'Catholic APIs'}`;
+
+    const description =
+      track === 'product'
+        ? 'A community-ranked directory of Catholic software: prayer apps, breviaries, formation, parish tools, media and AI. Free and paid, upvoted by the people who use them.'
+        : 'A community-ranked directory of Catholic APIs, datasets and libraries: liturgical calendars, daily readings, scripture, the Catechism, canon law, prayers and saints. Free and paid.';
+
+    const jsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: track === 'product' ? 'Catholic products' : 'Catholic APIs',
+      numberOfItems: result.total,
+      itemListElement: result.listings.map((listing, index) => ({
+        '@type': 'ListItem',
+        position: (result.page - 1) * PAGE_SIZE + index + 1,
+        url: absolute(c.env, listingPath(listing)),
+        name: listing.name,
+        description: listing.tagline,
+      })),
+    };
+
+    return c.html(
+      <Layout
+        title={title}
+        description={description}
+        canonical={absolute(c.env, isLanding ? root : `${root}${url.search}`)}
+        siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
+        jsonLd={jsonLd}
+        noindex={!isLanding && result.total === 0}
+        active={root}
+      >
+        <Home result={result} filters={filters} stats={counts} />
+      </Layout>,
+    );
+  };
+}
+
+app.get('/', directoryRoute('product'));
+app.get('/apis', directoryRoute('api'));
+
+function detailRoute(track: Track) {
+  return async (c: Context<{ Bindings: Env }>) => {
+    const voterId = await readVoterId(c);
+    const listing = await getListing(c.env, c.req.param('slug') ?? '', voterId);
+
+    if (!listing) return notFound(c);
+
+    // A listing has exactly one canonical URL. Reaching it under the other
+    // track's prefix redirects rather than serving a duplicate.
+    if (listing.track !== track) return c.redirect(listingPath(listing), 301);
+
+    const related = await getRelated(c.env, listing);
+
+    const jsonLd = {
+      '@context': 'https://schema.org',
+      '@type': listing.track === 'api' ? 'WebAPI' : 'SoftwareApplication',
       name: listing.name,
       description: listing.tagline,
-    })),
+      url: listing.homepage_url,
+      ...(listing.track === 'api'
+        ? { documentation: listing.docs_url ?? undefined }
+        : {
+            applicationCategory: listing.categories[0],
+            operatingSystem: listing.platforms.join(', ') || undefined,
+          }),
+      isAccessibleForFree: listing.pricing === 'free',
+      ...(listing.upvotes + listing.downvotes > 0 && {
+        aggregateRating: {
+          '@type': 'AggregateRating',
+          // Votes are up/down, so the rating is expressed on a 1-2 scale rather
+          // than pretending to be five stars.
+          ratingValue: Number(
+            (1 + listing.upvotes / (listing.upvotes + listing.downvotes)).toFixed(2),
+          ),
+          bestRating: 2,
+          worstRating: 1,
+          ratingCount: listing.upvotes + listing.downvotes,
+        },
+      }),
+    };
+
+    return c.html(
+      <Layout
+        title={`${listing.name} — ${listing.tagline}`}
+        description={listing.tagline}
+        canonical={absolute(c.env, listingPath(listing))}
+        siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
+        jsonLd={jsonLd}
+      >
+        <Detail listing={listing} related={related} />
+      </Layout>,
+    );
   };
+}
 
-  return c.html(
-    <Layout
-      title={title}
-      description="A community-ranked directory of Catholic APIs, datasets and libraries: liturgical calendars, daily readings, scripture, the Catechism, canon law, prayers and saints. Free and paid."
-      canonical={absolute(c.env, isLanding ? '/' : `/${url.search}`)}
-      siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
-      jsonLd={jsonLd}
-      noindex={!isLanding && result.total === 0}
-      active="/"
-    >
-      <Home result={result} filters={filters} stats={counts} />
-    </Layout>,
-  );
-});
-
-app.get('/apis/:slug', async (c) => {
-  const voterId = await readVoterId(c);
-  const listing = await getListing(c.env, c.req.param('slug'), voterId);
-
-  if (!listing) return notFound(c);
-
-  const related = await getRelated(c.env, listing);
-
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebAPI',
-    name: listing.name,
-    description: listing.tagline,
-    url: listing.homepage_url,
-    documentation: listing.docs_url ?? undefined,
-    isAccessibleForFree: listing.pricing === 'free',
-    ...(listing.upvotes + listing.downvotes > 0 && {
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        // Votes are up/down, so the rating is expressed on a 1-2 scale rather
-        // than pretending to be five stars.
-        ratingValue: Number(
-          (1 + listing.upvotes / (listing.upvotes + listing.downvotes)).toFixed(2),
-        ),
-        bestRating: 2,
-        worstRating: 1,
-        ratingCount: listing.upvotes + listing.downvotes,
-      },
-    }),
-  };
-
-  return c.html(
-    <Layout
-      title={`${listing.name} — ${listing.tagline}`}
-      description={listing.tagline}
-      canonical={absolute(c.env, `/apis/${listing.slug}`)}
-      siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
-      jsonLd={jsonLd}
-    >
-      <Detail listing={listing} related={related} />
-    </Layout>,
-  );
-});
+app.get('/apis/:slug', detailRoute('api'));
+app.get('/products/:slug', detailRoute('product'));
 
 // ---------------------------------------------------------------------------
 // voting
 // ---------------------------------------------------------------------------
 
-app.post('/apis/:slug/vote', async (c) => {
-  const slug = c.req.param('slug');
+const voteHandler = async (c: Context<{ Bindings: Env }>) => {
+  const slug = c.req.param('slug') ?? '';
   const body = await c.req.parseBody();
-  const raw = Number(body.value);
-  const value: -1 | 1 | null = raw === 1 ? 1 : raw === -1 ? -1 : null;
+  const rawValue = Number(body.value);
+  const value: -1 | 1 | null = rawValue === 1 ? 1 : rawValue === -1 ? -1 : null;
+
+  const listing = await getListing(c.env, slug, null);
+  const back = listing ? listingPath(listing) : '/';
 
   if (value === null) {
-    return wantsJson(c)
-      ? c.json({ error: 'value must be 1 or -1' }, 400)
-      : c.redirect(`/apis/${slug}`, 303);
+    return wantsJson(c) ? c.json({ error: 'value must be 1 or -1' }, 400) : c.redirect(back, 303);
   }
 
   const hash = await ipHash(c);
@@ -246,13 +287,12 @@ app.post('/apis/:slug/vote', async (c) => {
   if (!allowed) {
     return wantsJson(c)
       ? c.json({ error: 'Too many votes from this address. Try again later.' }, 429)
-      : c.redirect(`/apis/${slug}?error=rate-limited`, 303);
+      : c.redirect(`${back}?error=rate-limited`, 303);
   }
 
-  const voterId = await requireVoterId(c);
-  const listing = await getListing(c.env, slug, voterId);
   if (!listing) return notFound(c);
 
+  const voterId = await requireVoterId(c);
   const result = await castVote(c.env, listing.id, voterId, value, hash);
   if (!result) return notFound(c);
 
@@ -260,50 +300,60 @@ app.post('/apis/:slug/vote', async (c) => {
 
   // Without JavaScript, come back to where the vote was cast.
   const referer = c.req.header('referer');
-  const back = referer?.startsWith(absolute(c.env, '/')) ? referer : `/apis/${slug}`;
-  return c.redirect(back, 303);
-});
+  const target = referer?.startsWith(absolute(c.env, '/')) ? referer : back;
+  return c.redirect(target, 303);
+};
+
+app.post('/apis/:slug/vote', voteHandler);
+app.post('/products/:slug/vote', voteHandler);
 
 // ---------------------------------------------------------------------------
 // reports
 // ---------------------------------------------------------------------------
 
-app.post('/apis/:slug/report', async (c) => {
-  const slug = c.req.param('slug');
+const reportHandler = async (c: Context<{ Bindings: Env }>) => {
+  const slug = c.req.param('slug') ?? '';
   const body = await c.req.parseBody();
-
-  const hash = await ipHash(c);
-  const { allowed } = await checkRateLimit(c.env, 'report', hash);
-  if (!allowed) return c.redirect(`/apis/${slug}?error=rate-limited`, 303);
 
   const listing = await getListing(c.env, slug, null);
   if (!listing) return notFound(c);
+
+  const back = listingPath(listing);
+
+  const hash = await ipHash(c);
+  const { allowed } = await checkRateLimit(c.env, 'report', hash);
+  if (!allowed) return c.redirect(`${back}?error=rate-limited`, 303);
 
   const kind = String(body.kind ?? 'other');
   const valid = ['dead-link', 'wrong-info', 'duplicate', 'other'].includes(kind) ? kind : 'other';
 
   await createReport(c.env, listing.id, valid, String(body.message ?? ''), hash);
 
-  return c.redirect(`/apis/${slug}?reported=1`, 303);
-});
+  return c.redirect(`${back}?reported=1`, 303);
+};
+
+app.post('/apis/:slug/report', reportHandler);
+app.post('/products/:slug/report', reportHandler);
 
 // ---------------------------------------------------------------------------
 // submissions
 // ---------------------------------------------------------------------------
 
-app.get('/submit', (c) =>
-  c.html(
+app.get('/submit', (c) => {
+  const track: Track = c.req.query('track') === 'product' ? 'product' : 'api';
+
+  return c.html(
     <Layout
-      title="Submit a Catholic API"
-      description="Add an API, dataset, library or MCP server to the Catholic APIs directory. Reviewed by hand before publishing."
+      title="Submit to the Catholic APIs directory"
+      description="Add an app, service, API, dataset or library to the directory. Reviewed by hand before publishing."
       canonical={absolute(c.env, '/submit')}
       siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
       active="/submit"
     >
-      <Submit turnstileSiteKey={c.env.TURNSTILE_SITEKEY} />
+      <Submit values={{ track }} turnstileSiteKey={c.env.TURNSTILE_SITEKEY} />
     </Layout>,
-  ),
-);
+  );
+});
 
 async function verifyTurnstile(env: Env, token: string, ip: string): Promise<boolean> {
   if (!env.TURNSTILE_SECRET) return true;
@@ -404,7 +454,10 @@ app.post('/submit', async (c) => {
     );
   }
 
+  const track: Track = values.track === 'product' ? 'product' : 'api';
+
   await createSubmission(c.env, {
+    track,
     name: name.slice(0, 120),
     tagline: tagline.slice(0, 160),
     description: (values.description ?? '').trim().slice(0, 2000),
@@ -412,9 +465,20 @@ app.post('/submit', async (c) => {
     docs_url: (values.docs_url ?? '').trim() || null,
     repo_url: (values.repo_url ?? '').trim() || null,
     kind: KIND_VALUES.has(values.kind as Kind) ? values.kind : 'api',
+    platforms:
+      track === 'product'
+        ? splitList((values.platforms ?? '').toLowerCase(), 5).filter((p) =>
+            PLATFORM_VALUES.has(p as Platform),
+          )
+        : [],
+    // Only accept a launch date the submitter actually supplied. A guessed date
+    // would light up the "just launched" flash for something years old.
+    launched_at: /^\d{4}-\d{2}-\d{2}$/.test(values.launched_at ?? '')
+      ? values.launched_at
+      : null,
     pricing: PRICING_VALUES.has(values.pricing as Pricing) ? values.pricing : 'free',
     open_source: values.open_source === '1',
-    auth: AUTH_VALUES.has(values.auth as Auth) ? values.auth : 'unknown',
+    auth: track === 'api' && AUTH_VALUES.has(values.auth as Auth) ? values.auth : 'unknown',
     categories,
     languages: splitList((values.languages ?? '').toLowerCase(), 12),
     submitter: (values.submitter ?? '').trim().slice(0, 80) || null,
@@ -474,27 +538,38 @@ app.get('/api/v1', (c) =>
 // JSON API
 // ---------------------------------------------------------------------------
 
-app.get('/api/v1/apis', async (c) => {
-  const filters = parseFilters(new URL(c.req.url));
-  const result = await queryDirectory(c.env, filters, null);
+/** GET /api/v1/apis and /api/v1/products share one implementation. */
+function listEndpoint(track: Track) {
+  return async (c: Context<{ Bindings: Env }>) => {
+    const filters = parseFilters(new URL(c.req.url), track);
+    const result = await queryDirectory(c.env, filters, null);
 
-  c.header('cache-control', 'public, max-age=60, stale-while-revalidate=600');
+    c.header('cache-control', 'public, max-age=60, stale-while-revalidate=600');
 
-  return c.json({
-    meta: {
-      total: result.total,
-      page: result.page,
-      page_count: result.pageCount,
-      page_size: PAGE_SIZE,
-      sort: filters.sort,
-      docs: absolute(c.env, '/api/v1'),
-    },
-    data: result.listings.map((listing) => publicListing(c.env, listing)),
-  });
-});
+    return c.json({
+      meta: {
+        track,
+        total: result.total,
+        page: result.page,
+        page_count: result.pageCount,
+        page_size: PAGE_SIZE,
+        sort: filters.sort,
+        docs: absolute(c.env, '/api/v1'),
+      },
+      data: result.listings.map((listing) => publicListing(c.env, listing)),
+    });
+  };
+}
 
-app.get('/api/v1/apis/:slug', async (c) => {
-  const listing = await getListing(c.env, c.req.param('slug'), null);
+app.get('/api/v1/apis', listEndpoint('api'));
+app.get('/api/v1/products', listEndpoint('product'));
+
+/**
+ * Slugs are unique across both tracks, so a single lookup endpoint serves
+ * either. The older /api/v1/apis/:slug path stays as an alias.
+ */
+const lookupEndpoint = async (c: Context<{ Bindings: Env }>) => {
+  const listing = await getListing(c.env, c.req.param('slug') ?? '', null);
   if (!listing) return c.json({ error: 'not_found' }, 404);
 
   const related = await getRelated(c.env, listing);
@@ -507,22 +582,36 @@ app.get('/api/v1/apis/:slug', async (c) => {
       slug: item.slug,
       name: item.name,
       tagline: item.tagline,
-      permalink: absolute(c.env, `/apis/${item.slug}`),
+      permalink: absolute(c.env, listingPath(item)),
     })),
   });
-});
+};
+
+app.get('/api/v1/listings/:slug', lookupEndpoint);
+app.get('/api/v1/apis/:slug', lookupEndpoint);
+app.get('/api/v1/products/:slug', lookupEndpoint);
 
 app.get('/api/v1/categories', async (c) => {
-  const result = await queryDirectory(c.env, parseFilters(new URL('https://x/')), null);
+  const [apis, products] = await Promise.all([
+    queryDirectory(c.env, parseFilters(new URL('https://x/'), 'api'), null),
+    queryDirectory(c.env, parseFilters(new URL('https://x/'), 'product'), null),
+  ]);
 
   c.header('cache-control', 'public, max-age=300, stale-while-revalidate=3600');
 
   return c.json({
-    data: result.facets.categories.map((facet) => ({
-      name: facet.value,
-      count: facet.count,
-      url: absolute(c.env, `/?category=${encodeURIComponent(facet.value)}`),
-    })),
+    data: {
+      api: apis.facets.categories.map((facet) => ({
+        name: facet.value,
+        count: facet.count,
+        url: absolute(c.env, `/apis?category=${encodeURIComponent(facet.value)}`),
+      })),
+      product: products.facets.categories.map((facet) => ({
+        name: facet.value,
+        count: facet.count,
+        url: absolute(c.env, `/?category=${encodeURIComponent(facet.value)}`),
+      })),
+    },
   });
 });
 
@@ -531,13 +620,17 @@ app.get('/api/v1/categories', async (c) => {
 // ---------------------------------------------------------------------------
 
 app.get('/feed.xml', async (c) => {
-  const result = await queryDirectory(
-    c.env,
-    { ...parseFilters(new URL('https://x/')), sort: 'new' },
-    null,
-  );
-  // One page of newest-first listings; a feed reader only needs the recent tail.
-  const items = result.listings;
+  // Both tracks in one feed, newest first — a subscriber wants to know what
+  // joined the directory, not which half it joined.
+  const [apis, products] = await Promise.all([
+    recentlyAdded(c.env, 'api', 20),
+    recentlyAdded(c.env, 'product', 20),
+  ]);
+
+  const items = [...apis, ...products]
+    .sort((a, b) => b.created_at.localeCompare(a.created_at))
+    .slice(0, 30);
+
   const site = (c.env.SITE_URL ?? '').replace(/\/$/, '');
 
   const body = html`<?xml version="1.0" encoding="UTF-8"?>
@@ -546,18 +639,18 @@ app.get('/feed.xml', async (c) => {
     <title>Catholic APIs — newest listings</title>
     <link>${site}/</link>
     <atom:link href="${site}/feed.xml" rel="self" type="application/rss+xml" />
-    <description>New APIs, datasets and libraries for building Catholic software.</description>
+    <description>New Catholic apps, services, APIs and datasets, as they are added.</description>
     <language>en</language>
     ${raw(
       items
         .map(
           (listing) => `<item>
       <title>${escapeXml(listing.name)}</title>
-      <link>${site}/apis/${listing.slug}</link>
-      <guid isPermaLink="true">${site}/apis/${listing.slug}</guid>
+      <link>${site}${listingPath(listing)}</link>
+      <guid isPermaLink="true">${site}${listingPath(listing)}</guid>
       <pubDate>${new Date(`${listing.created_at.replace(/Z?$/, 'Z')}`).toUTCString()}</pubDate>
       <description>${escapeXml(listing.tagline)}</description>
-      <category>${escapeXml(listing.categories[0] ?? 'API')}</category>
+      <category>${escapeXml(listing.categories[0] ?? 'Catholic software')}</category>
     </item>`,
         )
         .join('\n    '),
@@ -571,44 +664,54 @@ app.get('/feed.xml', async (c) => {
 });
 
 app.get('/sitemap.xml', async (c) => {
-  const result = await queryDirectory(
-    c.env,
-    { ...parseFilters(new URL('https://x/')), page: 1 },
-    null,
-  );
   const site = (c.env.SITE_URL ?? '').replace(/\/$/, '');
+
+  /** Walks every page of a track so no listing is left out of the sitemap. */
+  async function allOf(track: Track) {
+    const first = await queryDirectory(c.env, parseFilters(new URL('https://x/'), track), null);
+    const listings: Listing[] = [...first.listings];
+
+    for (let page = 2; page <= first.pageCount; page++) {
+      const chunk = await queryDirectory(
+        c.env,
+        { ...parseFilters(new URL('https://x/'), track), page },
+        null,
+      );
+      listings.push(...chunk.listings);
+    }
+
+    return { listings, facets: first.facets };
+  }
+
+  const [apiTrack, productTrack] = await Promise.all([allOf('api'), allOf('product')]);
 
   const urls = [
     { loc: `${site}/`, priority: '1.0' },
+    { loc: `${site}/apis`, priority: '0.9' },
     { loc: `${site}/about`, priority: '0.5' },
     { loc: `${site}/submit`, priority: '0.5' },
     { loc: `${site}/api/v1`, priority: '0.6' },
-    ...result.facets.categories.map((facet) => ({
+    ...productTrack.facets.categories.map((facet) => ({
       loc: `${site}/?category=${encodeURIComponent(facet.value)}`,
+      priority: '0.4',
+    })),
+    ...apiTrack.facets.categories.map((facet) => ({
+      loc: `${site}/apis?category=${encodeURIComponent(facet.value)}`,
       priority: '0.4',
     })),
   ];
 
-  // queryDirectory paginates; walk every page so no listing is left out.
-  const all: Listing[] = [];
-  for (let page = 1; page <= result.pageCount; page++) {
-    const chunk = await queryDirectory(
-      c.env,
-      { ...parseFilters(new URL('https://x/')), page },
-      null,
-    );
-    all.push(...chunk.listings);
-  }
+  const listings = [...productTrack.listings, ...apiTrack.listings];
 
   const body = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls
   .map((url) => `  <url><loc>${escapeXml(url.loc)}</loc><priority>${url.priority}</priority></url>`)
   .join('\n')}
-${all
+${listings
   .map(
     (listing) =>
-      `  <url><loc>${site}/apis/${listing.slug}</loc><lastmod>${listing.updated_at.slice(0, 10)}</lastmod><priority>0.8</priority></url>`,
+      `  <url><loc>${site}${listingPath(listing)}</loc><lastmod>${listing.updated_at.slice(0, 10)}</lastmod><priority>0.8</priority></url>`,
   )
   .join('\n')}
 </urlset>`;

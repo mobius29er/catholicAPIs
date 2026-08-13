@@ -13,6 +13,9 @@ const listing = (overrides: Partial<Listing>): Listing =>
     docs_url: null,
     repo_url: null,
     kind: 'api',
+    track: 'api',
+    launched_at: null,
+    platforms: [],
     pricing: 'free',
     pricing_note: null,
     open_source: false,
@@ -35,6 +38,7 @@ const listing = (overrides: Partial<Listing>): Listing =>
     confidence: 0,
     recent: 0,
     myVote: 0,
+    isNew: false,
     ...overrides,
   }) as Listing;
 

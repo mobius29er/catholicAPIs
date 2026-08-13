@@ -13,9 +13,27 @@ CREATE TABLE apis (
   docs_url       TEXT,
   repo_url       TEXT,
 
+  -- Two tracks share this table: developer building blocks ('api') and finished
+  -- Catholic software people use ('product'). A second table would have meant a
+  -- duplicate set of votes, reports, rate limits and moderation for no gain, so
+  -- a listing simply declares which half it belongs to and everything
+  -- downstream is shared.
+  track          TEXT    NOT NULL DEFAULT 'api' CHECK (track IN ('api', 'product')),
+
   -- Not everything useful is a hosted endpoint. Keeping the distinction explicit
   -- means a reader filtering for "api" never gets handed an npm package.
+  -- Meaningful only when track = 'api'; product rows keep the default and the
+  -- UI never reads it for them.
   kind           TEXT    NOT NULL DEFAULT 'api' CHECK (kind IN ('api', 'dataset', 'library', 'mcp')),
+
+  -- Where a product runs: JSON array of ios/android/web/desktop/parish. The API
+  -- track answers the same question with `kind` instead.
+  platforms      TEXT    NOT NULL DEFAULT '[]',
+
+  -- When a product was released. Drives the "just launched" flash and is left
+  -- NULL unless someone actually confirmed a date — a guessed one would light
+  -- up the flash for something years old.
+  launched_at    TEXT,
 
   -- What it costs to use. `open_source` is orthogonal: an API can be free to
   -- call without its server being open source, and vice versa.
@@ -51,6 +69,8 @@ CREATE TABLE apis (
 
 CREATE INDEX idx_apis_status_created ON apis (status, created_at DESC);
 CREATE INDEX idx_apis_status_score   ON apis (status, (upvotes - downvotes) DESC);
+CREATE INDEX idx_apis_track          ON apis (track, status);
+CREATE INDEX idx_apis_launched       ON apis (track, launched_at DESC);
 
 -- One row per (api, voter). Re-voting the same direction deletes the row,
 -- voting the other way updates it in place.

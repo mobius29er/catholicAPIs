@@ -1,29 +1,50 @@
 # Catholic APIs
 
-A community-ranked directory of the APIs, datasets and libraries you can build Catholic software
-on — liturgical calendars, daily readings, scripture, the Catechism, canon law, prayers, saints —
-free and paid. Anyone can upvote what works and downvote what's abandoned.
+A community-ranked directory of Catholic software, in two tracks:
+
+- **Products** (`/`) — what Catholics actually use: prayer apps, breviaries, formation
+  programmes, parish tools, journalism, AI assistants.
+- **APIs** (`/apis`) — what those get built from: liturgical calendars, scripture, the Catechism,
+  canon law, datasets, libraries, MCP servers.
+
+Both are free and paid, both are upvoted and downvoted by the people who use them, and both run
+through one voting system, one moderation queue and one JSON API. A listing declares a `track`;
+everything downstream is shared. That is the whole of the "two products in one site" complexity.
 
 Runs entirely on Cloudflare: a Worker for server-rendered HTML, D1 for storage, static assets at
 the edge. No origin server, no container, and it fits comfortably in the free tier.
 
 ```
 Cloudflare Worker (Hono, SSR)  ──  D1 (SQLite)
-        │                              ├─ apis         listings + denormalised vote tallies
-        ├─ / directory + facets        ├─ votes        one row per (listing, voter)
-        ├─ /apis/:slug detail          ├─ reports      "this link is dead"
-        ├─ /submit  moderated queue    └─ rate_limits  fixed-window per-IP counters
+        │                              ├─ apis         listings, both tracks + vote tallies
+        ├─ /            products       ├─ votes        one row per (listing, voter)
+        ├─ /apis        developer      ├─ reports      "this link is dead"
+        ├─ /products/:slug  detail     └─ rate_limits  fixed-window per-IP counters
+        ├─ /apis/:slug      detail
+        ├─ /submit  moderated queue
         ├─ /admin   moderation
         └─ /api/v1  public JSON API
 Static assets (public/) served from the edge, never touching the Worker.
 ```
+
+## Design
+
+Golden-age comic book meets neo-noir Scandinavian. The two meet at the grid: a comic page is
+panels, gutters and hard rules, and Scandinavian design is the same discipline with the ink turned
+down. So the *structure* is comic — 2px panel borders, hard offset shadows with no blur, caption-box
+badges, halftone dots, page numbers on the cards — and the *palette* is noir: cold near-black,
+blue-grey, and exactly one warm light (amber) in an otherwise cold frame.
+
+Catholic identity is deliberately quiet: no crosses in the chrome, no gold leaf, no liturgical
+colour coding. The content says Catholic; the interface stays a developer tool. Dark is the
+default; light mode is a cold Scandinavian white rather than paper.
 
 ## Quick start
 
 ```bash
 npm install
 npx wrangler d1 create catholic-apis     # paste the printed id into wrangler.jsonc
-npm run db:migrate:local                 # schema + 28 seed listings
+npm run db:migrate:local                 # schema + 44 seed listings across both tracks
 cp .dev.vars.example .dev.vars
 npm run dev                              # http://127.0.0.1:8787
 ```
@@ -93,20 +114,25 @@ that it isn't worth doing to a list of Catholic APIs.
 
 ## Data
 
-Listings live in [`data/seed.json`](data/seed.json) — the single source of truth. Editing that
-file and running `npm run seed:build` regenerates a migration of upserts keyed on `slug`, which
-patch existing rows while leaving votes and moderation state alone.
+Listings live in two source files — [`data/seed.json`](data/seed.json) for the API track and
+[`data/products.json`](data/products.json) for products. Editing either and running
+`npm run seed:build` regenerates a migration of upserts keyed on `slug`, which patch existing rows
+while leaving votes and moderation state alone.
 
 > D1 runs each migration exactly once, so editing an already-applied migration does nothing. To
-> correct a listing after launch: edit `data/seed.json`, then
-> `node scripts/build-seed.mjs migrations/0003_fix.sql` and apply that.
+> correct a listing after launch: edit the source file, then
+> `node scripts/build-seed.mjs data/seed.json migrations/0004_fix.sql` and apply that.
+
+`launched_at` is null on every seeded product. We know roughly when most of them appeared but not
+precisely, and a launch feed built on invented dates is worse than one built on when a listing
+joined the directory. Submitters state their own launch date; ours stay blank until confirmed.
 
 Fields that haven't been confirmed are `null` rather than guessed — an honest blank beats a wrong
 "free" label. `verified_at` records when a maintainer last checked a listing by hand; the detail
 page shows it, and every listing has a report button because links rot.
 
 ```bash
-npm run links:check   # probes every URL in seed.json, exits 1 on any dead link
+npm run links:check   # probes every URL in both source files, exits 1 on any dead link
 ```
 
 ## The directory is itself an API
@@ -115,7 +141,8 @@ It would be a poor showing otherwise. No key, CORS open, docs at `/api/v1`.
 
 ```bash
 curl 'https://catholicapis.com/api/v1/apis?pricing=free&no_auth=1&sort=top'
-curl 'https://catholicapis.com/api/v1/apis/church-calendar-api'
+curl 'https://catholicapis.com/api/v1/products?platform=ios&sort=trending'
+curl 'https://catholicapis.com/api/v1/listings/church-calendar-api'
 curl 'https://catholicapis.com/api/v1/categories'
 ```
 
@@ -130,13 +157,13 @@ publish, reject, mark verified, or dismiss a report.
 | Path | What's in it |
 | --- | --- |
 | `src/index.tsx` | Every route: pages, voting, submissions, JSON API, feeds, moderation |
-| `src/db.ts` | D1 queries, filtering, faceting, vote transactions |
+| `src/db.ts` | D1 queries, track filtering, faceting, vote transactions |
 | `src/ranking.ts` | Wilson score, gravity decay, sort orders — pure and tested |
 | `src/voter.ts` | Signed voter cookies, IP hashing, rate limits |
-| `src/views/` | Server-rendered JSX |
-| `public/` | CSS, progressive-enhancement JS, favicon — served from the edge |
+| `src/views/` | Server-rendered JSX, shared by both tracks |
+| `public/styles.css` | The whole design system, hand-written |
 | `migrations/` | D1 schema and seed |
-| `data/seed.json` | The listings themselves |
+| `data/*.json` | The listings themselves |
 
 ## Notes on the implementation
 
@@ -147,7 +174,11 @@ is hundreds of rows rather than millions. Past a few thousand listings, move ran
 
 **Everything works without JavaScript.** Votes are real form posts that redirect back; `app.js`
 only intercepts them to avoid the reload. The filter panel ships open and is collapsed by script
-on narrow screens, so a no-JS phone gets a verbose page rather than a broken one.
+on narrow screens, so a no-JS phone gets a verbose page rather than a broken one. The submit form
+renders both tracks' fields and hides the irrelevant half by script for the same reason.
+
+**One listing, one canonical URL.** Slugs are unique across both tracks, so reaching a product
+under `/apis/:slug` 301s to `/products/:slug` rather than serving a duplicate page.
 
 **CSS is hand-written.** A dozen components did not justify a build step. Light and dark are both
 defined explicitly, including the `prefers-color-scheme` default and a manual override applied
@@ -167,9 +198,10 @@ npm run links:check      # check every seed URL still resolves
 ## Contributing a listing
 
 Either open the [submit form](https://catholicapis.com/submit) or send a pull request against
-`data/seed.json`. Anything a developer can build on qualifies: hosted APIs, open datasets, client
-libraries, MCP servers. Paid services are welcome as long as the pricing is stated plainly — an
-honest paid service beats an abandoned free one.
+`data/products.json` or `data/seed.json`. On the product side, anything a Catholic actually uses
+that is software; on the developer side, anything you can build on — hosted APIs, open datasets,
+client libraries, MCP servers. Paid is welcome as long as the pricing is stated plainly: an honest
+paid service beats an abandoned free one.
 
 Not affiliated with the Holy See, any bishops' conference, or any diocese. Every listing links to
 its own publisher; check their terms before you ship, especially for scripture translations, where

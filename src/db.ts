@@ -1,8 +1,11 @@
 import { sortListings, wilsonLowerBound } from './ranking';
-import type { ApiRow, Env, Filters, Listing, Status } from './types';
+import type { ApiRow, Env, Filters, Listing, Platform, Status, Track } from './types';
 
 /** How far back "trending" looks when counting votes. */
 const TRENDING_WINDOW_DAYS = 14;
+
+/** How recently a product must have launched to still read as "just launched". */
+const LAUNCH_WINDOW_DAYS = 14;
 
 export const PAGE_SIZE = 24;
 
@@ -28,17 +31,22 @@ function parseJsonArray(value: string): string[] {
 export function toListing(
   row: ApiRow,
   votes: { recent?: number; myVote?: -1 | 0 | 1 } = {},
+  now: number = Date.now(),
 ): Listing {
+  const launched = row.launched_at ? Date.parse(`${row.launched_at.slice(0, 10)}T00:00:00Z`) : NaN;
+
   return {
     ...row,
     categories: parseJsonArray(row.categories),
     languages: parseJsonArray(row.languages),
+    platforms: parseJsonArray(row.platforms) as Platform[],
     open_source: row.open_source === 1,
     official: row.official === 1,
     score: row.upvotes - row.downvotes,
     confidence: wilsonLowerBound(row.upvotes, row.downvotes),
     recent: votes.recent ?? 0,
     myVote: votes.myVote ?? 0,
+    isNew: !Number.isNaN(launched) && now - launched <= LAUNCH_WINDOW_DAYS * 86_400_000,
   };
 }
 
@@ -75,11 +83,20 @@ async function myVoteMap(env: Env, voterId: string | null): Promise<Map<number, 
 
 async function loadListings(
   env: Env,
-  { status = 'published', search = '' }: { status?: Status; search?: string },
+  {
+    status = 'published',
+    search = '',
+    track,
+  }: { status?: Status; search?: string; track?: Track },
   voterId: string | null,
 ): Promise<Listing[]> {
   const clauses = ['status = ?1'];
   const bindings: unknown[] = [status];
+
+  if (track) {
+    clauses.push(`track = ?${bindings.length + 1}`);
+    bindings.push(track);
+  }
 
   if (search.trim()) {
     // Cheap substring match over the fields a reader would search by. Good
@@ -118,6 +135,7 @@ export interface DirectoryResult {
   facets: {
     pricing: FacetCount[];
     kind: FacetCount[];
+    platforms: FacetCount[];
     categories: FacetCount[];
     languages: FacetCount[];
   };
@@ -138,6 +156,9 @@ function countBy(listings: Listing[], pick: (l: Listing) => string[]): FacetCoun
 function matchesFilters(listing: Listing, filters: Filters): boolean {
   if (filters.pricing.length && !filters.pricing.includes(listing.pricing)) return false;
   if (filters.kind.length && !filters.kind.includes(listing.kind)) return false;
+  if (filters.platforms.length && !filters.platforms.some((p) => listing.platforms.includes(p))) {
+    return false;
+  }
   if (filters.auth.length && !filters.auth.includes(listing.auth)) return false;
   if (filters.openSource && !listing.open_source) return false;
   if (filters.noAuth && listing.auth !== 'none') return false;
@@ -158,7 +179,7 @@ export async function queryDirectory(
   filters: Filters,
   voterId: string | null,
 ): Promise<DirectoryResult> {
-  const all = await loadListings(env, { search: filters.q }, voterId);
+  const all = await loadListings(env, { search: filters.q, track: filters.track }, voterId);
 
   // Facet counts are computed before the facet filters are applied, so a
   // reader can always see (and reach) the other options instead of hitting a
@@ -166,6 +187,7 @@ export async function queryDirectory(
   const facets = {
     pricing: countBy(all, (l) => [l.pricing]),
     kind: countBy(all, (l) => [l.kind]),
+    platforms: countBy(all, (l) => l.platforms),
     categories: countBy(all, (l) => l.categories),
     languages: countBy(all, (l) => l.languages),
   };
@@ -202,9 +224,9 @@ export async function getListing(
   return toListing(row, { recent: recent.get(row.id) ?? 0, myVote: mine.get(row.id) ?? 0 });
 }
 
-/** Same categories, ranked by confidence — the "you might also want" strip. */
+/** Same track and overlapping categories, ranked by confidence. */
 export async function getRelated(env: Env, listing: Listing, limit = 4): Promise<Listing[]> {
-  const all = await loadListings(env, {}, null);
+  const all = await loadListings(env, { track: listing.track }, null);
   const scored = all
     .filter((l) => l.id !== listing.id)
     .map((l) => ({
@@ -285,6 +307,9 @@ export interface SubmissionInput {
   docs_url: string | null;
   repo_url: string | null;
   kind: string;
+  track: Track;
+  platforms: string[];
+  launched_at: string | null;
   pricing: string;
   open_source: boolean;
   auth: string;
@@ -322,9 +347,9 @@ export async function createSubmission(env: Env, input: SubmissionInput): Promis
   await env.DB.prepare(
     `INSERT INTO apis (
        slug, name, tagline, description, homepage_url, docs_url, repo_url,
-       kind, pricing, open_source, auth, categories, languages,
-       status, submitter, submitter_note
-     ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, 'pending', ?14, ?15)`,
+       kind, track, platforms, launched_at, pricing, open_source, auth,
+       categories, languages, status, submitter, submitter_note
+     ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, 'pending', ?17, ?18)`,
   )
     .bind(
       slug,
@@ -335,6 +360,9 @@ export async function createSubmission(env: Env, input: SubmissionInput): Promis
       input.docs_url,
       input.repo_url,
       input.kind,
+      input.track,
+      JSON.stringify(input.platforms),
+      input.launched_at,
       input.pricing,
       input.open_source ? 1 : 0,
       input.auth,
@@ -364,6 +392,12 @@ export async function createReport(
 
 export async function listByStatus(env: Env, status: Status): Promise<Listing[]> {
   return loadListings(env, { status }, null);
+}
+
+/** Newest products first — the front-page launches feed. */
+export async function recentlyAdded(env: Env, track: Track, limit: number): Promise<Listing[]> {
+  const all = await loadListings(env, { track }, null);
+  return sortListings(all, 'new').slice(0, limit);
 }
 
 export async function listOpenReports(
@@ -406,13 +440,23 @@ export async function resolveReport(env: Env, id: number): Promise<void> {
   await env.DB.prepare('UPDATE reports SET resolved = 1 WHERE id = ?1').bind(id).run();
 }
 
-export async function stats(env: Env): Promise<{ total: number; free: number; votes: number }> {
+export interface Stats {
+  total: number;
+  apis: number;
+  products: number;
+  free: number;
+  votes: number;
+}
+
+export async function stats(env: Env): Promise<Stats> {
   const row = await env.DB.prepare(
     `SELECT
-       (SELECT COUNT(*) FROM apis WHERE status = 'published')                        AS total,
-       (SELECT COUNT(*) FROM apis WHERE status = 'published' AND pricing != 'paid')  AS free,
-       (SELECT COUNT(*) FROM votes)                                                  AS votes`,
-  ).first<{ total: number; free: number; votes: number }>();
+       (SELECT COUNT(*) FROM apis WHERE status = 'published')                            AS total,
+       (SELECT COUNT(*) FROM apis WHERE status = 'published' AND track = 'api')          AS apis,
+       (SELECT COUNT(*) FROM apis WHERE status = 'published' AND track = 'product')      AS products,
+       (SELECT COUNT(*) FROM apis WHERE status = 'published' AND pricing != 'paid')      AS free,
+       (SELECT COUNT(*) FROM votes)                                                      AS votes`,
+  ).first<Stats>();
 
-  return row ?? { total: 0, free: 0, votes: 0 };
+  return row ?? { total: 0, apis: 0, products: 0, free: 0, votes: 0 };
 }

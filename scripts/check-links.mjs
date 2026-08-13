@@ -14,7 +14,13 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const seed = JSON.parse(readFileSync(resolve(root, 'data/seed.json'), 'utf8'));
+
+const SOURCES = ['data/seed.json', 'data/products.json'];
+
+const listings = SOURCES.flatMap((source) => {
+  const parsed = JSON.parse(readFileSync(resolve(root, source), 'utf8'));
+  return parsed.listings ?? parsed.apis ?? [];
+});
 
 const TIMEOUT_MS = 20_000;
 const CONCURRENCY = 6;
@@ -47,9 +53,9 @@ async function probe(url) {
 }
 
 const targets = [];
-for (const api of seed.apis ?? []) {
+for (const listing of listings) {
   for (const field of ['homepage_url', 'docs_url', 'repo_url']) {
-    if (api[field]) targets.push({ slug: api.slug, field, url: api[field] });
+    if (listing[field]) targets.push({ slug: listing.slug, field, url: listing[field] });
   }
 }
 

@@ -131,6 +131,26 @@
     if (!filters.querySelector('.filters-badge')) filters.open = false;
   }
 
+  // ------------------------------------------------- submit form track ---
+
+  // The submit form asks for different things depending on the track. Both
+  // sets are in the DOM so the form still works without JavaScript; this just
+  // hides the half that doesn't apply.
+  var submitForm = document.querySelector('[data-submit-form]');
+  if (submitForm) {
+    var syncTrack = function () {
+      var checked = submitForm.querySelector('[data-track-radio]:checked');
+      var track = checked ? checked.value : 'api';
+      submitForm.querySelectorAll('[data-track-only]').forEach(function (el) {
+        el.hidden = el.getAttribute('data-track-only') !== track;
+      });
+    };
+    submitForm.querySelectorAll('[data-track-radio]').forEach(function (radio) {
+      radio.addEventListener('change', syncTrack);
+    });
+    syncTrack();
+  }
+
   // ------------------------------------------------------------ search ----
 
   // Submit the search as the reader stops typing, so filtering feels live

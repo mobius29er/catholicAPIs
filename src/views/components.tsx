@@ -1,5 +1,6 @@
 import type { FC } from 'hono/jsx';
-import type { Filters, Listing, Sort } from '../types';
+import type { Filters, Listing, Sort, Track } from '../types';
+import { listingPath } from '../types';
 import type { FacetCount } from '../db';
 
 export const KIND_LABELS: Record<string, string> = {
@@ -13,6 +14,14 @@ export const PRICING_LABELS: Record<string, string> = {
   free: 'Free',
   freemium: 'Freemium',
   paid: 'Paid',
+};
+
+export const PLATFORM_LABELS: Record<string, string> = {
+  ios: 'iOS',
+  android: 'Android',
+  web: 'Web',
+  desktop: 'Desktop',
+  parish: 'For parishes',
 };
 
 export const AUTH_LABELS: Record<string, string> = {
@@ -40,6 +49,9 @@ export const LANGUAGE_NAMES: Record<string, string> = {
 
 export const languageName = (code: string): string => LANGUAGE_NAMES[code] ?? code.toUpperCase();
 
+/** Where each track's index lives. Filter links must stay inside their track. */
+export const trackRoot = (track: Track): string => (track === 'product' ? '/' : '/apis');
+
 /** Rebuilds the current query string with one parameter changed. */
 export function buildQuery(
   filters: Filters,
@@ -52,6 +64,7 @@ export function buildQuery(
     sort: filters.sort,
     pricing: filters.pricing,
     kind: filters.kind,
+    platform: filters.platforms,
     category: filters.categories,
     lang: filters.languages,
     auth: filters.auth,
@@ -72,7 +85,8 @@ export function buildQuery(
   }
 
   const qs = params.toString();
-  return qs ? `?${qs}` : '/';
+  const root = trackRoot(filters.track);
+  return qs ? `${root}?${qs}` : root;
 }
 
 /** Toggles one value inside a multi-select facet and returns the resulting URL. */
@@ -81,93 +95,122 @@ function toggleUrl(filters: Filters, key: string, current: string[], value: stri
   return buildQuery(filters, { [key]: next, page: 1 });
 }
 
-export const VoteWidget: FC<{ listing: Listing; large?: boolean }> = ({ listing, large }) => (
-  <form
-    class={large ? 'vote vote-large' : 'vote'}
-    method="post"
-    action={`/apis/${listing.slug}/vote`}
-    data-vote
-  >
-    <button
-      type="submit"
-      name="value"
-      value="1"
-      class="vote-btn vote-up"
-      aria-pressed={listing.myVote === 1 ? 'true' : 'false'}
-      aria-label={`Upvote ${listing.name}`}
-      title="This API is worth using"
+export const VoteWidget: FC<{ listing: Listing; large?: boolean }> = ({ listing, large }) => {
+  const noun = listing.track === 'product' ? 'this' : 'this API';
+
+  return (
+    <form
+      class={large ? 'vote vote-large' : 'vote'}
+      method="post"
+      action={`${listingPath(listing)}/vote`}
+      data-vote
     >
-      <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-        <path d="M8 3 14 11H2z" />
-      </svg>
-    </button>
+      <button
+        type="submit"
+        name="value"
+        value="1"
+        class="vote-btn vote-up"
+        aria-pressed={listing.myVote === 1 ? 'true' : 'false'}
+        aria-label={`Upvote ${listing.name}`}
+        title={`Worth using — recommend ${noun}`}
+      >
+        <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+          <path d="M8 2.5 15 12H1z" />
+        </svg>
+      </button>
 
-    <span class="vote-score" data-vote-score title={`${listing.upvotes} up · ${listing.downvotes} down`}>
-      {listing.score}
-    </span>
+      <span
+        class="vote-score"
+        data-vote-score
+        title={`${listing.upvotes} up · ${listing.downvotes} down`}
+      >
+        {listing.score}
+      </span>
 
-    <button
-      type="submit"
-      name="value"
-      value="-1"
-      class="vote-btn vote-down"
-      aria-pressed={listing.myVote === -1 ? 'true' : 'false'}
-      aria-label={`Downvote ${listing.name}`}
-      title="This API is broken, abandoned or misleading"
-    >
-      <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-        <path d="M8 13 2 5h12z" />
-      </svg>
-    </button>
+      <button
+        type="submit"
+        name="value"
+        value="-1"
+        class="vote-btn vote-down"
+        aria-pressed={listing.myVote === -1 ? 'true' : 'false'}
+        aria-label={`Downvote ${listing.name}`}
+        title="Broken, abandoned or not what it claims"
+      >
+        <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+          <path d="M8 13.5 1 4h14z" />
+        </svg>
+      </button>
 
-    <span class="visually-hidden" data-vote-status role="status" aria-live="polite" />
-  </form>
-);
+      <span class="visually-hidden" data-vote-status role="status" aria-live="polite" />
+    </form>
+  );
+};
 
 export const Badges: FC<{ listing: Listing }> = ({ listing }) => (
   <ul class="badges">
     <li class={`badge badge-${listing.pricing}`}>{PRICING_LABELS[listing.pricing]}</li>
-    {listing.kind !== 'api' && <li class="badge">{KIND_LABELS[listing.kind]}</li>}
+
+    {listing.track === 'api' ? (
+      <>
+        {listing.kind !== 'api' && <li class="badge">{KIND_LABELS[listing.kind]}</li>}
+        {listing.auth === 'none' && <li class="badge badge-quiet">No key</li>}
+      </>
+    ) : (
+      listing.platforms.slice(0, 3).map((platform) => (
+        <li class="badge badge-quiet">{PLATFORM_LABELS[platform] ?? platform}</li>
+      ))
+    )}
+
     {listing.open_source && <li class="badge badge-quiet">Open source</li>}
-    {listing.auth === 'none' && <li class="badge badge-quiet">No key</li>}
-    {listing.official && <li class="badge badge-official">Official source</li>}
+    {listing.official && <li class="badge badge-official">Official</li>}
   </ul>
 );
 
-export const ApiCard: FC<{ listing: Listing }> = ({ listing }) => (
-  <li class="card">
-    <VoteWidget listing={listing} />
+export const ListingCard: FC<{ listing: Listing; rank?: number }> = ({ listing, rank }) => {
+  const href = listingPath(listing);
 
-    <div class="card-body">
-      <h3 class="card-title">
-        <a href={`/apis/${listing.slug}`}>{listing.name}</a>
-      </h3>
-      <p class="card-tagline">{listing.tagline}</p>
+  return (
+    <li class="card">
+      {rank !== undefined && (
+        <span class="card-rank" aria-hidden="true">
+          {String(rank).padStart(2, '0')}
+        </span>
+      )}
 
-      <Badges listing={listing} />
+      <VoteWidget listing={listing} />
 
-      <p class="card-meta muted">
-        {listing.categories.slice(0, 3).join(' · ')}
-        {listing.languages.length > 0 && (
-          <>
-            {' · '}
-            {listing.languages.slice(0, 4).map(languageName).join(', ')}
-            {listing.languages.length > 4 && ` +${listing.languages.length - 4}`}
-          </>
-        )}
-      </p>
-    </div>
+      <div class="card-body">
+        <h3 class="card-title">
+          <a href={href}>{listing.name}</a>
+          {listing.isNew && <span class="flash">Just launched</span>}
+        </h3>
+        <p class="card-tagline">{listing.tagline}</p>
 
-    <div class="card-actions">
-      <a class="btn btn-quiet" href={listing.homepage_url} rel="nofollow noopener" target="_blank">
-        Visit ↗
-      </a>
-      <a class="btn btn-link" href={`/apis/${listing.slug}`}>
-        Details
-      </a>
-    </div>
-  </li>
-);
+        <Badges listing={listing} />
+
+        <p class="card-meta">
+          {listing.categories.slice(0, 3).join(' · ')}
+          {listing.languages.length > 0 && (
+            <>
+              {' · '}
+              {listing.languages.slice(0, 4).map(languageName).join(', ')}
+              {listing.languages.length > 4 && ` +${listing.languages.length - 4}`}
+            </>
+          )}
+        </p>
+      </div>
+
+      <div class="card-actions">
+        <a class="btn btn-quiet" href={listing.homepage_url} rel="nofollow noopener" target="_blank">
+          Visit ↗
+        </a>
+        <a class="btn btn-link" href={href}>
+          Details
+        </a>
+      </div>
+    </li>
+  );
+};
 
 const SORTS: Array<{ value: Sort; label: string; hint: string }> = [
   { value: 'top', label: 'Top rated', hint: 'Highest confidence approval, not just raw votes' },
@@ -189,6 +232,25 @@ export const SortTabs: FC<{ filters: Filters }> = ({ filters }) => (
       </a>
     ))}
   </div>
+);
+
+/** The two-track switch. Present on both index pages so neither is a dead end. */
+export const TrackTabs: FC<{ active: Track; counts: { apis: number; products: number } }> = ({
+  active,
+  counts,
+}) => (
+  <nav class="track-tabs" aria-label="Directory section">
+    <a href="/" aria-current={active === 'product' ? 'page' : undefined}>
+      <span class="track-label">Products</span>
+      <span class="track-desc">Catholic apps &amp; services</span>
+      <span class="track-count">{counts.products}</span>
+    </a>
+    <a href="/apis" aria-current={active === 'api' ? 'page' : undefined}>
+      <span class="track-label">APIs</span>
+      <span class="track-desc">Developer building blocks</span>
+      <span class="track-count">{counts.apis}</span>
+    </a>
+  </nav>
 );
 
 const FacetGroup: FC<{
@@ -230,25 +292,38 @@ const FacetGroup: FC<{
   );
 };
 
-export const Filters_: FC<{
+export const FilterPanel: FC<{
   filters: Filters;
-  facets: { pricing: FacetCount[]; kind: FacetCount[]; categories: FacetCount[]; languages: FacetCount[] };
+  facets: {
+    pricing: FacetCount[];
+    kind: FacetCount[];
+    platforms: FacetCount[];
+    categories: FacetCount[];
+    languages: FacetCount[];
+  };
 }> = ({ filters, facets }) => {
-  const anyActive =
-    filters.pricing.length > 0 ||
-    filters.kind.length > 0 ||
-    filters.categories.length > 0 ||
-    filters.languages.length > 0 ||
-    filters.openSource ||
-    filters.noAuth;
+  const isApiTrack = filters.track === 'api';
 
   const activeCount =
     filters.pricing.length +
     filters.kind.length +
+    filters.platforms.length +
     filters.categories.length +
     filters.languages.length +
     (filters.openSource ? 1 : 0) +
     (filters.noAuth ? 1 : 0);
+
+  const clearHref = buildQuery(filters, {
+    pricing: [],
+    kind: [],
+    platform: [],
+    category: [],
+    lang: [],
+    auth: [],
+    open_source: false,
+    no_auth: false,
+    page: 1,
+  });
 
   return (
     /*
@@ -266,17 +341,8 @@ export const Filters_: FC<{
 
       <div class="filters-head">
         <h2>Filters</h2>
-        {anyActive && (
-          <a class="btn btn-link" href={buildQuery({ ...filters, sort: filters.sort } as Filters, {
-            pricing: [],
-            kind: [],
-            category: [],
-            lang: [],
-            auth: [],
-            open_source: false,
-            no_auth: false,
-            page: 1,
-          })} rel="nofollow">
+        {activeCount > 0 && (
+          <a class="btn btn-link" href={clearHref} rel="nofollow">
             Clear all
           </a>
         )}
@@ -291,14 +357,25 @@ export const Filters_: FC<{
         labels={PRICING_LABELS}
       />
 
-      <FacetGroup
-        legend="Type"
-        filters={filters}
-        paramKey="kind"
-        selected={filters.kind}
-        options={facets.kind}
-        labels={KIND_LABELS}
-      />
+      {isApiTrack ? (
+        <FacetGroup
+          legend="Type"
+          filters={filters}
+          paramKey="kind"
+          selected={filters.kind}
+          options={facets.kind}
+          labels={KIND_LABELS}
+        />
+      ) : (
+        <FacetGroup
+          legend="Platform"
+          filters={filters}
+          paramKey="platform"
+          selected={filters.platforms}
+          options={facets.platforms}
+          labels={PLATFORM_LABELS}
+        />
+      )}
 
       <fieldset class="facet">
         <legend>Quick filters</legend>
@@ -315,18 +392,20 @@ export const Filters_: FC<{
               <span class="facet-label">Open source only</span>
             </a>
           </li>
-          <li>
-            <a
-              class={filters.noAuth ? 'facet-option is-on' : 'facet-option'}
-              href={buildQuery(filters, { no_auth: !filters.noAuth, page: 1 })}
-              rel="nofollow"
-            >
-              <span class="facet-check" aria-hidden="true">
-                {filters.noAuth ? '✓' : ''}
-              </span>
-              <span class="facet-label">No API key required</span>
-            </a>
-          </li>
+          {isApiTrack && (
+            <li>
+              <a
+                class={filters.noAuth ? 'facet-option is-on' : 'facet-option'}
+                href={buildQuery(filters, { no_auth: !filters.noAuth, page: 1 })}
+                rel="nofollow"
+              >
+                <span class="facet-check" aria-hidden="true">
+                  {filters.noAuth ? '✓' : ''}
+                </span>
+                <span class="facet-label">No API key required</span>
+              </a>
+            </li>
+          )}
         </ul>
       </fieldset>
 

@@ -1,4 +1,11 @@
 export type Kind = 'api' | 'dataset' | 'library' | 'mcp';
+/**
+ * Which half of the directory a listing lives in: developer building blocks
+ * (`api`) or finished software people use (`product`). Everything else —
+ * voting, reports, moderation, the JSON API — is shared between them.
+ */
+export type Track = 'api' | 'product';
+export type Platform = 'ios' | 'android' | 'web' | 'desktop' | 'parish';
 export type Pricing = 'free' | 'freemium' | 'paid';
 export type Auth = 'none' | 'api-key' | 'oauth' | 'unknown';
 export type Cors = 'yes' | 'no' | 'unknown';
@@ -15,7 +22,11 @@ export interface ApiRow {
   homepage_url: string;
   docs_url: string | null;
   repo_url: string | null;
+  /** Meaningful only when `track` is 'api'. */
   kind: Kind;
+  track: Track;
+  launched_at: string | null;
+  platforms: string;
   pricing: Pricing;
   pricing_note: string | null;
   open_source: number;
@@ -38,9 +49,13 @@ export interface ApiRow {
 
 /** An `ApiRow` with JSON columns parsed and derived vote figures attached. */
 export interface Listing
-  extends Omit<ApiRow, 'categories' | 'languages' | 'open_source' | 'official'> {
+  extends Omit<
+    ApiRow,
+    'categories' | 'languages' | 'platforms' | 'open_source' | 'official'
+  > {
   categories: string[];
   languages: string[];
+  platforms: Platform[];
   open_source: boolean;
   official: boolean;
   score: number;
@@ -50,12 +65,16 @@ export interface Listing
   recent: number;
   /** The current visitor's vote on this listing, if any. */
   myVote: -1 | 0 | 1;
+  /** Launched inside the recency window — drives the "just launched" flash. */
+  isNew: boolean;
 }
 
 export interface Filters {
   q: string;
+  track: Track;
   pricing: Pricing[];
   kind: Kind[];
+  platforms: Platform[];
   categories: string[];
   languages: string[];
   auth: Auth[];
@@ -64,6 +83,10 @@ export interface Filters {
   sort: Sort;
   page: number;
 }
+
+/** Where a listing's detail page lives. The two tracks get distinct URL spaces. */
+export const listingPath = (listing: Pick<Listing, 'track' | 'slug'>): string =>
+  listing.track === 'product' ? `/products/${listing.slug}` : `/apis/${listing.slug}`;
 
 export interface Env {
   DB: D1Database;

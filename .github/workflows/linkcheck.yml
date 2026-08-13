@@ -1,0 +1,72 @@
+# A directory whose links rot is worse than no directory. This walks every URL
+# in data/seed.json weekly and files an issue when something stops answering.
+name: Link check
+
+on:
+  schedule:
+    - cron: '0 7 * * 1' # Mondays, 07:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - id: check
+        run: |
+          set +e
+          node scripts/check-links.mjs > report.txt 2>&1
+          echo "status=$?" >> "$GITHUB_OUTPUT"
+          cat report.txt
+
+      - if: steps.check.outputs.status != '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('report.txt', 'utf8').slice(-8000);
+            const title = 'Dead links in the directory';
+
+            const { data: open } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'link-rot',
+            });
+
+            const body = [
+              'The weekly link check found URLs that no longer answer.',
+              '',
+              'Fix the entry in `data/seed.json` and regenerate a correction migration, or',
+              'unpublish the listing from `/admin`.',
+              '',
+              '```',
+              report,
+              '```',
+            ].join('\n');
+
+            if (open.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: open[0].number,
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['link-rot'],
+              });
+            }

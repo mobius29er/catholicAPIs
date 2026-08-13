@@ -1,0 +1,40 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "catholic-apis",
+  "main": "src/index.tsx",
+  "compatibility_date": "2026-08-13",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+
+  // Static files (CSS, JS, icons) are served straight from Cloudflare's edge.
+  // `run_worker_first` is false so asset requests never touch the Worker; every
+  // other path falls through to the Hono app in src/index.tsx.
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "not_found_handling": "none"
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "catholic-apis",
+      // Replace with the id printed by `wrangler d1 create catholic-apis`.
+      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  "vars": {
+    "SITE_URL": "https://catholicapis.com",
+    "SITE_NAME": "Catholic APIs"
+  }
+
+  // Secrets (set with `wrangler secret put <NAME>`), all optional:
+  //   VOTE_SECRET      - HMAC key for signing anonymous voter cookies. Strongly recommended.
+  //   ADMIN_TOKEN      - enables the /admin moderation queue when set.
+  //   TURNSTILE_SITEKEY / TURNSTILE_SECRET - enables Turnstile on the submit form.
+  //   (TURNSTILE_SITEKEY is public; it can also live in "vars" above.)
+}

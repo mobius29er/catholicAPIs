@@ -1,0 +1,16 @@
+# Copy to `.dev.vars` for local development. In production these are secrets:
+#   wrangler secret put VOTE_SECRET
+#
+# All of them are optional; the site runs without any. What you lose:
+#   no VOTE_SECRET -> voter cookies are signed with a known dev key and can be forged
+#   no ADMIN_TOKEN -> /admin returns 401 and submissions can only be published via SQL
+#   no TURNSTILE_* -> the submit form falls back to the honeypot and rate limit alone
+
+# openssl rand -base64 32
+VOTE_SECRET=dev-secret-change-me
+
+ADMIN_TOKEN=dev-admin-token
+
+# From the Cloudflare dashboard, Turnstile -> add a widget.
+# TURNSTILE_SITEKEY=
+# TURNSTILE_SECRET=

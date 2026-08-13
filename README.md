@@ -29,29 +29,38 @@ Static assets (public/) served from the edge, never touching the Worker.
 
 ## Design
 
-**Neo-noir Scandinavian structure, golden-age comic palette.**
+**Golden-age comic × neo-noir**, built to a reference mockup.
 
-The structure is Scandinavian and noir: hairline rules, no boxes, no shadows, no rounded corners,
-wide margins, a strict left-aligned grid and a lot of deliberate emptiness. Listings are rows
-separated by a hairline, not cards; the only movement on the page is a bar of red ink sliding into
-the left margin on hover. Composition is asymmetric — weight at the left, air at the right.
+Warm, not cold: cream text on a blue-black night, lit by amber and a hot orange-red. Colour and
+construction come from the same place rather than being split between the two references.
 
-The colour is golden-age comics: the four-colour process. Saturated red, blue, yellow and cyan as
-flat ink, and Ben-Day dot fields printed slightly out of register, because misregistration is the
-actual golden-age artefact. Light mode is aged newsprint; dark mode is the noir night those inks
-glow against. Because the structure carries no visual weight, colour does all the work — it appears
-in small decisive placements and never as a wash or a gradient. Nothing is outlined.
+What reads as golden-age comic: the yellow caption box in heavy caps, the angled stamp across the
+corner of the hero, the starburst in the footer, Ben-Day dots in the art, and heavy condensed
+uppercase display type. What reads as neo-noir: a blue-black ground with a single warm light
+source, and an illustrated rain-slicked street in silhouette.
 
-Catholic identity is deliberately quiet: no crosses in the chrome, no gold leaf, no liturgical
-colour coding. The content says Catholic; the interface stays a developer tool.
+The hero illustration is hand-authored inline SVG ([`src/views/art.tsx`](src/views/art.tsx)) rather
+than a bitmap — the CSP blocks every external host, and painting it from the same custom properties
+as the rest of the page means it re-inks itself for light mode instead of shipping two files.
 
-> The first pass inverted these — comic *construction* (neubrutalist panels, hard offset shadows,
-> caption boxes) in a noir *palette* (cold near-black, one amber accent). It is archived at
-> [`public/styles-v1.css`](public/styles-v1.css); point the stylesheet link in
-> `src/views/layout.tsx` at `/styles-v1.css` to compare, and delete the file once a direction is
-> settled. Worth knowing that the v1 construction is essentially
-> [neubrutalism](https://www.nngroup.com/articles/neobrutalism/), a well-established trend, whereas
-> v2's pairing is the less common one.
+The chrome around the ornament is a calm, conventional card UI — rounded panels, hairline borders,
+a two-column grid — because the ornament is doing enough work and the reader still has to scan a
+list. Catholic identity is deliberately quiet: no crosses in the chrome, no gold leaf, no
+liturgical colour coding.
+
+### Earlier directions
+
+Both are kept as stylesheets rather than deleted. Point the `<link>` in
+[`src/views/layout.tsx`](src/views/layout.tsx) at one to compare, and delete them once a direction
+is settled.
+
+| File | Direction |
+| --- | --- |
+| [`public/styles-v1.css`](public/styles-v1.css) | Comic *construction* (neubrutalist panels, hard offset shadows, caption boxes) in a noir *palette* — cold near-black, one amber accent. |
+| [`public/styles-v2.css`](public/styles-v2.css) | The inverse: Scandinavian *structure* (hairlines, no boxes, no shadows) carrying a four-colour comic *palette* on newsprint. |
+
+Worth knowing that v1's construction is essentially
+[neubrutalism](https://www.nngroup.com/articles/neobrutalism/), a well-established trend.
 
 ## Quick start
 

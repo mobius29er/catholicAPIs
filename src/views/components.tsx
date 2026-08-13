@@ -166,15 +166,20 @@ export const Badges: FC<{ listing: Listing }> = ({ listing }) => (
   </ul>
 );
 
-export const ListingCard: FC<{ listing: Listing; rank?: number }> = ({ listing, rank }) => {
+export const ListingCard: FC<{ listing: Listing; rank?: number; rankNote?: string }> = ({
+  listing,
+  rank,
+  rankNote,
+}) => {
   const href = listingPath(listing);
 
   return (
     <li class="card">
       {rank !== undefined && (
-        <span class="card-rank" aria-hidden="true">
-          {String(rank).padStart(2, '0')}
-        </span>
+        <div class="card-rank" aria-hidden="true">
+          <span class="card-rank-number">{rank}</span>
+          {rankNote && <span class="card-rank-note">#1 {rankNote}</span>}
+        </div>
       )}
 
       <VoteWidget listing={listing} />
@@ -188,15 +193,15 @@ export const ListingCard: FC<{ listing: Listing; rank?: number }> = ({ listing, 
 
         <Badges listing={listing} />
 
+        <ul class="pills">
+          {listing.categories.slice(0, 2).map((category) => (
+            <li class="pill">{category}</li>
+          ))}
+        </ul>
+
         <p class="card-meta">
-          {listing.categories.slice(0, 3).join(' · ')}
-          {listing.languages.length > 0 && (
-            <>
-              {' · '}
-              {listing.languages.slice(0, 4).map(languageName).join(', ')}
-              {listing.languages.length > 4 && ` +${listing.languages.length - 4}`}
-            </>
-          )}
+          {listing.languages.slice(0, 4).map(languageName).join(', ')}
+          {listing.languages.length > 4 && ` +${listing.languages.length - 4}`}
         </p>
       </div>
 

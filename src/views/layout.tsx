@@ -1,4 +1,5 @@
 import type { FC, PropsWithChildren } from 'hono/jsx';
+import { Burst } from './art';
 
 export interface SeoProps {
   title: string;
@@ -47,13 +48,14 @@ export const Layout: FC<LayoutProps> = ({
       <meta property="og:url" content={canonical} />
       <meta name="twitter:card" content="summary_large_image" />
 
-      <meta name="theme-color" content="#f4efe4" media="(prefers-color-scheme: light)" />
-      <meta name="theme-color" content="#0e0f13" media="(prefers-color-scheme: dark)" />
+      <meta name="theme-color" content="#f2ead8" media="(prefers-color-scheme: light)" />
+      <meta name="theme-color" content="#0b1017" media="(prefers-color-scheme: dark)" />
 
       <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       <link rel="alternate" type="application/rss+xml" title={`${siteName} — newest listings`} href="/feed.xml" />
-      {/* Design v1 (comic structure, noir palette) is archived at
-          /styles-v1.css — swap this href to compare the two directions. */}
+      {/* Earlier directions are archived at /styles-v1.css (comic structure,
+          noir palette) and /styles-v2.css (Scandinavian structure, comic
+          palette). Swap this href to compare them. */}
       <link rel="stylesheet" href="/styles.css" />
 
       {/*
@@ -138,6 +140,10 @@ export const Layout: FC<LayoutProps> = ({
             <a href="/submit">Submit a listing</a>
             <a href="/about#data">Data &amp; corrections</a>
           </div>
+        </div>
+
+        <div class="wrap footer-burst">
+          <Burst>Vote honestly.</Burst>
         </div>
 
         <div class="wrap footer-legal">

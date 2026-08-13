@@ -1,0 +1,1819 @@
+/* ==========================================================================
+   ARCHIVED — design v2. Not linked by the site.
+   Point the stylesheet link in src/views/layout.tsx here to try it.
+
+   Catholic APIs — stylesheet
+   Neo-noir Scandinavian structure, golden-age comic palette.
+
+   The inverse of the obvious pairing. STRUCTURE is Scandinavian and noir:
+   hairline rules, no boxes, no shadows, no rounded corners, wide margins, a
+   strict left-aligned grid and a great deal of deliberate emptiness. The
+   composition is asymmetric and cinematic — weight at the left, air at the
+   right, one thing moving at a time.
+
+   COLOUR is golden-age comics: the four-colour process. Saturated red, blue,
+   yellow and cyan laid down as flat ink, plus Ben-Day dot fields — the
+   printing artefact itself, not a texture effect. Light mode is aged
+   newsprint; dark mode is the noir night those same inks glow against.
+
+   Because the structure carries no visual weight, colour does all the work.
+   Ink appears in small decisive placements and never as a wash or a gradient.
+   Nothing is outlined. When an element needs emphasis it is either filled with
+   flat ink or given space — never boxed.
+
+   Catholic identity stays out of the chrome and in the content.
+
+   Design v1 — the opposite pairing, comic construction in a noir palette —
+   is archived alongside this file as styles-v1.css.
+   ========================================================================== */
+
+:root {
+  color-scheme: dark;
+
+  /* Noir night: cool, flat, and quiet enough for ink to sing against. */
+  --paper: #0e0f13;
+  --paper-2: #15171d;
+  --sunken: #131519;
+
+  --ink: #f1efe9;
+  --ink-soft: #9d9b93;
+  --ink-faint: #6b6963;
+
+  /* Hairlines only. There is no thick border anywhere in this sheet. */
+  --rule: #23262e;
+  --rule-strong: #3a3e49;
+
+  /* Four-colour process, opened up to hold on a dark ground. */
+  --red: #ff5057;
+  --blue: #5aa2ff;
+  --yellow: #ffc93c;
+  --cyan: #35c6ea;
+  --green: #3ecb87;
+
+  /* Text sitting on a flat ink fill. */
+  --on-ink: #0e0f13;
+
+  /* Ben-Day dots: one plate per process colour, printed out of register. */
+  --dot: rgb(255 255 255 / 7%);
+  --dot-cyan: rgb(53 198 234 / 20%);
+  --dot-red: rgb(255 80 87 / 17%);
+  --dot-size: 6px;
+
+  --wrap: 1120px;
+  --gutter: 1.5rem;
+}
+
+/* Aged newsprint — the paper golden-age comics were actually printed on. */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --paper: #f4efe4;
+  --paper-2: #fdfaf3;
+  --sunken: #eae3d4;
+
+  --ink: #14120e;
+  --ink-soft: #56504a;
+  --ink-faint: #8a8377;
+
+  --rule: #dbd3c2;
+  --rule-strong: #b3a893;
+
+  --red: #ce1f28;
+  --blue: #14539a;
+  --yellow: #d99a00;
+  --cyan: #00819f;
+  --green: #0d7a48;
+
+  --on-ink: #fdfaf3;
+
+  --dot: rgb(20 18 14 / 10%);
+  --dot-cyan: rgb(0 129 159 / 24%);
+  --dot-red: rgb(206 31 40 / 20%);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+
+    --paper: #f4efe4;
+    --paper-2: #fdfaf3;
+    --sunken: #eae3d4;
+
+    --ink: #14120e;
+    --ink-soft: #56504a;
+    --ink-faint: #8a8377;
+
+    --rule: #dbd3c2;
+    --rule-strong: #b3a893;
+
+    --red: #ce1f28;
+    --blue: #14539a;
+    --yellow: #d99a00;
+    --cyan: #00819f;
+    --green: #0d7a48;
+
+    --on-ink: #fdfaf3;
+
+    --dot: rgb(20 18 14 / 10%);
+    --dot-cyan: rgb(0 129 159 / 24%);
+    --dot-red: rgb(206 31 40 / 20%);
+  }
+}
+
+/* --------------------------------------------------------------- base ---- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  /* One neutral grotesque throughout. Hierarchy comes from size, weight and
+     space — a display face would be ornament, and there is none here. */
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.65;
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0 0 0.6em;
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+}
+
+h1 {
+  font-size: clamp(2.1rem, 1.4rem + 2.6vw, 3.5rem);
+}
+
+h2 {
+  font-size: 1.3rem;
+}
+
+h3 {
+  font-size: 1.05rem;
+}
+
+p {
+  margin: 0 0 1em;
+}
+
+/* Comic blue is the link colour, as it was in print. */
+a {
+  color: var(--blue);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  color: var(--red);
+}
+
+:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+  background: var(--sunken);
+  padding: 0.08em 0.35em;
+}
+
+pre {
+  background: var(--sunken);
+  padding: 1.1rem 1.25rem;
+  overflow-x: auto;
+  border-left: 3px solid var(--blue);
+}
+
+pre code {
+  background: none;
+  padding: 0;
+}
+
+fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.wrap {
+  max-width: var(--wrap);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.narrow {
+  max-width: 660px;
+}
+
+.muted {
+  color: var(--ink-soft);
+}
+
+.small {
+  font-size: 0.875rem;
+}
+
+.lede {
+  font-size: 1.15rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  max-width: 58ch;
+}
+
+/* The one recurring typographic device: a micro label set in flat ink. */
+.kicker {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--red);
+  margin-bottom: 1.4rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  background: var(--red);
+  color: var(--on-ink);
+  font-weight: 600;
+  padding: 0.7rem 1.1rem;
+}
+
+.skip-link:focus {
+  left: 0;
+}
+
+.hp {
+  position: absolute;
+  left: -9999px;
+}
+
+/* ------------------------------------------------------------- header ---- */
+
+.site-header {
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  min-height: 72px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: inherit;
+  text-decoration: none;
+  margin-right: auto;
+}
+
+/* A single square of flat red ink — the only filled shape in the chrome. */
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  background: var(--red);
+  color: var(--on-ink);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-text strong {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+}
+
+.brand-text small {
+  color: var(--ink-faint);
+  font-size: 0.68rem;
+}
+
+.site-nav {
+  display: flex;
+  gap: 1.75rem;
+}
+
+.site-nav a {
+  color: var(--ink-soft);
+  text-decoration: none;
+  font-size: 0.85rem;
+  padding: 0.3rem 0;
+  border-bottom: 2px solid transparent;
+}
+
+.site-nav a:hover {
+  color: var(--ink);
+}
+
+.site-nav a[aria-current="page"] {
+  color: var(--ink);
+  border-bottom-color: var(--red);
+}
+
+@media (max-width: 820px) {
+  .header-inner {
+    flex-wrap: wrap;
+    min-height: 0;
+    padding-block: 0.85rem;
+    gap: 0.75rem 1.25rem;
+  }
+
+  .brand-text small {
+    display: none;
+  }
+
+  .site-nav {
+    order: 3;
+    width: 100%;
+    gap: 1.35rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .site-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .site-nav a {
+    white-space: nowrap;
+  }
+}
+
+.theme-toggle {
+  border: 1px solid var(--rule-strong);
+  background: none;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+  color: var(--ink-soft);
+  flex: none;
+}
+
+.theme-toggle:hover {
+  color: var(--ink);
+  border-color: var(--ink-faint);
+}
+
+.theme-toggle-icon {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: inset -4px -3px 0 0 var(--paper);
+}
+
+:root[data-theme="light"] .theme-toggle-icon {
+  box-shadow: none;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .theme-toggle-icon {
+    box-shadow: none;
+  }
+}
+
+/* --------------------------------------------------------------- hero ---- */
+
+/*
+  Asymmetric and mostly empty: text held to the left, a Ben-Day dot field
+  drifting off the right edge. The emptiness is the composition — resist
+  filling it.
+*/
+.hero {
+  border-bottom: 1px solid var(--rule);
+  overflow: hidden;
+}
+
+.hero-inner {
+  position: relative;
+  padding-block: clamp(3.5rem, 9vw, 7rem) clamp(3rem, 6vw, 5rem);
+}
+
+/* The measure is set on the text, never on the container — capping the
+   container's width would re-centre the whole block and break its alignment
+   with the header and the listings below. */
+.hero-inner > * {
+  max-width: 62ch;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-inner::after {
+  content: "";
+  position: absolute;
+  top: -20%;
+  right: -14vw;
+  width: 44vw;
+  height: 140%;
+  z-index: 0;
+  /* Two dot plates in process colours, deliberately out of register by a
+     couple of pixels. Misregistration is *the* golden-age printing artefact —
+     it belongs to the palette, which is why the structure gets none of it. */
+  background-image:
+    radial-gradient(var(--dot-cyan) 1.6px, transparent 1.7px),
+    radial-gradient(var(--dot-red) 1.6px, transparent 1.7px);
+  background-size: var(--dot-size) var(--dot-size), var(--dot-size) var(--dot-size);
+  background-position: 0 0, 2px 2px;
+  /* Fades out instead of stopping at an edge — halftone should read as
+     printing that ran out of ink, not as a rectangle. */
+  -webkit-mask-image: radial-gradient(120% 90% at 85% 30%, #000 10%, transparent 70%);
+  mask-image: radial-gradient(120% 90% at 85% 30%, #000 10%, transparent 70%);
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .hero-inner::after {
+    display: none;
+  }
+}
+
+.hero h1 {
+  max-width: 16ch;
+  margin-bottom: 0.55em;
+}
+
+.hero-sub {
+  font-size: 1.1rem;
+  color: var(--ink-soft);
+  max-width: 52ch;
+  margin-bottom: 0;
+}
+
+.hero-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2.75rem;
+  margin: 3rem 0 0;
+  padding: 0;
+}
+
+.hero-stats div {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.15rem;
+}
+
+.hero-stats dt {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--ink-faint);
+}
+
+.hero-stats dd {
+  margin: 0;
+  font-size: 1.9rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Three figures, three plates — the only place the inks meet. */
+.hero-stats div:nth-child(1) dd {
+  color: var(--red);
+}
+.hero-stats div:nth-child(2) dd {
+  color: var(--blue);
+}
+.hero-stats div:nth-child(3) dd {
+  color: var(--yellow);
+}
+
+/* ---------------------------------------------------------- directory ---- */
+
+.directory {
+  padding-block: 3rem 5rem;
+}
+
+/* Text tabs with a rule of ink under the active one. No fills, no boxes. */
+.track-tabs {
+  display: flex;
+  gap: 2.5rem;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 2.25rem;
+}
+
+.track-tabs a {
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-areas:
+    "label count"
+    "desc  desc";
+  align-items: baseline;
+  gap: 0 0.5rem;
+  padding-bottom: 0.9rem;
+  margin-bottom: -1px;
+  text-decoration: none;
+  color: var(--ink-faint);
+  border-bottom: 2px solid transparent;
+}
+
+.track-tabs a:hover {
+  color: var(--ink-soft);
+}
+
+.track-tabs a[aria-current="page"] {
+  color: var(--ink);
+  border-bottom-color: var(--red);
+}
+
+.track-label {
+  grid-area: label;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.track-desc {
+  grid-area: desc;
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+}
+
+.track-count {
+  grid-area: count;
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-faint);
+}
+
+.track-tabs a[aria-current="page"] .track-count {
+  color: var(--red);
+}
+
+@media (max-width: 560px) {
+  .track-tabs {
+    gap: 1.5rem;
+  }
+  .track-desc {
+    display: none;
+  }
+}
+
+/* An underline, not a box. */
+.searchbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid var(--rule-strong);
+  margin-bottom: 2.5rem;
+}
+
+.searchbar:focus-within {
+  border-bottom-color: var(--blue);
+}
+
+.searchbar input[type="search"] {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  padding: 0.7rem 0;
+  font-size: 1.05rem;
+}
+
+.searchbar input[type="search"]:focus-visible {
+  outline: none;
+}
+
+input[type="search"],
+input[type="url"],
+input[type="text"],
+input[type="date"],
+input:not([type]),
+select,
+textarea {
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--rule-strong);
+  padding: 0.5rem 0;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-bottom-color: var(--blue);
+}
+
+textarea {
+  resize: vertical;
+  border: 1px solid var(--rule-strong);
+  padding: 0.65rem 0.8rem;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--ink-faint);
+}
+
+.directory-grid {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 4rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .directory-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+/* ------------------------------------------------------------ filters ---- */
+
+.filters {
+  position: sticky;
+  top: 96px;
+}
+
+.filters-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.filters-summary {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .filters {
+    position: static;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .filters-body {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 1.75rem;
+    padding-top: 1.5rem;
+  }
+
+  .filters-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: fit-content;
+    cursor: pointer;
+    list-style: none;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--ink-soft);
+    padding-bottom: 0.4rem;
+    border-bottom: 2px solid var(--red);
+  }
+
+  .filters-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .filters-summary::after {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg) translate(-2px, -2px);
+  }
+
+  .filters[open] .filters-summary::after {
+    transform: rotate(-135deg) translate(-2px, -2px);
+  }
+
+
+  .filters-badge {
+    background: var(--red);
+    color: var(--on-ink);
+    padding: 0 0.35rem;
+    font-size: 0.7rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .filters .filters-head {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+    margin-bottom: -1rem;
+  }
+
+  .filters .filters-head h2 {
+    display: none;
+  }
+
+  .filters:not([open]) .filters-body {
+    display: none;
+  }
+}
+
+.filters-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.filters-head h2 {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--ink-faint);
+  font-weight: 700;
+  margin: 0;
+}
+
+.facet legend {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--ink-faint);
+  font-weight: 700;
+  padding: 0;
+  margin-bottom: 0.7rem;
+}
+
+.facet ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+/* No boxes: a selected facet is simply set in ink. */
+.facet-option {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.18rem 0;
+  color: var(--ink-soft);
+  text-decoration: none;
+  font-size: 0.875rem;
+}
+
+.facet-option:hover {
+  color: var(--ink);
+}
+
+.facet-option.is-on {
+  color: var(--red);
+  font-weight: 600;
+}
+
+/* A hairline square that fills with ink when chosen. */
+.facet-check {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  background: transparent;
+  font-size: 0;
+  outline: 1px solid var(--rule-strong);
+  outline-offset: 0;
+}
+
+.facet-option:hover .facet-check {
+  outline-color: var(--ink-faint);
+}
+
+.facet-option.is-on .facet-check {
+  background: var(--red);
+  outline-color: var(--red);
+}
+
+.facet-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.facet-count {
+  color: var(--ink-faint);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------ results ---- */
+
+.results-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--rule-strong);
+}
+
+.results-count {
+  margin: 0;
+  color: var(--ink-faint);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.results-count strong {
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.results-count em {
+  color: var(--red);
+  font-style: normal;
+}
+
+.sort-tabs {
+  display: flex;
+  gap: 1.25rem;
+}
+
+.sort-tabs a {
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+  text-decoration: none;
+  white-space: nowrap;
+  padding-bottom: 0.3rem;
+  border-bottom: 2px solid transparent;
+}
+
+.sort-tabs a:hover {
+  color: var(--ink);
+}
+
+.sort-tabs a[aria-selected="true"] {
+  color: var(--ink);
+  font-weight: 600;
+  border-bottom-color: var(--yellow);
+}
+
+/* --------------------------------------------------------------- card ---- */
+
+/*
+  Rows, not cards. A hairline between entries and nothing else — no border, no
+  fill, no shadow. Hovering slides a bar of red ink into the left margin, and
+  that is the only movement on the page.
+*/
+.cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.25rem auto minmax(0, 1fr) auto;
+  gap: 1.5rem;
+  align-items: start;
+  padding: 1.6rem 0 1.5rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  left: -1.5rem;
+  top: 1.5rem;
+  bottom: 1.4rem;
+  width: 3px;
+  background: var(--red);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 0.16s ease;
+}
+
+.card:hover::before {
+  transform: scaleY(1);
+}
+
+/* Quiet numerals in the left gutter, setting a rhythm down the page. */
+.card-rank {
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-faint);
+  letter-spacing: 0.05em;
+  padding-top: 0.3rem;
+}
+
+.card:hover .card-rank {
+  color: var(--red);
+}
+
+.card-title {
+  margin: 0 0 0.3rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.card-title a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.card-title a:hover {
+  color: var(--red);
+}
+
+.card-tagline {
+  margin: 0 0 0.7rem;
+  color: var(--ink-soft);
+  font-size: 0.925rem;
+  max-width: 62ch;
+}
+
+.card-meta {
+  margin: 0.55rem 0 0;
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+}
+
+.card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+@media (max-width: 700px) {
+  .card {
+    grid-template-columns: 1.5rem auto minmax(0, 1fr);
+    gap: 1rem;
+  }
+  .card::before {
+    left: -0.75rem;
+  }
+  .card-actions {
+    grid-column: 3;
+    flex-direction: row;
+    align-items: center;
+    gap: 1.25rem;
+  }
+}
+
+/* Flat yellow ink. The loudest chip on the page, so it stays rare. */
+.flash {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  background: var(--yellow);
+  color: #14120e;
+  padding: 0.15rem 0.45rem;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------- vote ---- */
+
+/* Bare glyphs and a numeral. No container at all. */
+.vote {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  margin: 0;
+}
+
+.vote-btn {
+  border: 0;
+  background: none;
+  color: var(--ink-faint);
+  cursor: pointer;
+  padding: 0.15rem 0.3rem;
+  display: grid;
+  place-items: center;
+  transition: color 0.1s ease;
+}
+
+.vote-btn svg {
+  width: 15px;
+  height: 15px;
+  fill: currentColor;
+}
+
+.vote-up:hover,
+.vote-up[aria-pressed="true"] {
+  color: var(--green);
+}
+
+.vote-down:hover,
+.vote-down[aria-pressed="true"] {
+  color: var(--red);
+}
+
+.vote-score {
+  font-size: 1.15rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  min-width: 2.2ch;
+  text-align: center;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+/* Once you have voted, the tally takes the ink of the vote you cast. */
+.vote:has(.vote-up[aria-pressed="true"]) .vote-score {
+  color: var(--green);
+}
+
+.vote:has(.vote-down[aria-pressed="true"]) .vote-score {
+  color: var(--red);
+}
+
+.vote-large .vote-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.vote-large .vote-score {
+  font-size: 1.5rem;
+}
+
+.vote-flash {
+  animation: vote-pop 0.25s ease;
+}
+
+@keyframes vote-pop {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.22);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ------------------------------------------------------------- badges ---- */
+
+/*
+  Not chips. A pricing badge is a word set in its own ink behind a small filled
+  square — the colour plate standing in for the outline. Secondary facts stay
+  plain grey text.
+*/
+.badges {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.9rem;
+  margin: 0;
+  padding: 0;
+}
+
+.badge {
+  font-size: 0.66rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-faint);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.badge-free,
+.badge-freemium,
+.badge-paid,
+.badge-official {
+  font-weight: 700;
+}
+
+.badge-free::before,
+.badge-freemium::before,
+.badge-paid::before,
+.badge-official::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  background: currentColor;
+}
+
+.badge-free {
+  color: var(--green);
+}
+
+.badge-freemium {
+  color: var(--yellow);
+}
+
+.badge-paid {
+  color: var(--red);
+}
+
+.badge-official {
+  color: var(--cyan);
+}
+
+/* ------------------------------------------------------------ buttons ---- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.45rem 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--rule-strong);
+}
+
+.btn:hover {
+  color: var(--red);
+  border-bottom-color: var(--red);
+}
+
+/* Flat ink, no outline and no shadow — the comic's solid colour plate. */
+.btn-primary {
+  background: var(--red);
+  border: 0;
+  color: var(--on-ink);
+  padding: 0.75rem 1.5rem;
+}
+
+.btn-primary:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.btn-quiet {
+  border-bottom-color: var(--rule);
+  color: var(--ink-soft);
+}
+
+.btn-quiet:hover {
+  color: var(--red);
+  border-bottom-color: var(--red);
+}
+
+.btn-link {
+  border-bottom-color: transparent;
+  color: var(--ink-faint);
+  font-weight: 400;
+}
+
+.btn-link:hover {
+  color: var(--red);
+  border-bottom-color: transparent;
+}
+
+.btn-wide {
+  width: 100%;
+  padding-block: 0.9rem;
+  font-size: 0.85rem;
+}
+
+.is-disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* ----------------------------------------------------------- messages ---- */
+
+.empty {
+  padding: 5rem 0;
+  max-width: 46ch;
+}
+
+.empty-title {
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.5rem;
+}
+
+.alert {
+  padding: 0 0 0 1.1rem;
+  margin-bottom: 2rem;
+  border-left: 3px solid var(--red);
+}
+
+.alert ul {
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.alert p {
+  margin: 0;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 2.5rem;
+}
+
+/* The one place a full field of tone is allowed, and it closes the page. */
+.crossover {
+  margin-top: 5rem;
+  padding: 3rem;
+  background: var(--sunken);
+  background-image: radial-gradient(var(--dot) 1.4px, transparent 1.5px);
+  background-size: var(--dot-size) var(--dot-size);
+}
+
+.crossover h2 {
+  font-size: 1.6rem;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.5rem;
+}
+
+.crossover p {
+  color: var(--ink-soft);
+  max-width: 56ch;
+}
+
+@media (max-width: 620px) {
+  .crossover {
+    padding: 2rem 1.5rem;
+  }
+}
+
+/* ------------------------------------------------------------- detail ---- */
+
+.page {
+  padding-block: 3.5rem 5rem;
+}
+
+.detail {
+  padding-block: 2rem 5rem;
+}
+
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+  margin-bottom: 2.5rem;
+}
+
+.breadcrumb a {
+  color: var(--ink-faint);
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  color: var(--red);
+}
+
+.detail-head {
+  display: flex;
+  gap: 1.75rem;
+  align-items: flex-start;
+  padding-bottom: 2.5rem;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 3rem;
+}
+
+.detail-head h1 {
+  margin-bottom: 0.35rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+.detail-tagline {
+  font-size: 1.15rem;
+  color: var(--ink-soft);
+  margin-bottom: 1rem;
+  max-width: 56ch;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 4.5rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+}
+
+.detail-main > section + section {
+  margin-top: 3rem;
+}
+
+.prose {
+  max-width: 66ch;
+}
+
+.prose h2 {
+  margin-top: 2.5rem;
+}
+
+.prose li {
+  margin-bottom: 0.35rem;
+}
+
+.cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.vote-explainer,
+.report {
+  border-top: 1px solid var(--rule);
+  padding-top: 2rem;
+}
+
+.report-form {
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  align-items: flex-start;
+}
+
+/* No panel. A rule of ink above it, and the same type scale as the page. */
+.detail-side {
+  border-top: 2px solid var(--ink);
+  padding-top: 1rem;
+}
+
+.side-title {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--ink-faint);
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.specs {
+  margin: 0 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.spec-row {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 1rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 0.875rem;
+}
+
+.spec-row dt {
+  color: var(--ink-faint);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  padding-top: 3px;
+}
+
+.spec-row dd {
+  margin: 0;
+}
+
+.spec-row dd p {
+  margin: 0.3rem 0 0;
+}
+
+.tag-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.7rem;
+}
+
+.tag {
+  display: inline-block;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  text-decoration: none;
+  border-bottom: 1px solid var(--rule);
+}
+
+.tag:hover {
+  color: var(--red);
+  border-bottom-color: var(--red);
+}
+
+.related {
+  margin-top: 4rem;
+  border-top: 1px solid var(--rule);
+  padding-top: 2rem;
+}
+
+.related-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0;
+}
+
+.related-list li {
+  border-left: 1px solid var(--rule);
+}
+
+.related-list li:first-child {
+  border-left: 0;
+}
+
+.related-list a {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0 1.5rem;
+  text-decoration: none;
+  color: var(--ink);
+  height: 100%;
+}
+
+.related-list li:first-child a {
+  padding-left: 0;
+}
+
+.related-list a:hover strong {
+  color: var(--red);
+}
+
+.related-list strong {
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: -0.015em;
+}
+
+.related-list .muted {
+  font-size: 0.85rem;
+}
+
+@media (max-width: 700px) {
+  .related-list li {
+    border-left: 0;
+    border-top: 1px solid var(--rule);
+  }
+  .related-list li:first-child {
+    border-top: 0;
+  }
+  .related-list a {
+    padding: 1rem 0;
+  }
+  .related-list li:first-child a {
+    padding-top: 0;
+  }
+}
+
+/* --------------------------------------------------------------- form ---- */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 580px;
+  margin-top: 2.5rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 2rem;
+}
+
+.field > label,
+.field legend {
+  font-weight: 700;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--ink-faint);
+}
+
+.field-check label {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-weight: 400;
+  font-size: 0.925rem;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--ink);
+}
+
+.field-check input {
+  width: auto;
+  accent-color: var(--red);
+}
+
+.track-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0;
+  margin-top: 0.75rem;
+  border-top: 1px solid var(--rule);
+}
+
+.track-options label {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  padding: 1rem 1.25rem 1rem 0;
+  cursor: pointer;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  border-bottom: 2px solid transparent;
+}
+
+.track-options label:has(input:checked) {
+  border-bottom-color: var(--red);
+}
+
+.track-options input {
+  width: auto;
+  margin-top: 4px;
+  accent-color: var(--red);
+  flex: none;
+}
+
+.track-options span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.8rem;
+  color: var(--ink-faint);
+}
+
+.track-options strong {
+  font-size: 0.925rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.req {
+  font-weight: 400;
+  font-size: 0.6rem;
+  color: var(--ink-faint);
+  letter-spacing: 0.1em;
+  margin-left: 0.4rem;
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ink-faint);
+}
+
+.params {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25rem 0 2.5rem;
+  font-size: 0.875rem;
+  display: block;
+  overflow-x: auto;
+}
+
+.params th,
+.params td {
+  text-align: left;
+  padding: 0.65rem 1rem 0.65rem 0;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+
+.params th {
+  color: var(--ink-faint);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+}
+
+/* -------------------------------------------------------------- admin ---- */
+
+.admin-list {
+  list-style: none;
+  margin: 0 0 3rem;
+  padding: 0;
+}
+
+.admin-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.admin-list h3 {
+  margin-bottom: 0.25rem;
+}
+
+.admin-list p {
+  margin: 0 0 0.35rem;
+}
+
+.admin-actions {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.admin-actions form {
+  margin: 0;
+}
+
+/* ------------------------------------------------------------- footer ---- */
+
+.site-footer {
+  border-top: 1px solid var(--rule);
+  padding-top: 3.5rem;
+  margin-top: auto;
+}
+
+.footer-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr));
+  gap: 3rem;
+  padding-bottom: 3rem;
+}
+
+@media (max-width: 700px) {
+  .footer-inner {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+.footer-title {
+  font-weight: 700;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  margin-bottom: 0.9rem;
+  color: var(--ink-faint);
+}
+
+.footer-inner .muted {
+  font-size: 0.875rem;
+  max-width: 44ch;
+}
+
+.footer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.footer-links a {
+  color: var(--ink-soft);
+  text-decoration: none;
+  font-size: 0.875rem;
+}
+
+.footer-links a:hover {
+  color: var(--red);
+}
+
+.footer-legal {
+  border-top: 1px solid var(--rule);
+  padding-block: 1.5rem 2rem;
+}
+
+.footer-legal p {
+  margin: 0;
+  font-size: 0.8rem;
+  max-width: 70ch;
+}
+
+/* -------------------------------------------------------------- toast ---- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translate(-50%, 1rem);
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 0.8rem;
+  padding: 0.75rem 1.25rem;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.toast.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}

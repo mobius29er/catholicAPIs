@@ -1,5 +1,6 @@
 import type { FC } from 'hono/jsx';
 import type { Filters, Track } from '../types';
+import { PAGE_SIZE } from '../db';
 import type { DirectoryResult, Stats } from '../db';
 import {
   FilterPanel,
@@ -9,19 +10,35 @@ import {
   TrackTabs,
   buildQuery,
 } from './components';
+import { NoirScene } from './art';
 
-const COPY: Record<Track, { kicker: string; headline: string; sub: string; search: string }> = {
+interface Copy {
+  /** The yellow caption box above the headline. */
+  caption: string;
+  headline: string;
+  sub: string;
+  search: string;
+  /** The angled stamp in the corner of the hero. */
+  stamp: string;
+  cta: { href: string; label: string };
+}
+
+const COPY: Record<Track, Copy> = {
   product: {
-    kicker: 'The Catholic software index',
-    headline: 'What Catholics\nare actually\nbuilding.',
+    caption: 'New is worth finding.',
+    headline: 'What Catholics\nare actually building.',
     sub: 'Prayer apps, breviaries, formation, parish tools, journalism, AI that cites its sources. Upvote what earned a place on your phone. Downvote what wasted your evening.',
     search: 'Search apps, services, media…',
+    stamp: 'Good work deserves users.',
+    cta: { href: '/submit?track=product', label: 'Submit a product' },
   },
   api: {
-    kicker: 'For developers',
-    headline: 'Every Catholic API,\nranked by the people\nwho use them.',
+    caption: 'Stop rebuilding the calendar.',
+    headline: 'Every Catholic API,\nrated by developers.',
     sub: 'Liturgical calendars, daily readings, scripture, the Catechism, canon law, prayers and saints — free and paid. Upvote what works, downvote what\'s abandoned, and add anything we\'re missing.',
     search: 'Search for readings, calendar, Vulgate, Catechism…',
+    stamp: 'Someone already solved this.',
+    cta: { href: '/submit', label: 'Submit an API' },
   },
 };
 
@@ -47,8 +64,13 @@ export const Home: FC<{
     <>
       {isLanding && (
         <section class="hero">
+          <div class="hero-art" aria-hidden="true">
+            <NoirScene />
+          </div>
+
           <div class="wrap hero-inner">
-            <p class="kicker">{copy.kicker}</p>
+            <p class="caption-box">{copy.caption}</p>
+
             <h1>
               {copy.headline.split('\n').map((line, i) => (
                 <>
@@ -57,7 +79,17 @@ export const Home: FC<{
                 </>
               ))}
             </h1>
+
             <p class="hero-sub">{copy.sub}</p>
+
+            <div class="hero-cta">
+              <a class="btn btn-primary" href="#listings">
+                Browse the list
+              </a>
+              <a class="btn btn-outline" href={copy.cta.href}>
+                {copy.cta.label}
+              </a>
+            </div>
 
             <dl class="hero-stats">
               <div>
@@ -74,10 +106,12 @@ export const Home: FC<{
               </div>
             </dl>
           </div>
+
+          <p class="stamp">{copy.stamp}</p>
         </section>
       )}
 
-      <div class="wrap directory">
+      <div class="wrap directory" id="listings">
         <TrackTabs active={filters.track} counts={{ apis: stats.apis, products: stats.products }} />
 
         <form class="searchbar" method="get" action={filters.track === 'product' ? '/' : '/apis'} role="search">
@@ -164,7 +198,12 @@ export const Home: FC<{
                     rank={
                       filters.sort === 'name'
                         ? undefined
-                        : (result.page - 1) * result.listings.length + index + 1
+                        : (result.page - 1) * PAGE_SIZE + index + 1
+                    }
+                    rankNote={
+                      filters.sort === 'top' && result.page === 1 && index === 0
+                        ? 'Most recommended'
+                        : undefined
                     }
                   />
                 ))}

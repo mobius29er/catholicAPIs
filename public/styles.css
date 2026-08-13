@@ -1,147 +1,119 @@
 /* ==========================================================================
    Catholic APIs — stylesheet
-   Golden-age comic book meets neo-noir Scandinavian.
+   Neo-noir Scandinavian structure, golden-age comic palette.
 
-   The two references meet at the grid. A comic page is panels, gutters and
-   hard rules; Scandinavian design is the same discipline with the ink turned
-   down. So: the *structure* is comic — panels with 2px borders, hard offset
-   shadows with no blur, caption-box labels, halftone, page numbers on the
-   cards. The *palette and restraint* are noir — cold near-black, blue-grey,
-   generous space, and exactly one warm light (amber) in an otherwise cold
-   frame. Saturated ink appears in small blocks, never in washes.
+   The inverse of the obvious pairing. STRUCTURE is Scandinavian and noir:
+   hairline rules, no boxes, no shadows, no rounded corners, wide margins, a
+   strict left-aligned grid and a great deal of deliberate emptiness. The
+   composition is asymmetric and cinematic — weight at the left, air at the
+   right, one thing moving at a time.
 
-   Catholic identity is deliberately quiet. No gold leaf, no illuminated caps.
-   The content says Catholic; the chrome stays a developer tool.
+   COLOUR is golden-age comics: the four-colour process. Saturated red, blue,
+   yellow and cyan laid down as flat ink, plus Ben-Day dot fields — the
+   printing artefact itself, not a texture effect. Light mode is aged
+   newsprint; dark mode is the noir night those same inks glow against.
 
-   Hand-written, no build step. Dark is the default; light is a cold
-   Scandinavian white rather than paper.
+   Because the structure carries no visual weight, colour does all the work.
+   Ink appears in small decisive placements and never as a wash or a gradient.
+   Nothing is outlined. When an element needs emphasis it is either filled with
+   flat ink or given space — never boxed.
+
+   Catholic identity stays out of the chrome and in the content.
+
+   Design v1 — the opposite pairing, comic construction in a noir palette —
+   is archived alongside this file as styles-v1.css.
    ========================================================================== */
 
 :root {
   color-scheme: dark;
 
-  /* Cold near-blacks. Blue-shifted, never warm — warmth is the accent's job. */
-  --bg: #090c10;
-  --panel: #141a21;
-  --panel-2: #1c242d;
-  --sunken: #0d1116;
+  /* Noir night: cool, flat, and quiet enough for ink to sing against. */
+  --paper: #0e0f13;
+  --paper-2: #15171d;
+  --sunken: #131519;
 
-  --rule: #26303b;
-  --rule-strong: #44525f;
+  --ink: #f1efe9;
+  --ink-soft: #9d9b93;
+  --ink-faint: #6b6963;
 
-  --ink: #e9eef4;
-  --ink-soft: #9dabba;
-  --ink-faint: #6b7987;
+  /* Hairlines only. There is no thick border anywhere in this sheet. */
+  --rule: #23262e;
+  --rule-strong: #3a3e49;
 
-  /* The one warm light in a cold frame. */
-  --amber: #f2a71b;
-  --amber-ink: #12171d;
-  --amber-dim: #2a2110;
+  /* Four-colour process, opened up to hold on a dark ground. */
+  --red: #ff5057;
+  --blue: #5aa2ff;
+  --yellow: #ffc93c;
+  --cyan: #35c6ea;
+  --green: #3ecb87;
 
-  --cyan: #35c9df;
-  --cyan-dim: #0d2a30;
+  /* Text sitting on a flat ink fill. */
+  --on-ink: #0e0f13;
 
-  --red: #ef4a4a;
-  --red-dim: #2e1417;
+  /* Ben-Day dots: one plate per process colour, printed out of register. */
+  --dot: rgb(255 255 255 / 7%);
+  --dot-cyan: rgb(53 198 234 / 20%);
+  --dot-red: rgb(255 80 87 / 17%);
+  --dot-size: 6px;
 
-  --green: #3ec98a;
-  --green-dim: #0f2a1f;
-
-  /* Halftone dot colour. */
-  --dot: rgb(255 255 255 / 5%);
-
-  /* Hard offset shadows: print, not glass. No blur anywhere. */
-  --lift: #000;
-  --shadow-flat: 3px 3px 0 var(--lift);
-  --shadow-pop: 6px 6px 0 var(--lift);
-
-  --radius: 2px;
-
-  /* Condensed poster face for the wordmark, hero and numerals — the one overt
-     comic gesture. Everything else is a neutral grotesque.
-     Impact and Haettenschweiler only exist on Windows and macOS, so the stack
-     runs down through the condensed faces that ship on Linux and Android
-     before landing on the system sans. `--display-weight` and the stretch
-     request in `.display` make that last fallback heavy and narrow rather than
-     thin and wide — a single-weight face like Impact just ignores them. */
-  --display: "Haettenschweiler", "Arial Narrow Bold", Impact, "Franklin Gothic Bold",
-    "Liberation Sans Narrow", "DejaVu Sans Condensed", "Noto Sans Display",
-    ui-sans-serif, system-ui, sans-serif;
-  --display-weight: 800;
-  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
-    sans-serif;
-  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-
-  --wrap: 1200px;
-  --focus: 0 0 0 3px var(--amber);
+  --wrap: 1120px;
+  --gutter: 1.5rem;
 }
 
-/* Cold Scandinavian daylight: white, grey, black ink. Same accents. */
+/* Aged newsprint — the paper golden-age comics were actually printed on. */
 :root[data-theme="light"] {
   color-scheme: light;
 
-  --bg: #f4f6f8;
-  --panel: #ffffff;
-  --panel-2: #eceff3;
-  --sunken: #e4e8ed;
+  --paper: #f4efe4;
+  --paper-2: #fdfaf3;
+  --sunken: #eae3d4;
 
-  --rule: #d3d9e0;
-  --rule-strong: #0b0e12;
+  --ink: #14120e;
+  --ink-soft: #56504a;
+  --ink-faint: #8a8377;
 
-  --ink: #0b0e12;
-  --ink-soft: #4a5663;
-  --ink-faint: #71808f;
+  --rule: #dbd3c2;
+  --rule-strong: #b3a893;
 
-  --amber: #e0930a;
-  --amber-ink: #0b0e12;
-  --amber-dim: #fdf1d8;
+  --red: #ce1f28;
+  --blue: #14539a;
+  --yellow: #d99a00;
+  --cyan: #00819f;
+  --green: #0d7a48;
 
-  --cyan: #0e7f92;
-  --cyan-dim: #ddf3f6;
+  --on-ink: #fdfaf3;
 
-  --red: #d02a2a;
-  --red-dim: #fbe3e3;
-
-  --green: #17784f;
-  --green-dim: #ddf2e8;
-
-  --dot: rgb(11 14 18 / 7%);
-
-  --lift: #0b0e12;
+  --dot: rgb(20 18 14 / 10%);
+  --dot-cyan: rgb(0 129 159 / 24%);
+  --dot-red: rgb(206 31 40 / 20%);
 }
 
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
     color-scheme: light;
 
-    --bg: #f4f6f8;
-    --panel: #ffffff;
-    --panel-2: #eceff3;
-    --sunken: #e4e8ed;
+    --paper: #f4efe4;
+    --paper-2: #fdfaf3;
+    --sunken: #eae3d4;
 
-    --rule: #d3d9e0;
-    --rule-strong: #0b0e12;
+    --ink: #14120e;
+    --ink-soft: #56504a;
+    --ink-faint: #8a8377;
 
-    --ink: #0b0e12;
-    --ink-soft: #4a5663;
-    --ink-faint: #71808f;
+    --rule: #dbd3c2;
+    --rule-strong: #b3a893;
 
-    --amber: #e0930a;
-    --amber-ink: #0b0e12;
-    --amber-dim: #fdf1d8;
+    --red: #ce1f28;
+    --blue: #14539a;
+    --yellow: #d99a00;
+    --cyan: #00819f;
+    --green: #0d7a48;
 
-    --cyan: #0e7f92;
-    --cyan-dim: #ddf3f6;
+    --on-ink: #fdfaf3;
 
-    --red: #d02a2a;
-    --red-dim: #fbe3e3;
-
-    --green: #17784f;
-    --green-dim: #ddf2e8;
-
-    --dot: rgb(11 14 18 / 7%);
-
-    --lift: #0b0e12;
+    --dot: rgb(20 18 14 / 10%);
+    --dot-cyan: rgb(0 129 159 / 24%);
+    --dot-red: rgb(206 31 40 / 20%);
   }
 }
 
@@ -172,11 +144,14 @@ html {
 
 body {
   margin: 0;
-  background: var(--bg);
+  background: var(--paper);
   color: var(--ink);
-  font-family: var(--sans);
+  /* One neutral grotesque throughout. Hierarchy comes from size, weight and
+     space — a display face would be ornament, and there is none here. */
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
   font-size: 16px;
-  line-height: 1.6;
+  line-height: 1.65;
   display: flex;
   min-height: 100vh;
   flex-direction: column;
@@ -189,63 +164,60 @@ main {
 h1,
 h2,
 h3 {
-  margin: 0 0 0.5em;
-  font-weight: 800;
-  line-height: 1.05;
-  letter-spacing: -0.02em;
+  margin: 0 0 0.6em;
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+}
+
+h1 {
+  font-size: clamp(2.1rem, 1.4rem + 2.6vw, 3.5rem);
 }
 
 h2 {
-  font-size: 1.25rem;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
+  font-size: 1.3rem;
 }
 
 h3 {
   font-size: 1.05rem;
-  letter-spacing: -0.01em;
 }
 
 p {
   margin: 0 0 1em;
 }
 
+/* Comic blue is the link colour, as it was in print. */
 a {
-  color: var(--amber);
+  color: var(--blue);
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
 }
 
 a:hover {
-  color: var(--ink);
+  color: var(--red);
 }
 
 :focus-visible {
-  outline: 2px solid transparent;
-  box-shadow: var(--focus);
-  border-radius: var(--radius);
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
 }
 
 code {
-  font-family: var(--mono);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   font-size: 0.85em;
   background: var(--sunken);
-  border: 1px solid var(--rule);
-  padding: 0.05em 0.35em;
-  border-radius: var(--radius);
+  padding: 0.08em 0.35em;
 }
 
 pre {
   background: var(--sunken);
-  border: 2px solid var(--rule-strong);
-  border-radius: var(--radius);
-  padding: 1rem;
+  padding: 1.1rem 1.25rem;
   overflow-x: auto;
+  border-left: 3px solid var(--blue);
 }
 
 pre code {
   background: none;
-  border: 0;
   padding: 0;
 }
 
@@ -258,11 +230,11 @@ fieldset {
 .wrap {
   max-width: var(--wrap);
   margin-inline: auto;
-  padding-inline: 1.25rem;
+  padding-inline: var(--gutter);
 }
 
 .narrow {
-  max-width: 720px;
+  max-width: 660px;
 }
 
 .muted {
@@ -274,19 +246,20 @@ fieldset {
 }
 
 .lede {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
+  line-height: 1.6;
   color: var(--ink-soft);
-  max-width: 62ch;
+  max-width: 58ch;
 }
 
-/* Small uppercase label — the comic caption's typographic cousin. */
+/* The one recurring typographic device: a micro label set in flat ink. */
 .kicker {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.22em;
-  color: var(--amber);
-  margin-bottom: 1.1rem;
+  letter-spacing: 0.2em;
+  color: var(--red);
+  margin-bottom: 1.4rem;
 }
 
 .visually-hidden {
@@ -306,11 +279,10 @@ fieldset {
   left: -9999px;
   top: 0;
   z-index: 100;
-  background: var(--amber);
-  color: var(--amber-ink);
-  font-weight: 700;
+  background: var(--red);
+  color: var(--on-ink);
+  font-weight: 600;
   padding: 0.7rem 1.1rem;
-  border: 2px solid var(--lift);
 }
 
 .skip-link:focus {
@@ -325,8 +297,8 @@ fieldset {
 /* ------------------------------------------------------------- header ---- */
 
 .site-header {
-  border-bottom: 2px solid var(--rule-strong);
-  background: var(--bg);
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper);
   position: sticky;
   top: 0;
   z-index: 20;
@@ -335,32 +307,31 @@ fieldset {
 .header-inner {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
-  min-height: 64px;
+  gap: 2rem;
+  min-height: 72px;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 0.7rem;
+  gap: 0.75rem;
   color: inherit;
   text-decoration: none;
   margin-right: auto;
 }
 
-/* A hard amber block with a dark glyph: the caption box, used as a logo. */
+/* A single square of flat red ink — the only filled shape in the chrome. */
 .brand-mark {
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   flex: none;
-  background: var(--amber);
-  color: var(--amber-ink);
-  border: 2px solid var(--lift);
-  font-size: 1rem;
-  line-height: 1;
+  background: var(--red);
+  color: var(--on-ink);
+  font-size: 0.7rem;
   font-weight: 700;
+  line-height: 1;
 }
 
 .brand-text {
@@ -369,37 +340,27 @@ fieldset {
 }
 
 .brand-text strong {
-  font-family: var(--display);
-  font-weight: var(--display-weight);
-  font-stretch: 85%;
-  font-size: 1.35rem;
-  line-height: 1;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
   white-space: nowrap;
 }
 
 .brand-text small {
   color: var(--ink-faint);
-  font-size: 0.65rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  margin-top: 2px;
+  font-size: 0.68rem;
 }
 
 .site-nav {
   display: flex;
-  gap: 1.4rem;
+  gap: 1.75rem;
 }
 
 .site-nav a {
   color: var(--ink-soft);
   text-decoration: none;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  padding: 0.35rem 0;
+  font-size: 0.85rem;
+  padding: 0.3rem 0;
   border-bottom: 2px solid transparent;
 }
 
@@ -409,15 +370,15 @@ fieldset {
 
 .site-nav a[aria-current="page"] {
   color: var(--ink);
-  border-bottom-color: var(--amber);
+  border-bottom-color: var(--red);
 }
 
-@media (max-width: 800px) {
+@media (max-width: 820px) {
   .header-inner {
     flex-wrap: wrap;
     min-height: 0;
-    padding-block: 0.7rem;
-    gap: 0.6rem 1rem;
+    padding-block: 0.85rem;
+    gap: 0.75rem 1.25rem;
   }
 
   .brand-text small {
@@ -427,7 +388,7 @@ fieldset {
   .site-nav {
     order: 3;
     width: 100%;
-    gap: 1.15rem;
+    gap: 1.35rem;
     overflow-x: auto;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
@@ -443,11 +404,10 @@ fieldset {
 }
 
 .theme-toggle {
-  border: 2px solid var(--rule-strong);
-  background: var(--panel);
-  border-radius: 0;
-  width: 32px;
-  height: 32px;
+  border: 1px solid var(--rule-strong);
+  background: none;
+  width: 30px;
+  height: 30px;
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -457,15 +417,16 @@ fieldset {
 }
 
 .theme-toggle:hover {
-  color: var(--amber);
-  border-color: var(--amber);
+  color: var(--ink);
+  border-color: var(--ink-faint);
 }
 
 .theme-toggle-icon {
-  width: 12px;
-  height: 12px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
   background: currentColor;
-  box-shadow: inset -4px -3px 0 0 var(--panel);
+  box-shadow: inset -4px -3px 0 0 var(--paper);
 }
 
 :root[data-theme="light"] .theme-toggle-icon {
@@ -480,69 +441,83 @@ fieldset {
 
 /* --------------------------------------------------------------- hero ---- */
 
+/*
+  Asymmetric and mostly empty: text held to the left, a Ben-Day dot field
+  drifting off the right edge. The emptiness is the composition — resist
+  filling it.
+*/
 .hero {
-  border-bottom: 2px solid var(--rule-strong);
-  /* Ben-Day dots: the printing artefact, kept faint enough to read as texture. */
-  background-image: radial-gradient(var(--dot) 1px, transparent 1.2px);
-  background-size: 6px 6px;
-  position: relative;
+  border-bottom: 1px solid var(--rule);
   overflow: hidden;
-}
-
-/* A single raking light from the top left — the noir key light. */
-.hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    70ch 40ch at 12% -20%,
-    color-mix(in srgb, var(--amber) 12%, transparent),
-    transparent 70%
-  );
-  pointer-events: none;
 }
 
 .hero-inner {
   position: relative;
-  padding-block: clamp(2.75rem, 6vw, 4.75rem) clamp(2rem, 4vw, 3rem);
+  padding-block: clamp(3.5rem, 9vw, 7rem) clamp(3rem, 6vw, 5rem);
+}
+
+/* The measure is set on the text, never on the container — capping the
+   container's width would re-centre the whole block and break its alignment
+   with the header and the listings below. */
+.hero-inner > * {
+  max-width: 62ch;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-inner::after {
+  content: "";
+  position: absolute;
+  top: -20%;
+  right: -14vw;
+  width: 44vw;
+  height: 140%;
+  z-index: 0;
+  /* Two dot plates in process colours, deliberately out of register by a
+     couple of pixels. Misregistration is *the* golden-age printing artefact —
+     it belongs to the palette, which is why the structure gets none of it. */
+  background-image:
+    radial-gradient(var(--dot-cyan) 1.6px, transparent 1.7px),
+    radial-gradient(var(--dot-red) 1.6px, transparent 1.7px);
+  background-size: var(--dot-size) var(--dot-size), var(--dot-size) var(--dot-size);
+  background-position: 0 0, 2px 2px;
+  /* Fades out instead of stopping at an edge — halftone should read as
+     printing that ran out of ink, not as a rectangle. */
+  -webkit-mask-image: radial-gradient(120% 90% at 85% 30%, #000 10%, transparent 70%);
+  mask-image: radial-gradient(120% 90% at 85% 30%, #000 10%, transparent 70%);
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .hero-inner::after {
+    display: none;
+  }
 }
 
 .hero h1 {
-  font-family: var(--display);
-  font-weight: var(--display-weight);
-  font-stretch: 85%;
-  font-size: clamp(2.4rem, 1.3rem + 4.6vw, 4.6rem);
-  line-height: 0.92;
-  letter-spacing: 0.005em;
-  text-transform: uppercase;
-  max-width: 18ch;
-  margin-bottom: 0.4em;
+  max-width: 16ch;
+  margin-bottom: 0.55em;
 }
 
 .hero-sub {
   font-size: 1.1rem;
   color: var(--ink-soft);
-  max-width: 60ch;
+  max-width: 52ch;
+  margin-bottom: 0;
 }
 
 .hero-stats {
   display: flex;
   flex-wrap: wrap;
-  gap: 0 2.5rem;
-  margin: 2.25rem 0 0;
+  gap: 2.75rem;
+  margin: 3rem 0 0;
   padding: 0;
 }
 
 .hero-stats div {
   display: flex;
   flex-direction: column-reverse;
-  padding-right: 2.5rem;
-  border-right: 1px solid var(--rule);
-}
-
-.hero-stats div:last-child {
-  border-right: 0;
-  padding-right: 0;
+  gap: 0.15rem;
 }
 
 .hero-stats dt {
@@ -554,146 +529,119 @@ fieldset {
 
 .hero-stats dd {
   margin: 0;
-  font-family: var(--display);
-  font-weight: var(--display-weight);
-  font-stretch: 85%;
-  font-size: 2.4rem;
+  font-size: 1.9rem;
+  font-weight: 600;
   line-height: 1;
-  letter-spacing: 0.02em;
+  letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
 }
 
-/* Below three-across the dividers start dangling on wrapped rows, so drop
-   them and let the numbers sit on a plain grid. */
-@media (max-width: 560px) {
-  .hero-stats {
-    display: grid;
-    grid-template-columns: repeat(3, auto);
-    justify-content: start;
-    gap: 1.25rem;
-  }
-
-  .hero-stats div {
-    border-right: 0;
-    padding-right: 0;
-  }
-
-  .hero-stats dd {
-    font-size: 1.8rem;
-  }
-
-  .hero-stats dt {
-    font-size: 0.6rem;
-    letter-spacing: 0.1em;
-  }
+/* Three figures, three plates — the only place the inks meet. */
+.hero-stats div:nth-child(1) dd {
+  color: var(--red);
+}
+.hero-stats div:nth-child(2) dd {
+  color: var(--blue);
+}
+.hero-stats div:nth-child(3) dd {
+  color: var(--yellow);
 }
 
 /* ---------------------------------------------------------- directory ---- */
 
 .directory {
-  padding-block: 2rem 4rem;
+  padding-block: 3rem 5rem;
 }
 
-/* The two-track switch: two hard panels, the active one lit amber. */
+/* Text tabs with a rule of ink under the active one. No fills, no boxes. */
 .track-tabs {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 0;
-  border: 2px solid var(--rule-strong);
-  margin-bottom: 1.75rem;
+  display: flex;
+  gap: 2.5rem;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 2.25rem;
 }
 
 .track-tabs a {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: auto auto;
   grid-template-areas:
     "label count"
-    "desc  count";
-  align-items: center;
-  gap: 0 0.75rem;
-  padding: 0.85rem 1.1rem;
+    "desc  desc";
+  align-items: baseline;
+  gap: 0 0.5rem;
+  padding-bottom: 0.9rem;
+  margin-bottom: -1px;
   text-decoration: none;
-  color: var(--ink-soft);
-  background: var(--panel);
-  border-right: 2px solid var(--rule-strong);
-}
-
-.track-tabs a:last-child {
-  border-right: 0;
+  color: var(--ink-faint);
+  border-bottom: 2px solid transparent;
 }
 
 .track-tabs a:hover {
-  background: var(--panel-2);
-  color: var(--ink);
+  color: var(--ink-soft);
 }
 
 .track-tabs a[aria-current="page"] {
-  background: var(--amber);
-  color: var(--amber-ink);
+  color: var(--ink);
+  border-bottom-color: var(--red);
 }
 
 .track-label {
   grid-area: label;
-  font-weight: 800;
-  font-size: 0.95rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 .track-desc {
   grid-area: desc;
-  font-size: 0.75rem;
-  opacity: 0.75;
+  font-size: 0.78rem;
+  color: var(--ink-faint);
 }
 
 .track-count {
   grid-area: count;
-  font-family: var(--display);
-  font-weight: var(--display-weight);
-  font-stretch: 85%;
-  font-size: 1.6rem;
-  line-height: 1;
-  letter-spacing: 0.02em;
+  font-size: 0.7rem;
   font-variant-numeric: tabular-nums;
-  opacity: 0.5;
+  color: var(--ink-faint);
 }
 
-@media (max-width: 520px) {
-  .track-tabs a {
-    border-right: 0;
-    border-bottom: 2px solid var(--rule-strong);
+.track-tabs a[aria-current="page"] .track-count {
+  color: var(--red);
+}
+
+@media (max-width: 560px) {
+  .track-tabs {
+    gap: 1.5rem;
   }
-  .track-tabs a:last-child {
-    border-bottom: 0;
+  .track-desc {
+    display: none;
   }
 }
 
+/* An underline, not a box. */
 .searchbar {
   display: flex;
-  gap: 0;
-  margin-bottom: 1.75rem;
-  border: 2px solid var(--rule-strong);
-  background: var(--panel);
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid var(--rule-strong);
+  margin-bottom: 2.5rem;
+}
+
+.searchbar:focus-within {
+  border-bottom-color: var(--blue);
 }
 
 .searchbar input[type="search"] {
   flex: 1;
   min-width: 0;
   border: 0;
-  background: transparent;
-  padding: 0.75rem 0.95rem;
+  background: none;
+  padding: 0.7rem 0;
+  font-size: 1.05rem;
 }
 
 .searchbar input[type="search"]:focus-visible {
-  box-shadow: none;
-  outline: 2px solid var(--amber);
-  outline-offset: -2px;
-}
-
-.searchbar .btn {
-  border: 0;
-  border-left: 2px solid var(--rule-strong);
-  border-radius: 0;
+  outline: none;
 }
 
 input[type="search"],
@@ -706,20 +654,23 @@ textarea {
   width: 100%;
   font: inherit;
   color: inherit;
-  background: var(--panel);
-  border: 2px solid var(--rule);
-  border-radius: var(--radius);
-  padding: 0.6rem 0.8rem;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--rule-strong);
+  padding: 0.5rem 0;
 }
 
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: var(--amber);
+  outline: none;
+  border-bottom-color: var(--blue);
 }
 
 textarea {
   resize: vertical;
+  border: 1px solid var(--rule-strong);
+  padding: 0.65rem 0.8rem;
 }
 
 input::placeholder,
@@ -729,15 +680,15 @@ textarea::placeholder {
 
 .directory-grid {
   display: grid;
-  grid-template-columns: 232px minmax(0, 1fr);
-  gap: 2.5rem;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 4rem;
   align-items: start;
 }
 
 @media (max-width: 900px) {
   .directory-grid {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 2rem;
   }
 }
 
@@ -745,10 +696,13 @@ textarea::placeholder {
 
 .filters {
   position: sticky;
-  top: 84px;
+  top: 96px;
+}
+
+.filters-body {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 2rem;
 }
 
 .filters-summary {
@@ -758,15 +712,15 @@ textarea::placeholder {
 @media (max-width: 900px) {
   .filters {
     position: static;
-    display: block;
-    padding-bottom: 1.25rem;
-    border-bottom: 2px solid var(--rule-strong);
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--rule);
   }
 
-  .filters[open] {
+  .filters-body {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 1.75rem;
+    padding-top: 1.5rem;
   }
 
   .filters-summary {
@@ -776,13 +730,13 @@ textarea::placeholder {
     width: fit-content;
     cursor: pointer;
     list-style: none;
-    font-weight: 800;
-    font-size: 0.75rem;
+    font-size: 0.68rem;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
-    padding: 0.6rem 1rem;
-    border: 2px solid var(--rule-strong);
-    background: var(--panel);
+    letter-spacing: 0.16em;
+    color: var(--ink-soft);
+    padding-bottom: 0.4rem;
+    border-bottom: 2px solid var(--red);
   }
 
   .filters-summary::-webkit-details-marker {
@@ -791,10 +745,10 @@ textarea::placeholder {
 
   .filters-summary::after {
     content: "";
-    width: 6px;
-    height: 6px;
-    border-right: 2px solid currentColor;
-    border-bottom: 2px solid currentColor;
+    width: 5px;
+    height: 5px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
     transform: rotate(45deg) translate(-2px, -2px);
   }
 
@@ -802,25 +756,26 @@ textarea::placeholder {
     transform: rotate(-135deg) translate(-2px, -2px);
   }
 
-  .filters[open] .filters-summary {
-    grid-column: 1 / -1;
-  }
 
   .filters-badge {
-    background: var(--amber);
-    color: var(--amber-ink);
-    padding: 0 0.4rem;
-    font-size: 0.75rem;
+    background: var(--red);
+    color: var(--on-ink);
+    padding: 0 0.35rem;
+    font-size: 0.7rem;
     font-variant-numeric: tabular-nums;
   }
 
   .filters .filters-head {
     grid-column: 1 / -1;
     justify-content: flex-end;
-    margin-bottom: -0.75rem;
+    margin-bottom: -1rem;
   }
 
   .filters .filters-head h2 {
+    display: none;
+  }
+
+  .filters:not([open]) .filters-body {
     display: none;
   }
 }
@@ -830,16 +785,14 @@ textarea::placeholder {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  padding-bottom: 0.6rem;
-  border-bottom: 2px solid var(--rule-strong);
 }
 
 .filters-head h2 {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   text-transform: uppercase;
-  letter-spacing: 0.18em;
-  color: var(--ink);
-  font-weight: 800;
+  letter-spacing: 0.2em;
+  color: var(--ink-faint);
+  font-weight: 700;
   margin: 0;
 }
 
@@ -850,7 +803,7 @@ textarea::placeholder {
   color: var(--ink-faint);
   font-weight: 700;
   padding: 0;
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.7rem;
 }
 
 .facet ul {
@@ -859,45 +812,47 @@ textarea::placeholder {
   padding: 0;
   display: flex;
   flex-direction: column;
+  gap: 0.1rem;
 }
 
+/* No boxes: a selected facet is simply set in ink. */
 .facet-option {
   display: flex;
   align-items: center;
   gap: 0.55rem;
-  padding: 0.32rem 0.4rem;
+  padding: 0.18rem 0;
   color: var(--ink-soft);
   text-decoration: none;
   font-size: 0.875rem;
-  border-left: 2px solid transparent;
 }
 
 .facet-option:hover {
-  background: var(--panel);
   color: var(--ink);
-  border-left-color: var(--rule-strong);
 }
 
 .facet-option.is-on {
-  color: var(--ink);
-  font-weight: 700;
-  border-left-color: var(--amber);
+  color: var(--red);
+  font-weight: 600;
 }
 
+/* A hairline square that fills with ink when chosen. */
 .facet-check {
-  width: 13px;
-  height: 13px;
-  border: 2px solid var(--rule-strong);
-  font-size: 9px;
-  line-height: 9px;
-  text-align: center;
+  width: 7px;
+  height: 7px;
   flex: none;
-  color: var(--amber-ink);
+  background: transparent;
+  font-size: 0;
+  outline: 1px solid var(--rule-strong);
+  outline-offset: 0;
+}
+
+.facet-option:hover .facet-check {
+  outline-color: var(--ink-faint);
 }
 
 .facet-option.is-on .facet-check {
-  background: var(--amber);
-  border-color: var(--amber);
+  background: var(--red);
+  outline-color: var(--red);
 }
 
 .facet-label {
@@ -909,7 +864,7 @@ textarea::placeholder {
 
 .facet-count {
   color: var(--ink-faint);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-variant-numeric: tabular-nums;
 }
 
@@ -918,132 +873,119 @@ textarea::placeholder {
 .results-head {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--rule-strong);
 }
 
 .results-count {
   margin: 0;
-  color: var(--ink-soft);
-  font-size: 0.875rem;
+  color: var(--ink-faint);
+  font-size: 0.72rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.14em;
 }
 
 .results-count strong {
   color: var(--ink);
-  font-family: var(--display);
-  font-weight: var(--display-weight);
-  font-stretch: 85%;
-  font-size: 1.3rem;
-  letter-spacing: 0.02em;
-  vertical-align: -1px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0;
 }
 
 .results-count em {
-  color: var(--amber);
+  color: var(--red);
   font-style: normal;
 }
 
 .sort-tabs {
   display: flex;
-  border: 2px solid var(--rule-strong);
+  gap: 1.25rem;
 }
 
 .sort-tabs a {
-  padding: 0.35rem 0.8rem;
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--ink-soft);
+  font-size: 0.78rem;
+  color: var(--ink-faint);
   text-decoration: none;
   white-space: nowrap;
-  background: var(--panel);
-  border-right: 2px solid var(--rule-strong);
-}
-
-.sort-tabs a:last-child {
-  border-right: 0;
+  padding-bottom: 0.3rem;
+  border-bottom: 2px solid transparent;
 }
 
 .sort-tabs a:hover {
   color: var(--ink);
-  background: var(--panel-2);
 }
 
 .sort-tabs a[aria-selected="true"] {
-  background: var(--amber);
-  color: var(--amber-ink);
+  color: var(--ink);
+  font-weight: 600;
+  border-bottom-color: var(--yellow);
 }
 
 /* --------------------------------------------------------------- card ---- */
 
+/*
+  Rows, not cards. A hairline between entries and nothing else — no border, no
+  fill, no shadow. Hovering slides a bar of red ink into the left margin, and
+  that is the only movement on the page.
+*/
 .cards {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
 }
 
-/* A comic panel: hard border, no blur, lifts off the page on hover. */
 .card {
   position: relative;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 1.15rem;
+  grid-template-columns: 2.25rem auto minmax(0, 1fr) auto;
+  gap: 1.5rem;
   align-items: start;
-  background: var(--panel);
-  border: 2px solid var(--rule-strong);
-  border-radius: var(--radius);
-  padding: 1.1rem 1.25rem;
-  transition:
-    transform 0.12s ease,
-    box-shadow 0.12s ease,
-    border-color 0.12s ease;
+  padding: 1.6rem 0 1.5rem;
+  border-bottom: 1px solid var(--rule);
 }
 
-.card:hover {
-  border-color: var(--amber);
-  box-shadow: var(--shadow-pop);
-  transform: translate(-3px, -3px);
-}
-
-/* Page numbering, straight off a comic page. Decorative only. */
-.card-rank {
+.card::before {
+  content: "";
   position: absolute;
-  top: -2px;
-  right: -2px;
-  font-family: var(--display);
-  font-weight: var(--display-weight);
-  font-stretch: 85%;
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
+  left: -1.5rem;
+  top: 1.5rem;
+  bottom: 1.4rem;
+  width: 3px;
+  background: var(--red);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 0.16s ease;
+}
+
+.card:hover::before {
+  transform: scaleY(1);
+}
+
+/* Quiet numerals in the left gutter, setting a rhythm down the page. */
+.card-rank {
+  font-size: 0.72rem;
   font-variant-numeric: tabular-nums;
   color: var(--ink-faint);
-  background: var(--sunken);
-  border: 2px solid var(--rule-strong);
-  padding: 0 0.35rem;
-  line-height: 1.5;
+  letter-spacing: 0.05em;
+  padding-top: 0.3rem;
 }
 
 .card:hover .card-rank {
-  color: var(--amber-ink);
-  background: var(--amber);
-  border-color: var(--amber);
+  color: var(--red);
 }
 
 .card-title {
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.3rem;
   font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.6rem;
 }
 
 .card-title a {
@@ -1052,65 +994,67 @@ textarea::placeholder {
 }
 
 .card-title a:hover {
-  color: var(--amber);
+  color: var(--red);
 }
 
 .card-tagline {
   margin: 0 0 0.7rem;
   color: var(--ink-soft);
   font-size: 0.925rem;
+  max-width: 62ch;
 }
 
 .card-meta {
-  margin: 0.6rem 0 0;
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  margin: 0.55rem 0 0;
+  font-size: 0.72rem;
   color: var(--ink-faint);
 }
 
 .card-actions {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  align-items: stretch;
+  gap: 0.5rem;
+  align-items: flex-end;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 700px) {
   .card {
-    grid-template-columns: auto minmax(0, 1fr);
-    padding-right: 1rem;
+    grid-template-columns: 1.5rem auto minmax(0, 1fr);
+    gap: 1rem;
+  }
+  .card::before {
+    left: -0.75rem;
   }
   .card-actions {
-    grid-column: 2;
+    grid-column: 3;
     flex-direction: row;
+    align-items: center;
+    gap: 1.25rem;
   }
 }
 
-/* The "!" burst: a launch flash, squared off rather than starburst. */
+/* Flat yellow ink. The loudest chip on the page, so it stays rare. */
 .flash {
   display: inline-block;
   font-size: 0.6rem;
-  font-weight: 800;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  background: var(--cyan);
-  color: var(--amber-ink);
-  border: 2px solid var(--lift);
-  padding: 0.1rem 0.4rem;
-  transform: rotate(-2deg);
+  letter-spacing: 0.14em;
+  background: var(--yellow);
+  color: #14120e;
+  padding: 0.15rem 0.45rem;
   white-space: nowrap;
 }
 
 /* --------------------------------------------------------------- vote ---- */
 
+/* Bare glyphs and a numeral. No container at all. */
 .vote {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  align-items: center;
+  gap: 0.1rem;
   margin: 0;
-  border: 2px solid var(--rule-strong);
-  background: var(--sunken);
 }
 
 .vote-btn {
@@ -1118,72 +1062,67 @@ textarea::placeholder {
   background: none;
   color: var(--ink-faint);
   cursor: pointer;
-  padding: 0.22rem 0.45rem;
+  padding: 0.15rem 0.3rem;
   display: grid;
   place-items: center;
-  transition: color 0.1s ease, background 0.1s ease;
+  transition: color 0.1s ease;
 }
 
 .vote-btn svg {
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
   fill: currentColor;
 }
 
-.vote-btn:hover {
-  background: var(--panel-2);
-  color: var(--ink);
-}
-
+.vote-up:hover,
 .vote-up[aria-pressed="true"] {
-  color: var(--amber-ink);
-  background: var(--green);
+  color: var(--green);
 }
 
+.vote-down:hover,
 .vote-down[aria-pressed="true"] {
-  color: var(--amber-ink);
-  background: var(--red);
+  color: var(--red);
 }
 
 .vote-score {
-  font-family: var(--display);
-  font-weight: var(--display-weight);
-  font-stretch: 85%;
-  font-size: 1.05rem;
-  line-height: 1.35;
-  letter-spacing: 0.03em;
+  font-size: 1.15rem;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
-  min-width: 2.4ch;
+  letter-spacing: -0.03em;
+  min-width: 2.2ch;
   text-align: center;
   color: var(--ink);
-  border-block: 2px solid var(--rule-strong);
-  background: var(--panel);
+  line-height: 1.2;
+}
+
+/* Once you have voted, the tally takes the ink of the vote you cast. */
+.vote:has(.vote-up[aria-pressed="true"]) .vote-score {
+  color: var(--green);
+}
+
+.vote:has(.vote-down[aria-pressed="true"]) .vote-score {
+  color: var(--red);
 }
 
 .vote-large .vote-btn svg {
-  width: 20px;
-  height: 20px;
-}
-
-.vote-large .vote-btn {
-  padding: 0.4rem 0.7rem;
+  width: 18px;
+  height: 18px;
 }
 
 .vote-large .vote-score {
-  font-size: 1.7rem;
-  line-height: 1.25;
+  font-size: 1.5rem;
 }
 
 .vote-flash {
-  animation: vote-pop 0.24s steps(3, end);
+  animation: vote-pop 0.25s ease;
 }
 
 @keyframes vote-pop {
   0% {
     transform: scale(1);
   }
-  50% {
-    transform: scale(1.25);
+  45% {
+    transform: scale(1.22);
   }
   100% {
     transform: scale(1);
@@ -1192,55 +1131,64 @@ textarea::placeholder {
 
 /* ------------------------------------------------------------- badges ---- */
 
-/* Caption boxes: solid ink, hard border, no rounding. */
+/*
+  Not chips. A pricing badge is a word set in its own ink behind a small filled
+  square — the colour plate standing in for the outline. Secondary facts stay
+  plain grey text.
+*/
 .badges {
   list-style: none;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.3rem;
+  align-items: center;
+  gap: 0.3rem 0.9rem;
   margin: 0;
   padding: 0;
 }
 
 .badge {
-  font-size: 0.62rem;
-  font-weight: 800;
+  font-size: 0.66rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  padding: 0.12rem 0.4rem;
-  border: 2px solid var(--rule-strong);
-  color: var(--ink-soft);
-  background: transparent;
+  letter-spacing: 0.12em;
+  color: var(--ink-faint);
   white-space: nowrap;
-  line-height: 1.5;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.badge-free,
+.badge-freemium,
+.badge-paid,
+.badge-official {
+  font-weight: 700;
+}
+
+.badge-free::before,
+.badge-freemium::before,
+.badge-paid::before,
+.badge-official::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  background: currentColor;
 }
 
 .badge-free {
   color: var(--green);
-  border-color: var(--green);
-  background: var(--green-dim);
 }
 
 .badge-freemium {
-  color: var(--amber);
-  border-color: var(--amber);
-  background: var(--amber-dim);
+  color: var(--yellow);
 }
 
 .badge-paid {
   color: var(--red);
-  border-color: var(--red);
-  background: var(--red-dim);
 }
 
 .badge-official {
   color: var(--cyan);
-  border-color: var(--cyan);
-  background: var(--cyan-dim);
-}
-
-.badge-quiet {
-  border-color: var(--rule);
 }
 
 /* ------------------------------------------------------------ buttons ---- */
@@ -1251,97 +1199,91 @@ textarea::placeholder {
   justify-content: center;
   gap: 0.4rem;
   font: inherit;
-  font-size: 0.72rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 0.55rem 0.9rem;
-  border-radius: var(--radius);
-  border: 2px solid var(--rule-strong);
-  background: var(--panel);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.45rem 0;
+  border: 0;
+  background: none;
   color: var(--ink);
   text-decoration: none;
   cursor: pointer;
   white-space: nowrap;
-  transition:
-    transform 0.1s ease,
-    box-shadow 0.1s ease,
-    background 0.1s ease,
-    border-color 0.1s ease;
+  border-bottom: 1px solid var(--rule-strong);
 }
 
 .btn:hover {
-  border-color: var(--amber);
-  color: var(--ink);
+  color: var(--red);
+  border-bottom-color: var(--red);
 }
 
+/* Flat ink, no outline and no shadow — the comic's solid colour plate. */
 .btn-primary {
-  background: var(--amber);
-  border-color: var(--amber);
-  color: var(--amber-ink);
+  background: var(--red);
+  border: 0;
+  color: var(--on-ink);
+  padding: 0.75rem 1.5rem;
 }
 
 .btn-primary:hover {
-  color: var(--amber-ink);
-  box-shadow: var(--shadow-flat);
-  transform: translate(-2px, -2px);
+  background: var(--ink);
+  color: var(--paper);
 }
 
 .btn-quiet {
-  background: transparent;
+  border-bottom-color: var(--rule);
+  color: var(--ink-soft);
+}
+
+.btn-quiet:hover {
+  color: var(--red);
+  border-bottom-color: var(--red);
 }
 
 .btn-link {
-  border-color: transparent;
-  background: none;
+  border-bottom-color: transparent;
   color: var(--ink-faint);
-  padding-inline: 0.4rem;
+  font-weight: 400;
 }
 
 .btn-link:hover {
-  color: var(--amber);
-  border-color: transparent;
+  color: var(--red);
+  border-bottom-color: transparent;
 }
 
 .btn-wide {
   width: 100%;
-  padding-block: 0.8rem;
-  font-size: 0.8rem;
+  padding-block: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .is-disabled {
-  opacity: 0.35;
+  opacity: 0.3;
   pointer-events: none;
 }
 
 /* ----------------------------------------------------------- messages ---- */
 
 .empty {
-  border: 2px dashed var(--rule-strong);
-  padding: 3rem 1.5rem;
-  text-align: center;
+  padding: 5rem 0;
+  max-width: 46ch;
 }
 
 .empty-title {
-  font-family: var(--display);
-  font-weight: var(--display-weight);
-  font-stretch: 85%;
-  font-size: 2rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-bottom: 0.4rem;
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.5rem;
 }
 
 .alert {
-  padding: 1rem 1.15rem;
-  margin-bottom: 1.5rem;
-  border: 2px solid var(--red);
-  background: var(--red-dim);
+  padding: 0 0 0 1.1rem;
+  margin-bottom: 2rem;
+  border-left: 3px solid var(--red);
 }
 
 .alert ul {
   margin: 0.4rem 0 0;
-  padding-left: 1.2rem;
+  padding-left: 1.1rem;
 }
 
 .alert p {
@@ -1353,116 +1295,111 @@ textarea::placeholder {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-top: 2rem;
+  margin-top: 2.5rem;
 }
 
-/* A parting panel pointing at the other track. */
+/* The one place a full field of tone is allowed, and it closes the page. */
 .crossover {
-  margin-top: 3rem;
-  border: 2px solid var(--rule-strong);
-  background: var(--panel);
-  background-image: radial-gradient(var(--dot) 1px, transparent 1.2px);
-  background-size: 6px 6px;
-  padding: 2rem;
+  margin-top: 5rem;
+  padding: 3rem;
+  background: var(--sunken);
+  background-image: radial-gradient(var(--dot) 1.4px, transparent 1.5px);
+  background-size: var(--dot-size) var(--dot-size);
 }
 
 .crossover h2 {
-  font-family: var(--display);
-  font-weight: var(--display-weight);
-  font-stretch: 85%;
-  font-size: 1.9rem;
-  letter-spacing: 0.03em;
-  margin-bottom: 0.4rem;
+  font-size: 1.6rem;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.5rem;
 }
 
 .crossover p {
   color: var(--ink-soft);
-  max-width: 60ch;
+  max-width: 56ch;
+}
+
+@media (max-width: 620px) {
+  .crossover {
+    padding: 2rem 1.5rem;
+  }
 }
 
 /* ------------------------------------------------------------- detail ---- */
 
 .page {
-  padding-block: 2.5rem 4rem;
+  padding-block: 3.5rem 5rem;
 }
 
 .detail {
-  padding-block: 1.5rem 4rem;
+  padding-block: 2rem 5rem;
 }
 
 .breadcrumb {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  font-size: 0.72rem;
   color: var(--ink-faint);
-  margin-bottom: 1.5rem;
+  margin-bottom: 2.5rem;
 }
 
 .breadcrumb a {
-  color: var(--ink-soft);
+  color: var(--ink-faint);
   text-decoration: none;
 }
 
 .breadcrumb a:hover {
-  color: var(--amber);
+  color: var(--red);
 }
 
 .detail-head {
   display: flex;
-  gap: 1.5rem;
+  gap: 1.75rem;
   align-items: flex-start;
-  padding-bottom: 1.75rem;
-  border-bottom: 2px solid var(--rule-strong);
-  margin-bottom: 2rem;
+  padding-bottom: 2.5rem;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 3rem;
 }
 
 .detail-head h1 {
-  font-family: var(--display);
-  font-weight: var(--display-weight);
-  font-stretch: 85%;
-  font-size: clamp(2rem, 1.2rem + 3vw, 3.4rem);
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.35rem;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 0.85rem;
 }
 
 .detail-tagline {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   color: var(--ink-soft);
-  margin-bottom: 0.85rem;
+  margin-bottom: 1rem;
+  max-width: 56ch;
 }
 
 .detail-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
-  gap: 3rem;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 4.5rem;
   align-items: start;
 }
 
-@media (max-width: 880px) {
+@media (max-width: 900px) {
   .detail-grid {
     grid-template-columns: 1fr;
-    gap: 2rem;
+    gap: 3rem;
   }
 }
 
 .detail-main > section + section {
-  margin-top: 2.25rem;
+  margin-top: 3rem;
 }
 
 .prose {
-  max-width: 68ch;
+  max-width: 66ch;
 }
 
 .prose h2 {
-  margin-top: 2rem;
+  margin-top: 2.5rem;
 }
 
 .prose li {
@@ -1472,62 +1409,60 @@ textarea::placeholder {
 .cta-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.6rem;
+  gap: 1.5rem;
+  align-items: center;
 }
 
 .vote-explainer,
 .report {
-  border-top: 2px solid var(--rule);
-  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+  padding-top: 2rem;
 }
 
 .report-form {
-  max-width: 520px;
+  max-width: 480px;
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 1.25rem;
   align-items: flex-start;
 }
 
+/* No panel. A rule of ink above it, and the same type scale as the page. */
 .detail-side {
-  background: var(--panel);
-  border: 2px solid var(--rule-strong);
-  padding: 1.25rem;
+  border-top: 2px solid var(--ink);
+  padding-top: 1rem;
 }
 
 .side-title {
   font-size: 0.65rem;
   text-transform: uppercase;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.2em;
   color: var(--ink-faint);
   font-weight: 700;
+  margin-bottom: 1rem;
 }
 
 .specs {
-  margin: 0 0 1rem;
+  margin: 0 0 1.5rem;
   display: flex;
   flex-direction: column;
 }
 
 .spec-row {
   display: grid;
-  grid-template-columns: 88px minmax(0, 1fr);
-  gap: 0.75rem;
-  padding: 0.6rem 0;
-  border-top: 1px solid var(--rule);
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 1rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--rule);
   font-size: 0.875rem;
-}
-
-.spec-row:first-child {
-  border-top: 0;
 }
 
 .spec-row dt {
   color: var(--ink-faint);
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   text-transform: uppercase;
-  letter-spacing: 0.09em;
-  padding-top: 2px;
+  letter-spacing: 0.11em;
+  padding-top: 3px;
 }
 
 .spec-row dd {
@@ -1535,7 +1470,7 @@ textarea::placeholder {
 }
 
 .spec-row dd p {
-  margin: 0.25rem 0 0;
+  margin: 0.3rem 0 0;
 }
 
 .tag-list {
@@ -1544,28 +1479,26 @@ textarea::placeholder {
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
+  gap: 0.15rem 0.7rem;
 }
 
 .tag {
   display: inline-block;
-  font-size: 0.7rem;
-  padding: 0.05rem 0.4rem;
-  border: 1px solid var(--rule);
-  background: var(--sunken);
+  font-size: 0.8rem;
   color: var(--ink-soft);
   text-decoration: none;
+  border-bottom: 1px solid var(--rule);
 }
 
 .tag:hover {
-  border-color: var(--amber);
-  color: var(--amber);
+  color: var(--red);
+  border-bottom-color: var(--red);
 }
 
 .related {
-  margin-top: 3rem;
-  border-top: 2px solid var(--rule-strong);
-  padding-top: 1.5rem;
+  margin-top: 4rem;
+  border-top: 1px solid var(--rule);
+  padding-top: 2rem;
 }
 
 .related-list {
@@ -1573,31 +1506,60 @@ textarea::placeholder {
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0;
+}
+
+.related-list li {
+  border-left: 1px solid var(--rule);
+}
+
+.related-list li:first-child {
+  border-left: 0;
 }
 
 .related-list a {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  padding: 0.85rem 1rem;
-  border: 2px solid var(--rule);
+  gap: 0.25rem;
+  padding: 0 1.5rem;
   text-decoration: none;
   color: var(--ink);
-  background: var(--panel);
   height: 100%;
-  transition: transform 0.1s ease, box-shadow 0.1s ease, border-color 0.1s ease;
 }
 
-.related-list a:hover {
-  border-color: var(--amber);
-  box-shadow: var(--shadow-flat);
-  transform: translate(-2px, -2px);
+.related-list li:first-child a {
+  padding-left: 0;
+}
+
+.related-list a:hover strong {
+  color: var(--red);
+}
+
+.related-list strong {
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: -0.015em;
 }
 
 .related-list .muted {
-  font-size: 0.825rem;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 700px) {
+  .related-list li {
+    border-left: 0;
+    border-top: 1px solid var(--rule);
+  }
+  .related-list li:first-child {
+    border-top: 0;
+  }
+  .related-list a {
+    padding: 1rem 0;
+  }
+  .related-list li:first-child a {
+    padding-top: 0;
+  }
 }
 
 /* --------------------------------------------------------------- form ---- */
@@ -1605,76 +1567,76 @@ textarea::placeholder {
 .form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  max-width: 640px;
-  margin-top: 2rem;
+  gap: 2rem;
+  max-width: 580px;
+  margin-top: 2.5rem;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.4rem;
 }
 
 .field-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 2rem;
 }
 
 .field > label,
 .field legend {
-  font-weight: 800;
-  font-size: 0.7rem;
+  font-weight: 700;
+  font-size: 0.65rem;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.16em;
+  color: var(--ink-faint);
 }
 
 .field-check label {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.55rem;
   font-weight: 400;
   font-size: 0.925rem;
   text-transform: none;
   letter-spacing: 0;
+  color: var(--ink);
 }
 
 .field-check input {
   width: auto;
-  accent-color: var(--amber);
+  accent-color: var(--red);
 }
 
-/* Two hard panels, like the track switch. */
 .track-options {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 0.6rem;
-  margin-top: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0;
+  margin-top: 0.75rem;
+  border-top: 1px solid var(--rule);
 }
 
 .track-options label {
   display: flex;
   gap: 0.6rem;
   align-items: flex-start;
-  padding: 0.85rem 1rem;
-  border: 2px solid var(--rule);
-  background: var(--panel);
+  padding: 1rem 1.25rem 1rem 0;
   cursor: pointer;
   font-weight: 400;
   text-transform: none;
   letter-spacing: 0;
+  border-bottom: 2px solid transparent;
 }
 
 .track-options label:has(input:checked) {
-  border-color: var(--amber);
-  background: var(--amber-dim);
+  border-bottom-color: var(--red);
 }
 
 .track-options input {
   width: auto;
-  margin-top: 3px;
-  accent-color: var(--amber);
+  margin-top: 4px;
+  accent-color: var(--red);
   flex: none;
 }
 
@@ -1683,20 +1645,21 @@ textarea::placeholder {
   flex-direction: column;
   gap: 2px;
   font-size: 0.8rem;
-  color: var(--ink-soft);
+  color: var(--ink-faint);
 }
 
 .track-options strong {
-  font-size: 0.9rem;
+  font-size: 0.925rem;
+  font-weight: 600;
   color: var(--ink);
 }
 
 .req {
   font-weight: 400;
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   color: var(--ink-faint);
-  letter-spacing: 0.08em;
-  margin-left: 0.35rem;
+  letter-spacing: 0.1em;
+  margin-left: 0.4rem;
 }
 
 .hint {
@@ -1708,7 +1671,7 @@ textarea::placeholder {
 .params {
   width: 100%;
   border-collapse: collapse;
-  margin: 1rem 0 2rem;
+  margin: 1.25rem 0 2.5rem;
   font-size: 0.875rem;
   display: block;
   overflow-x: auto;
@@ -1717,42 +1680,39 @@ textarea::placeholder {
 .params th,
 .params td {
   text-align: left;
-  padding: 0.6rem 0.75rem 0.6rem 0;
+  padding: 0.65rem 1rem 0.65rem 0;
   border-bottom: 1px solid var(--rule);
   vertical-align: top;
 }
 
 .params th {
   color: var(--ink-faint);
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
+  font-weight: 700;
 }
 
 /* -------------------------------------------------------------- admin ---- */
 
 .admin-list {
   list-style: none;
-  margin: 0 0 2.5rem;
+  margin: 0 0 3rem;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
 }
 
 .admin-list li {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 1.5rem;
   justify-content: space-between;
   align-items: flex-start;
-  border: 2px solid var(--rule-strong);
-  padding: 1rem 1.25rem;
-  background: var(--panel);
+  padding: 1.5rem 0;
+  border-bottom: 1px solid var(--rule);
 }
 
 .admin-list h3 {
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.25rem;
 }
 
 .admin-list p {
@@ -1761,8 +1721,9 @@ textarea::placeholder {
 
 .admin-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 1.25rem;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .admin-actions form {
@@ -1772,43 +1733,43 @@ textarea::placeholder {
 /* ------------------------------------------------------------- footer ---- */
 
 .site-footer {
-  border-top: 2px solid var(--rule-strong);
-  background: var(--sunken);
-  padding-top: 2.5rem;
+  border-top: 1px solid var(--rule);
+  padding-top: 3.5rem;
   margin-top: auto;
 }
 
 .footer-inner {
   display: grid;
   grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr));
-  gap: 2rem;
-  padding-bottom: 2rem;
+  gap: 3rem;
+  padding-bottom: 3rem;
 }
 
 @media (max-width: 700px) {
   .footer-inner {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 2rem;
   }
 }
 
 .footer-title {
-  font-weight: 800;
-  font-size: 0.68rem;
+  font-weight: 700;
+  font-size: 0.62rem;
   text-transform: uppercase;
-  letter-spacing: 0.16em;
-  margin-bottom: 0.7rem;
+  letter-spacing: 0.2em;
+  margin-bottom: 0.9rem;
   color: var(--ink-faint);
 }
 
 .footer-inner .muted {
   font-size: 0.875rem;
+  max-width: 44ch;
 }
 
 .footer-links {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.5rem;
 }
 
 .footer-links a {
@@ -1818,17 +1779,18 @@ textarea::placeholder {
 }
 
 .footer-links a:hover {
-  color: var(--amber);
+  color: var(--red);
 }
 
 .footer-legal {
   border-top: 1px solid var(--rule);
-  padding-block: 1.25rem;
+  padding-block: 1.5rem 2rem;
 }
 
 .footer-legal p {
   margin: 0;
   font-size: 0.8rem;
+  max-width: 70ch;
 }
 
 /* -------------------------------------------------------------- toast ---- */
@@ -1838,15 +1800,10 @@ textarea::placeholder {
   left: 50%;
   bottom: 1.5rem;
   transform: translate(-50%, 1rem);
-  background: var(--amber);
-  color: var(--amber-ink);
-  font-weight: 700;
+  background: var(--ink);
+  color: var(--paper);
   font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 0.7rem 1.2rem;
-  border: 2px solid var(--lift);
-  box-shadow: var(--shadow-flat);
+  padding: 0.75rem 1.25rem;
   opacity: 0;
   transition: opacity 0.15s ease, transform 0.15s ease;
   z-index: 50;

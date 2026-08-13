@@ -339,6 +339,14 @@ export const FilterPanel: FC<{
         {activeCount > 0 && <span class="filters-badge">{activeCount}</span>}
       </summary>
 
+      {/*
+        A real wrapper, not just the summary's siblings. A <details> puts
+        everything after the summary into one anonymous box, so `display: flex`
+        with a gap on the <details> itself lays out summary-plus-one-blob and
+        the gap between the facet groups silently never happens. Laying out
+        this div instead is the fix.
+      */}
+      <div class="filters-body">
       <div class="filters-head">
         <h2>Filters</h2>
         {activeCount > 0 && (
@@ -427,6 +435,7 @@ export const FilterPanel: FC<{
         labels={LANGUAGE_NAMES}
         limit={10}
       />
+      </div>
     </details>
   );
 };

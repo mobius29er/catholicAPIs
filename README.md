@@ -29,15 +29,29 @@ Static assets (public/) served from the edge, never touching the Worker.
 
 ## Design
 
-Golden-age comic book meets neo-noir Scandinavian. The two meet at the grid: a comic page is
-panels, gutters and hard rules, and Scandinavian design is the same discipline with the ink turned
-down. So the *structure* is comic — 2px panel borders, hard offset shadows with no blur, caption-box
-badges, halftone dots, page numbers on the cards — and the *palette* is noir: cold near-black,
-blue-grey, and exactly one warm light (amber) in an otherwise cold frame.
+**Neo-noir Scandinavian structure, golden-age comic palette.**
+
+The structure is Scandinavian and noir: hairline rules, no boxes, no shadows, no rounded corners,
+wide margins, a strict left-aligned grid and a lot of deliberate emptiness. Listings are rows
+separated by a hairline, not cards; the only movement on the page is a bar of red ink sliding into
+the left margin on hover. Composition is asymmetric — weight at the left, air at the right.
+
+The colour is golden-age comics: the four-colour process. Saturated red, blue, yellow and cyan as
+flat ink, and Ben-Day dot fields printed slightly out of register, because misregistration is the
+actual golden-age artefact. Light mode is aged newsprint; dark mode is the noir night those inks
+glow against. Because the structure carries no visual weight, colour does all the work — it appears
+in small decisive placements and never as a wash or a gradient. Nothing is outlined.
 
 Catholic identity is deliberately quiet: no crosses in the chrome, no gold leaf, no liturgical
-colour coding. The content says Catholic; the interface stays a developer tool. Dark is the
-default; light mode is a cold Scandinavian white rather than paper.
+colour coding. The content says Catholic; the interface stays a developer tool.
+
+> The first pass inverted these — comic *construction* (neubrutalist panels, hard offset shadows,
+> caption boxes) in a noir *palette* (cold near-black, one amber accent). It is archived at
+> [`public/styles-v1.css`](public/styles-v1.css); point the stylesheet link in
+> `src/views/layout.tsx` at `/styles-v1.css` to compare, and delete the file once a direction is
+> settled. Worth knowing that the v1 construction is essentially
+> [neubrutalism](https://www.nngroup.com/articles/neobrutalism/), a well-established trend, whereas
+> v2's pairing is the less common one.
 
 ## Quick start
 

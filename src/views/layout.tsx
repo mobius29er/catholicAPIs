@@ -47,11 +47,13 @@ export const Layout: FC<LayoutProps> = ({
       <meta property="og:url" content={canonical} />
       <meta name="twitter:card" content="summary_large_image" />
 
-      <meta name="theme-color" content="#f4f6f8" media="(prefers-color-scheme: light)" />
-      <meta name="theme-color" content="#0b0e12" media="(prefers-color-scheme: dark)" />
+      <meta name="theme-color" content="#f4efe4" media="(prefers-color-scheme: light)" />
+      <meta name="theme-color" content="#0e0f13" media="(prefers-color-scheme: dark)" />
 
       <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       <link rel="alternate" type="application/rss+xml" title={`${siteName} — newest listings`} href="/feed.xml" />
+      {/* Design v1 (comic structure, noir palette) is archived at
+          /styles-v1.css — swap this href to compare the two directions. */}
       <link rel="stylesheet" href="/styles.css" />
 
       {/*

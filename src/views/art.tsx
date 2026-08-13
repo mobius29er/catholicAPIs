@@ -280,3 +280,34 @@ export const SpotlightBeam: FC = () => (
     <path d="M260 0 L60 160 L200 160 L260 96z" fill="url(#beamFade)" />
   </svg>
 );
+
+/**
+ * Topic glyphs for the rail. The reference uses a different line icon per
+ * topic rather than a coloured dot; these cycle by position.
+ */
+const TOPIC_PATHS = [
+  'M8 3a3 3 0 0 0-3 3 3 3 0 0 0-1 5.6V13a3 3 0 0 0 4 2.8V3.9A3 3 0 0 0 8 3Zm4 0a3 3 0 0 1 3 3 3 3 0 0 1 1 5.6V13a3 3 0 0 1-4 2.8V3.9A3 3 0 0 1 12 3Z',
+  'M7 6 3 10l4 4M13 6l4 4-4 4',
+  'M4 10.5 8 14l8-8',
+  'M11 2 4 11h5l-1 7 7-9h-5z',
+  'M10 3v14M3 10h14',
+  'M4 15V8m4 7V5m4 10V9m4 6V4',
+];
+
+export const TopicIcon: FC<{ index: number }> = ({ index }) => {
+  const path = TOPIC_PATHS[index % TOPIC_PATHS.length];
+  const filled = index % TOPIC_PATHS.length === 0 || index % TOPIC_PATHS.length === 3;
+
+  return (
+    <svg class="topic-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+      <path
+        d={path}
+        fill={filled ? 'currentColor' : 'none'}
+        stroke={filled ? 'none' : 'currentColor'}
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+  );
+};

@@ -36,13 +36,13 @@
 :root {
   color-scheme: dark;
 
-  --bg: #0a0f16;
-  --panel: #111925;
-  --panel-2: #17212e;
-  --sunken: #0c121a;
+  --bg: #0d1117;
+  --panel: #141b24;
+  --panel-2: #1a2330;
+  --sunken: #0f151d;
 
-  --line: #1f2b3a;
-  --line-soft: #182231;
+  --line: #232e3b;
+  --line-soft: #1b242f;
 
   --cream: #f0e7d4;
   --muted: #8d9aa8;
@@ -450,6 +450,17 @@ fieldset {
   outline: none;
 }
 
+.masthead-search kbd {
+  flex: none;
+  font: inherit;
+  font-size: 0.72rem;
+  color: var(--faint);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0 0.35rem;
+  line-height: 1.4;
+}
+
 .masthead-actions {
   display: flex;
   align-items: center;
@@ -575,7 +586,7 @@ fieldset {
 .hero-inner {
   position: relative;
   z-index: 1;
-  padding-block: clamp(2.5rem, 5vw, 4rem) clamp(2.75rem, 5vw, 4.25rem);
+  padding-block: clamp(2.25rem, 4vw, 3.25rem) clamp(2.25rem, 4vw, 3.25rem);
 }
 
 .hero-inner > * {
@@ -602,7 +613,7 @@ fieldset {
 .hero h1 {
   font-family: var(--display);
   font-weight: 400;
-  font-size: clamp(2.5rem, 1.2rem + 4.2vw, 4.2rem);
+  font-size: clamp(2.4rem, 1.2rem + 3.8vw, 3.85rem);
   line-height: 0.98;
   letter-spacing: 0.005em;
   text-transform: uppercase;
@@ -703,6 +714,19 @@ fieldset {
 
 /* ------------------------------------------------------- list heading ---- */
 
+.feed {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.35rem 1.4rem 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .feed {
+    padding: 1rem;
+  }
+}
+
 .feed-head {
   display: flex;
   flex-wrap: wrap;
@@ -714,11 +738,9 @@ fieldset {
 
 .feed-title {
   margin: 0;
-  font-family: var(--display);
-  font-weight: 400;
-  font-size: 1.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.015em;
+  font-size: 1.55rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .feed-title em {
@@ -952,13 +974,13 @@ fieldset {
 
 .row {
   display: grid;
-  grid-template-columns: 4.25rem auto minmax(0, 1fr) 10.5rem auto;
-  gap: 1.1rem;
+  grid-template-columns: 4.5rem auto minmax(0, 1fr) 11rem auto;
+  gap: 1.25rem;
   align-items: center;
-  background: var(--panel);
+  background: var(--sunken);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 1rem 1.15rem;
+  padding: 1.15rem 1.25rem;
   transition: border-color 0.14s ease, background 0.14s ease;
 }
 
@@ -978,7 +1000,7 @@ fieldset {
 .row-rank-number {
   font-family: var(--display);
   font-weight: 400;
-  font-size: 2rem;
+  font-size: 2.3rem;
   line-height: 1;
   font-variant-numeric: tabular-nums;
   color: var(--cream);
@@ -1003,8 +1025,8 @@ fieldset {
 }
 
 .logo-mark svg {
-  width: 52px;
-  height: 52px;
+  width: 66px;
+  height: 66px;
   display: block;
 }
 
@@ -1013,8 +1035,8 @@ fieldset {
 }
 
 .row-name {
-  margin: 0 0 0.15rem;
-  font-size: 1rem;
+  margin: 0 0 0.2rem;
+  font-size: 1.06rem;
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -1032,9 +1054,10 @@ fieldset {
 }
 
 .row-tagline {
-  margin: 0 0 0.5rem;
+  margin: 0 0 0.6rem;
   color: var(--muted);
-  font-size: 0.86rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 .row-by {
@@ -1057,7 +1080,7 @@ fieldset {
 }
 
 .row-by a {
-  font-size: 0.82rem;
+  font-size: 0.86rem;
   font-weight: 600;
   color: var(--cream);
   text-decoration: none;
@@ -1090,8 +1113,8 @@ fieldset {
 .monogram {
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
   flex: none;
   border-radius: 50%;
   color: #fff;
@@ -1139,9 +1162,9 @@ fieldset {
   white-space: nowrap;
 }
 
-@media (max-width: 1160px) {
+@media (max-width: 1240px) {
   .row {
-    grid-template-columns: 3rem auto minmax(0, 1fr) auto;
+    grid-template-columns: 3.25rem auto minmax(0, 1fr) auto;
   }
 
   .row-by {
@@ -1157,7 +1180,7 @@ fieldset {
   }
 
   .row-rank-number {
-    font-size: 1.35rem;
+    font-size: 1.5rem;
   }
 
   .row-rank-note {
@@ -1165,8 +1188,8 @@ fieldset {
   }
 
   .logo-mark svg {
-    width: 38px;
-    height: 38px;
+    width: 44px;
+    height: 44px;
   }
 }
 
@@ -1178,12 +1201,14 @@ fieldset {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 0;
   margin: 0;
-  min-width: 74px;
-  padding: 0.5rem 0.65rem;
+  min-width: 88px;
+  min-height: 86px;
+  padding: 0.6rem 0.8rem;
   border: 1px solid var(--orange);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
   background: color-mix(in srgb, var(--orange) 8%, transparent);
   transition: background 0.14s ease;
 }
@@ -1205,8 +1230,8 @@ fieldset {
 }
 
 .vote-btn svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   fill: currentColor;
 }
 
@@ -1230,8 +1255,8 @@ fieldset {
 .vote-score {
   font-family: var(--display);
   font-weight: 400;
-  font-size: 1.65rem;
-  line-height: 1.05;
+  font-size: 1.9rem;
+  line-height: 1.1;
   font-variant-numeric: tabular-nums;
   text-align: center;
   color: var(--orange);
@@ -1254,12 +1279,18 @@ fieldset {
 
 @media (max-width: 620px) {
   .vote {
-    min-width: 58px;
-    padding: 0.35rem 0.45rem;
+    min-width: 62px;
+    min-height: 0;
+    padding: 0.4rem 0.5rem;
   }
 
   .vote-score {
-    font-size: 1.25rem;
+    font-size: 1.4rem;
+  }
+
+  .vote-btn svg {
+    width: 14px;
+    height: 14px;
   }
 }
 
@@ -1395,8 +1426,8 @@ fieldset {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.45rem 0.3rem;
+  gap: 0.7rem;
+  padding: 0.52rem 0.3rem;
   border-radius: var(--radius-sm);
   text-decoration: none;
   color: var(--cream);
@@ -1407,27 +1438,27 @@ fieldset {
   background: var(--panel-2);
 }
 
-.topic-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--teal);
+.topic-icon {
+  width: 19px;
+  height: 19px;
+  flex: none;
+  color: var(--teal);
 }
 
-.topics li:nth-child(2) .topic-dot {
-  background: var(--amber);
+.topics li:nth-child(2) .topic-icon {
+  color: var(--amber);
 }
-.topics li:nth-child(3) .topic-dot {
-  background: var(--orange);
+.topics li:nth-child(3) .topic-icon {
+  color: var(--orange);
 }
-.topics li:nth-child(4) .topic-dot {
-  background: var(--green);
+.topics li:nth-child(4) .topic-icon {
+  color: var(--green);
 }
-.topics li:nth-child(5) .topic-dot {
-  background: #7c6cf0;
+.topics li:nth-child(5) .topic-icon {
+  color: #7c6cf0;
 }
-.topics li:nth-child(6) .topic-dot {
-  background: #f472b6;
+.topics li:nth-child(6) .topic-icon {
+  color: #f472b6;
 }
 
 .topic-name {

@@ -120,6 +120,22 @@
       });
   }
 
+  // -------------------------------------------------------- / to search ---
+
+  // The masthead shows a "/" hint, so it had better do something.
+  document.addEventListener('keydown', function (event) {
+    if (event.key !== '/' || event.metaKey || event.ctrlKey || event.altKey) return;
+    var active = document.activeElement;
+    var tag = active ? active.tagName : '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    if (active && active.isContentEditable) return;
+
+    var field = document.querySelector('[data-search]');
+    if (!field) return;
+    event.preventDefault();
+    field.focus();
+  });
+
   // ------------------------------------------------- submit form track ---
 
   // The submit form asks for different things depending on the track. Both

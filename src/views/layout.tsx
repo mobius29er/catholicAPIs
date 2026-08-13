@@ -142,7 +142,9 @@ export const Layout: FC<LayoutProps> = ({
               name="q"
               placeholder="Search apps, APIs, or topics"
               autocomplete="off"
+              data-search
             />
+            <kbd aria-hidden="true">/</kbd>
           </form>
 
           <div class="masthead-actions">

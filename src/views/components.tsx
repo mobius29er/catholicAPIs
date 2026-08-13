@@ -2,7 +2,7 @@ import type { FC } from 'hono/jsx';
 import type { Filters, Listing, Sort, Track } from '../types';
 import { listingPath } from '../types';
 import type { FacetCount } from '../db';
-import { LogoMark, Monogram, SpotlightBeam } from './art';
+import { LogoMark, Monogram, SpotlightBeam, TopicIcon } from './art';
 
 export const KIND_LABELS: Record<string, string> = {
   api: 'Hosted API',
@@ -512,12 +512,14 @@ export const TrendingTopics: FC<{ filters: Filters; categories: FacetCount[] }> 
     </div>
 
     <ul class="topics">
-      {categories.slice(0, 6).map((category) => (
+      {categories.slice(0, 6).map((category, index) => (
         <li>
           <a href={buildQuery(filters, { category: [category.value], page: 1 })}>
-            <span class="topic-dot" aria-hidden="true" />
+            <TopicIcon index={index} />
             <span class="topic-name">{category.value}</span>
-            <span class="topic-count">{category.count}</span>
+            <span class="topic-count">
+              {category.count} {category.count === 1 ? 'listing' : 'listings'}
+            </span>
           </a>
         </li>
       ))}

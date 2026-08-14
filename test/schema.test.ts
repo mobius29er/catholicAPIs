@@ -132,15 +132,33 @@ describe('brand', () => {
 describe('deploy configuration', () => {
   const config = read('wrangler.jsonc');
 
-  it('does not pin SITE_URL, so a preview deploy describes itself', () => {
-    // Commented-out guidance is fine; an active setting is not. Without this,
-    // a *.workers.dev deploy emits canonical tags for a domain that may not be
-    // serving anything yet.
-    const active = config
-      .split('\n')
-      .filter((line) => !line.trim().startsWith('//'))
-      .join('\n');
-    expect(active).not.toMatch(/"SITE_URL"\s*:/);
+  const uncommented = config
+    .split('\n')
+    .filter((line) => !line.trim().startsWith('//'))
+    .join('\n');
+
+  const routes = [...uncommented.matchAll(/"pattern":\s*"([^"]+)"/g)].map((m) => m[1]);
+  const siteUrl = uncommented.match(/"SITE_URL":\s*"([^"]+)"/)?.[1];
+
+  /*
+    This started life as "never pin SITE_URL", which was right only while the
+    site lived on a workers.dev address and pinning would have advertised a
+    domain that answered nothing. Now fideshunt.com is attached, and the real
+    invariant — the one that was always underneath — is that SITE_URL may only
+    name a hostname this Worker actually serves. Unset stays legal: the Worker
+    then describes itself from the request, which is correct for a preview.
+  */
+  it('pins SITE_URL only to a hostname the Worker actually serves', () => {
+    if (!siteUrl) return;
+    expect(routes).toContain(new URL(siteUrl).host);
+  });
+
+  it('serves the apex it canonicalises to, not only www', () => {
+    if (!siteUrl) return;
+    const host = new URL(siteUrl).host;
+    expect(host.startsWith('www.')).toBe(false);
+    // www may also be routed — it just has to point home, which SITE_URL does.
+    expect(routes.some((r) => r === host)).toBe(true);
   });
 
   it('runs the uptime cron', () => {

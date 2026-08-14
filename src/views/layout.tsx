@@ -104,11 +104,11 @@ export const Layout: FC<LayoutProps> = ({
         <div class="masthead-inner">
           <a class="brand" href="/">
             <span class="brand-mark" aria-hidden="true">
-              CA
+              FH
             </span>
             <span class="brand-text">
-              <strong>Catholic APIs</strong>
-              <small>Discover what's already built</small>
+              <strong>FidesHunt</strong>
+              <small>Find what's already built</small>
             </span>
           </a>
 
@@ -170,10 +170,10 @@ export const Layout: FC<LayoutProps> = ({
         <div class="footer-inner">
           <div class="footer-brand">
             <span class="footer-mark" aria-hidden="true">
-              CA
+              FH
             </span>
             <p class="muted small">
-              Catholic APIs
+              FidesHunt
               <br />
               An open, community-ranked directory.
             </p>
@@ -181,7 +181,7 @@ export const Layout: FC<LayoutProps> = ({
 
           <div class="footer-links">
             <p class="footer-title">Browse</p>
-            <a href="/">Catholic products</a>
+            <a href="/">Apps &amp; products</a>
             <a href="/apis">Developer APIs</a>
             <a href="/apis?pricing=free&amp;no_auth=1">Free, no key needed</a>
             <a href="/?sort=new">Recently added</a>

@@ -30,7 +30,7 @@ const COPY: Record<Track, Copy> = {
   product: {
     caption: 'New is worth finding.',
     headline: 'Discover the software\nCatholics actually use',
-    sub: 'Catholic APIs is a directory of the apps, services and tools people pray, study and run parishes with — ranked by the people who use them.',
+    sub: 'FidesHunt is a directory of the apps, services and tools people pray, study and run parishes with — ranked by the people who use them.',
     stamp: 'Good work deserves users.',
     listHeading: 'Top products',
     secondary: { href: '/submit?track=product', label: 'Submit a product' },

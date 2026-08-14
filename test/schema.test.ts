@@ -80,6 +80,52 @@ describe('generated migrations', () => {
  * quietly wrong — a preview whose canonical tags point at production, or a
  * `database_id` placeholder that fails several steps after the mistake.
  */
+/**
+ * The brand, in the three places that must agree.
+ *
+ * A rename is easy to do 90% of. What survives is the 10%: a stale fallback
+ * that only appears when an env var is missing, or a config that disagrees
+ * with the code and only shows up in production. These are those spots.
+ */
+describe('brand', () => {
+  const BRAND = 'FidesHunt';
+
+  it('is what the masthead and footer render', () => {
+    const layout = read('src/views/layout.tsx');
+    expect(layout).toContain(`<strong>${BRAND}</strong>`);
+    expect(layout).not.toContain('Catholic APIs');
+  });
+
+  it('is the SITE_NAME fallback used when the env var is unset', () => {
+    // The fallback is the one that shows up on a misconfigured deploy, which is
+    // exactly when nobody is looking.
+    const app = read('src/index.tsx');
+    expect(app).toContain(`c.env.SITE_NAME ?? '${BRAND}'`);
+    expect(app).not.toMatch(/SITE_NAME \?\? 'Catholic APIs'/);
+  });
+
+  it('is the SITE_NAME the config actually ships', () => {
+    expect(read('wrangler.jsonc')).toContain(`"SITE_NAME": "${BRAND}"`);
+  });
+
+  it('names the Worker and the package after the brand', () => {
+    expect(read('wrangler.jsonc')).toMatch(/"name":\s*"fideshunt"/);
+    expect(JSON.parse(read('package.json')).name).toBe('fideshunt');
+  });
+
+  /*
+    The D1 database keeps its original name on purpose — databases cannot be
+    renamed and recreating one would mean migrating every listing and vote. The
+    two places that name it have to stay in step with each other and with the
+    database that actually exists.
+  */
+  it('keeps the D1 name consistent between config and deploy script', () => {
+    const configured = read('wrangler.jsonc').match(/"database_name":\s*"([^"]+)"/)?.[1];
+    const scripted = read('scripts/deploy.mjs').match(/const DB_NAME = '([^']+)'/)?.[1];
+    expect(configured).toBe(scripted);
+  });
+});
+
 describe('deploy configuration', () => {
   const config = read('wrangler.jsonc');
 

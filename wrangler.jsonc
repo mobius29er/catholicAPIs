@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "catholic-apis",
+  "name": "fideshunt",
   "main": "src/index.tsx",
   "compatibility_date": "2026-08-13",
   "compatibility_flags": ["nodejs_compat"],
@@ -20,8 +20,12 @@
   "d1_databases": [
     {
       "binding": "DB",
+      // Still "catholic-apis" after the rename to FidesHunt, on purpose: D1
+      // databases cannot be renamed, and recreating one to change a label would
+      // mean migrating 237 listings and every vote cast against them for no
+      // user-visible gain. The binding is what the code sees, and that is `DB`.
       "database_name": "catholic-apis",
-      // Replace with the id printed by `wrangler d1 create catholic-apis`.
+      // Written by `npm run deploy:setup`; see scripts/deploy.mjs.
       "database_id": "6b3c70bd-3424-4627-bc20-a6cc449f2848",
       "migrations_dir": "migrations"
     }
@@ -40,9 +44,11 @@
     // canonical tags, sitemap, feed and JSON-LD all point at the preview rather
     // than at a domain that is not serving yet.
     //
-    // Set it once a custom domain is live and is the ONE canonical hostname:
-    //   "SITE_URL": "https://catholicapis.com",
-    "SITE_NAME": "Catholic APIs"
+    // Set it once fideshunt.com is attached and serving, and is the ONE
+    // canonical hostname — at that point you WANT it pinned, so a request
+    // arriving on the workers.dev address still points search engines home:
+    //   "SITE_URL": "https://fideshunt.com",
+    "SITE_NAME": "FidesHunt"
   }
 
   // Secrets (set with `wrangler secret put <NAME>`), all optional:

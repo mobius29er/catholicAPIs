@@ -1,6 +1,6 @@
 {
   "$comment": [
-    "Curated seed listings for the Catholic APIs directory.",
+    "Curated seed listings for FidesHunt (fideshunt.com).",
     "Edit this file, then run `npm run seed:build` to regenerate migrations/0002_seed.sql.",
     "The generator upserts by slug, so re-running a corrected seed fixes existing rows",
     "without touching their votes.",

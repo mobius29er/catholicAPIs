@@ -34,7 +34,7 @@ async function probe(url) {
         method,
         redirect: 'follow',
         signal: controller.signal,
-        headers: { 'user-agent': 'catholicapis-linkcheck/1.0 (+https://catholicapis.com)' },
+        headers: { 'user-agent': 'fideshunt-linkcheck/1.0 (+https://fideshunt.com)' },
       });
       return { status: res.status };
     } finally {

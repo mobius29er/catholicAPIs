@@ -29,6 +29,12 @@ import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CONFIG = resolve(root, 'wrangler.jsonc');
+/*
+  Still the old name after the rename to FidesHunt, and deliberately so: D1
+  databases cannot be renamed, and recreating one to relabel it would mean
+  migrating every listing and every vote for no user-visible gain. It must keep
+  matching `database_name` in wrangler.jsonc, which is what wrangler looks up.
+*/
 const DB_NAME = 'catholic-apis';
 
 export const PLACEHOLDER = 'REPLACE_WITH_YOUR_D1_DATABASE_ID';

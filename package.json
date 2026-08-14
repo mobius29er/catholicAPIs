@@ -1,9 +1,9 @@
 {
-  "name": "catholic-apis",
+  "name": "fideshunt",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "A community-ranked directory of free and paid Catholic APIs.",
+  "description": "FidesHunt — a community-ranked directory of faith software: apps, tools and APIs.",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",

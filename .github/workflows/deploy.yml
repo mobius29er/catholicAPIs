@@ -1,0 +1,66 @@
+# Deploy on merge to main.
+#
+# This replaces the dashboard Git integration that used to build a second,
+# separately-named Worker from this same repo. Two Workers ran the same code
+# against the same D1 and both fired the uptime cron, and only one of them
+# held the secrets — so the deploy path lives in the repo now, where it is
+# reviewable and versioned, for the same reason the routes live in
+# wrangler.jsonc rather than in the dashboard.
+#
+# The Worker name comes from wrangler.jsonc. There is exactly one.
+#
+# Requires one repository secret:
+#   CLOUDFLARE_API_TOKEN - an API token with "Edit Cloudflare Workers", plus
+#                          D1 edit if a deploy ever needs to apply migrations.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  # So a deploy can be re-run without an empty commit.
+  workflow_dispatch:
+
+# A queued deploy should wait for the one in flight rather than race it, but
+# superseded commits in the queue are not worth shipping.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # CI runs these on the pull request too. Repeating them here is the
+      # difference between "main was green when it was proposed" and "main is
+      # green now" — a merge commit is a state no one has actually tested.
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      # A deploy that returns 200 on the apex is the only proof that matters.
+      - name: Smoke-test the live site
+        run: |
+          set -euo pipefail
+          for path in / /apis /about /submit; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --retry 5 --retry-all-errors \
+                     --retry-delay 3 --max-time 30 "https://fideshunt.com${path}")
+            echo "${path} -> ${code}"
+            [ "$code" = "200" ] || { echo "::error::${path} returned ${code}"; exit 1; }
+          done

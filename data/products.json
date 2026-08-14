@@ -493,6 +493,55 @@
         "ios"
       ],
       "launched_at": "2026-05-08"
+    },
+    {
+      "slug": "303030v",
+      "name": "30-30-30 V",
+      "tagline": "The 30-30-30 morning routine, with a virtue attached to each day.",
+      "description": "Tracks the routine the name describes — 30g of protein within 30 minutes of waking, then 30 minutes of low-intensity movement — with streaks, XP and check-off from an Apple Watch. The faith framing is real but light-touch: a Daily Virtue accompanies each morning, and the stated rationale is stewardship of the body as temple rather than fitness for its own sake. If you want prayer or study, look elsewhere in the directory; if you want a habit tracker that does not leave your faith at the door, this is it.",
+      "homepage_url": "https://www.303030virtue.com/",
+      "docs_url": "https://apps.apple.com/us/app/303030v/id6756642220",
+      "kind": "api",
+      "track": "product",
+      "pricing": "free",
+      "pricing_note": "Free on the App Store.",
+      "open_source": 0,
+      "official": 0,
+      "categories": [
+        "Daily Life",
+        "Formation"
+      ],
+      "languages": [
+        "en"
+      ],
+      "platforms": [
+        "ios"
+      ],
+      "launched_at": "2026-01-15"
+    },
+    {
+      "slug": "hearthly",
+      "name": "Hearthly",
+      "tagline": "One household task at a time, for people who stall at a list.",
+      "description": "Serves a single cleaning task chosen for you rather than a backlog, in five- to fifteen-minute pieces, built explicitly for ADHD minds and anyone whom a full list simply defeats. Finished tasks water a virtual garden. The faith content is one thread rather than a feature set: Proverbs 31:27 anchors the whole thing — keeping a household as quiet work worth doing well. Not a devotional, but a home-care app that is clear about why it thinks the work matters.",
+      "homepage_url": "https://www.hearthlyapp.com/",
+      "docs_url": "https://apps.apple.com/us/app/hearthly/id6757168603",
+      "kind": "api",
+      "track": "product",
+      "pricing": "free",
+      "pricing_note": "Free on the App Store.",
+      "open_source": 0,
+      "official": 0,
+      "categories": [
+        "Daily Life"
+      ],
+      "languages": [
+        "en"
+      ],
+      "platforms": [
+        "ios"
+      ],
+      "launched_at": "2026-01-07"
     }
   ]
 }

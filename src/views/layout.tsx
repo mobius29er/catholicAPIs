@@ -1,5 +1,5 @@
 import type { FC, PropsWithChildren } from 'hono/jsx';
-import { Burst } from './art';
+import { Burst, MarkInks } from './art';
 
 export interface SeoProps {
   title: string;
@@ -98,6 +98,8 @@ export const Layout: FC<LayoutProps> = ({
       <a class="skip-link" href="#main">
         Skip to content
       </a>
+
+      <MarkInks />
 
       {/* Masthead: brand · nav · search · actions, all on one line. */}
       <header class="masthead">

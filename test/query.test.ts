@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildQuery } from '../src/views/components';
+import { CLEARED, appliedFilters, buildQuery, pageWindow } from '../src/views/components';
 import { searchTerms, slugify } from '../src/db';
 import type { Filters } from '../src/types';
 
@@ -157,5 +157,91 @@ describe('searchTerms', () => {
     const many = Array.from({ length: 40 }, (_, i) => `term${i}`).join(' ');
     expect(searchTerms(many)).toHaveLength(8);
     expect(searchTerms(many)[0]).toBe('term0');
+  });
+});
+
+describe('appliedFilters', () => {
+  it('is empty when nothing narrows the list', () => {
+    expect(appliedFilters(base)).toEqual([]);
+  });
+
+  it('offers one chip per selected value, each removing only itself', () => {
+    const chips = appliedFilters({ ...base, pricing: ['free', 'paid'] });
+    expect(chips.map((c) => c.label)).toEqual(['Free', 'Paid']);
+    // Removing "Free" must leave "Paid" standing.
+    expect(chips[0].href).toBe('/apis?pricing=paid');
+    expect(chips[1].href).toBe('/apis?pricing=free');
+  });
+
+  it('covers the boolean quick filters and the search term', () => {
+    const chips = appliedFilters({ ...base, q: 'psalms', openSource: true, noAuth: true });
+    expect(chips.map((c) => c.paramKey)).toEqual(['q', 'open_source', 'no_auth']);
+    expect(chips[0].href).toBe('/apis?open_source=1&no_auth=1');
+  });
+});
+
+describe('CLEARED', () => {
+  // Two different affordances clear filters; they had drifted apart, and the
+  // one that forgot `auth` could leave the reader still looking at nothing.
+  it('drops every narrowing parameter at once', () => {
+    const busy: Filters = {
+      ...base,
+      q: 'psalms',
+      pricing: ['free'],
+      kind: ['dataset'],
+      platforms: ['ios'],
+      categories: ['Prayer'],
+      languages: ['la'],
+      auth: ['oauth'],
+      openSource: true,
+      noAuth: true,
+      page: 4,
+    };
+    expect(buildQuery(busy, CLEARED)).toBe('/apis');
+  });
+
+  it('leaves the sort alone, which is not a filter', () => {
+    expect(buildQuery({ ...base, sort: 'new', pricing: ['free'] }, CLEARED)).toBe('/apis?sort=new');
+  });
+});
+
+describe('pageWindow', () => {
+  it('lists every page when they all fit', () => {
+    expect(pageWindow(1, 5)).toEqual([1, 2, 3, 4, 5]);
+    expect(pageWindow(4, 7)).toEqual([1, 2, 3, 4, 5, 6, 7]);
+  });
+
+  it('always offers the first and last page', () => {
+    const window = pageWindow(10, 20);
+    expect(window[0]).toBe(1);
+    expect(window[window.length - 1]).toBe(20);
+  });
+
+  it('keeps a run around the current page, with gaps marked', () => {
+    expect(pageWindow(10, 20)).toEqual([1, 'gap', 9, 10, 11, 'gap', 20]);
+  });
+
+  it('does not open a gap for a single skipped page', () => {
+    // 1 … 3 would hide exactly one page behind an ellipsis, which is worse
+    // than just showing it.
+    expect(pageWindow(3, 12)).toEqual([1, 2, 3, 4, 'gap', 12]);
+  });
+
+  it('runs the window against the near edges', () => {
+    expect(pageWindow(1, 12)).toEqual([1, 2, 3, 4, 'gap', 12]);
+    expect(pageWindow(12, 12)).toEqual([1, 'gap', 9, 10, 11, 12]);
+  });
+
+  it('never emits a page outside the range', () => {
+    for (let count = 1; count <= 30; count++) {
+      for (let page = 1; page <= count; page++) {
+        const numbers = pageWindow(page, count).filter((p): p is number => p !== 'gap');
+        expect(Math.min(...numbers)).toBeGreaterThanOrEqual(1);
+        expect(Math.max(...numbers)).toBeLessThanOrEqual(count);
+        expect(numbers).toContain(page);
+        // Sorted, and never repeated.
+        expect(numbers).toEqual([...new Set(numbers)].sort((a, b) => a - b));
+      }
+    }
   });
 });

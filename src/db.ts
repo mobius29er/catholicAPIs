@@ -191,6 +191,12 @@ export interface DirectoryResult {
     categories: FacetCount[];
     languages: FacetCount[];
   };
+  /**
+   * One listing worth surfacing beside the leaderboard. Deliberately not the
+   * top row — a "spotlight" that reprints whatever is already at #1 reads as a
+   * rendering fault. This is the newest thing in the current result set.
+   */
+  spotlight: Listing | null;
 }
 
 function countBy(listings: Listing[], pick: (l: Listing) => string[]): FacetCount[] {
@@ -203,6 +209,46 @@ function countBy(listings: Listing[], pick: (l: Listing) => string[]): FacetCoun
   return [...counts.entries()]
     .map(([value, count]) => ({ value, count }))
     .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value));
+}
+
+/** Facet groups that count disjunctively — each ignores its own selection. */
+type FacetKey = 'pricing' | 'kind' | 'platforms' | 'categories' | 'languages';
+
+/**
+ * Disjunctive facet counting.
+ *
+ * A count is only useful if it predicts what you get by clicking it, so each
+ * group is counted against every *other* group's filters with its own
+ * selection lifted — otherwise "Free" and "iOS" both advertise their whole-
+ * catalogue totals and the intersection lands somewhere neither promised.
+ *
+ * The option *list* still comes from the unfiltered catalogue, in unfiltered
+ * order. That keeps the panel a fixed set of rows in a fixed order — nothing
+ * appears, disappears or jumps under the pointer mid-refinement — and an
+ * option that currently yields nothing says so with a zero instead of
+ * vanishing and leaving a hole where the reader was about to click.
+ */
+function facetCounts(
+  all: Listing[],
+  filters: Filters,
+  key: FacetKey,
+  pick: (l: Listing) => string[],
+): FacetCount[] {
+  const scoped = new Map(
+    countBy(
+      all.filter((l) => matchesFilters(l, { ...filters, [key]: [] })),
+      pick,
+    ).map((f) => [f.value, f.count]),
+  );
+
+  return countBy(all, pick).map(({ value }) => ({ value, count: scoped.get(value) ?? 0 }));
+}
+
+/** Most recently launched, falling back to most recently added to the directory. */
+function newest(listings: Listing[]): Listing | null {
+  if (listings.length === 0) return null;
+  const when = (l: Listing) => Date.parse(l.launched_at ?? l.created_at) || 0;
+  return listings.reduce((best, l) => (when(l) > when(best) ? l : best));
 }
 
 function matchesFilters(listing: Listing, filters: Filters): boolean {
@@ -233,15 +279,12 @@ export async function queryDirectory(
 ): Promise<DirectoryResult> {
   const all = await loadListings(env, { search: filters.q, track: filters.track }, voterId);
 
-  // Facet counts are computed before the facet filters are applied, so a
-  // reader can always see (and reach) the other options instead of hitting a
-  // dead end of zeroes.
   const facets = {
-    pricing: countBy(all, (l) => [l.pricing]),
-    kind: countBy(all, (l) => [l.kind]),
-    platforms: countBy(all, (l) => l.platforms),
-    categories: countBy(all, (l) => l.categories),
-    languages: countBy(all, (l) => l.languages),
+    pricing: facetCounts(all, filters, 'pricing', (l) => [l.pricing]),
+    kind: facetCounts(all, filters, 'kind', (l) => [l.kind]),
+    platforms: facetCounts(all, filters, 'platforms', (l) => l.platforms),
+    categories: facetCounts(all, filters, 'categories', (l) => l.categories),
+    languages: facetCounts(all, filters, 'languages', (l) => l.languages),
   };
 
   const matched = sortListings(all.filter((l) => matchesFilters(l, filters)), filters.sort);
@@ -249,13 +292,19 @@ export async function queryDirectory(
   const pageCount = Math.max(1, Math.ceil(matched.length / PAGE_SIZE));
   const page = Math.min(Math.max(1, filters.page), pageCount);
   const start = (page - 1) * PAGE_SIZE;
+  const listings = matched.slice(start, start + PAGE_SIZE);
+
+  // Never the row the reader is already looking at.
+  const top = listings[0];
+  const spotlight = newest(matched.filter((l) => l.id !== top?.id));
 
   return {
-    listings: matched.slice(start, start + PAGE_SIZE),
+    listings,
     total: matched.length,
     page,
     pageCount,
     facets,
+    spotlight,
   };
 }
 

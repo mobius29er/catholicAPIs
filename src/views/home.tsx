@@ -3,15 +3,19 @@ import type { Filters, Track } from '../types';
 import { PAGE_SIZE } from '../db';
 import type { DirectoryResult, Stats } from '../db';
 import {
+  AppliedFilters,
+  CLEARED,
   FeedPanel,
+  FilterBody,
   FilterPanel,
   ListingRow,
   Pagination,
-  SortTabs,
+  SortMenu,
   Spotlight,
-  TrackTabs,
   TrendingTopics,
+  activeFilterCount,
   buildQuery,
+  sortLabel,
 } from './components';
 import { NoirScene } from './art';
 
@@ -45,65 +49,136 @@ const COPY: Record<Track, Copy> = {
   },
 };
 
+/**
+ * The part of the page a filter change replaces.
+ *
+ * Rendered on its own for `?partial=1`, which is what app.js fetches so a
+ * refinement swaps the list in place instead of reloading the document. The
+ * ids and the wrapper have to match what the script looks for.
+ */
+export const Results: FC<{ result: DirectoryResult; filters: Filters }> = ({ result, filters }) => (
+  <div id="results" data-results>
+    <AppliedFilters filters={filters} total={result.total} />
+
+    {result.listings.length === 0 ? (
+      <div class="empty">
+        <p class="empty-title">Nothing matches.</p>
+        <p>
+          If you know of something that belongs here, <a href="/submit">add it to the directory</a>{' '}
+          — that's how the list grows.
+        </p>
+        <a class="btn btn-outline" href={buildQuery(filters, CLEARED)}>
+          Clear filters
+        </a>
+      </div>
+    ) : (
+      <ol class="listings">
+        {result.listings.map((listing, index) => (
+          <ListingRow
+            listing={listing}
+            rank={(result.page - 1) * PAGE_SIZE + index + 1}
+            rankNote={
+              filters.sort === 'top' && result.page === 1 && index === 0
+                ? '#1 most recommended'
+                : undefined
+            }
+          />
+        ))}
+      </ol>
+    )}
+
+    <Pagination filters={filters} page={result.page} pageCount={result.pageCount} />
+  </div>
+);
+
+/**
+ * What `?partial=1` returns: the results region, plus fresh copies of the bits
+ * of the control row that live outside it.
+ *
+ * The facet counts, the checked states and the toggle links all change with
+ * every refinement, but they sit inside a popover the reader may still have
+ * open. Shipping them here lets app.js replace the popover's *contents*,
+ * leaving the <details> — and the reader's place in it — alone.
+ */
+export const ResultsPartial: FC<{ result: DirectoryResult; filters: Filters }> = ({
+  result,
+  filters,
+}) => {
+  const count = activeFilterCount(filters);
+
+  return (
+    <>
+      <Results result={result} filters={filters} />
+
+      <div hidden data-fresh>
+        <span data-fresh-sort>{sortLabel(filters.sort)}</span>
+        <span data-fresh-count>{count}</span>
+        <div data-fresh-facets>
+          <FilterBody filters={filters} facets={result.facets} />
+        </div>
+      </div>
+    </>
+  );
+};
+
 export const Home: FC<{
   result: DirectoryResult;
   filters: Filters;
   stats: Stats;
 }> = ({ result, filters, stats }) => {
   const copy = COPY[filters.track];
-  const root = filters.track === 'product' ? '/' : '/apis';
-
-  const isLanding =
-    !filters.q &&
-    filters.page === 1 &&
-    filters.pricing.length === 0 &&
-    filters.kind.length === 0 &&
-    filters.platforms.length === 0 &&
-    filters.categories.length === 0 &&
-    filters.languages.length === 0 &&
-    !filters.openSource &&
-    !filters.noAuth;
 
   return (
     <>
-      {isLanding && (
-        <section class="hero">
-          <div class="hero-art" aria-hidden="true">
-            <NoirScene />
+      {/*
+        The hero stays put in every state.
+
+        It used to be gated on "no filters set", so the first facet click
+        deleted ~400px from above the list and the page the reader landed on
+        was not the page they had clicked in. Filtering narrows the list; it is
+        not a different destination.
+      */}
+      <section class="hero">
+        <div class="hero-art" aria-hidden="true">
+          <NoirScene />
+        </div>
+
+        <div class="hero-inner">
+          <p class="caption-box">{copy.caption}</p>
+
+          <h1>
+            {copy.headline.split('\n').map((line, i) => (
+              <>
+                {i > 0 && <br />}
+                {line}
+              </>
+            ))}
+          </h1>
+
+          <p class="hero-sub">{copy.sub}</p>
+
+          <div class="hero-cta">
+            <a class="btn btn-primary btn-lg" href="#listings">
+              Explore top listings
+            </a>
+            <a class="btn btn-outline btn-lg" href={copy.secondary.href}>
+              {copy.secondary.label}
+            </a>
           </div>
+        </div>
 
-          <div class="hero-inner">
-            <p class="caption-box">{copy.caption}</p>
-
-            <h1>
-              {copy.headline.split('\n').map((line, i) => (
-                <>
-                  {i > 0 && <br />}
-                  {line}
-                </>
-              ))}
-            </h1>
-
-            <p class="hero-sub">{copy.sub}</p>
-
-            <div class="hero-cta">
-              <a class="btn btn-primary btn-lg" href="#listings">
-                Explore top listings
-              </a>
-              <a class="btn btn-outline btn-lg" href={copy.secondary.href}>
-                {copy.secondary.label}
-              </a>
-            </div>
-          </div>
-
-          <p class="stamp">{copy.stamp}</p>
-        </section>
-      )}
+        <p class="stamp">{copy.stamp}</p>
+      </section>
 
       <div class="shell" id="listings">
         <div class="columns">
           {/* ------------------------------------------------------ list --- */}
           <section class="feed" aria-label="Listings">
+            {/*
+              The mockup's whole control row: the heading, and two menus that
+              open over the page. Nothing here changes height, so nothing below
+              it moves.
+            */}
             <div class="feed-head">
               <h2 class="feed-title">
                 {filters.q ? (
@@ -114,88 +189,27 @@ export const Home: FC<{
                   copy.listHeading
                 )}
               </h2>
-              <SortTabs filters={filters} />
-            </div>
 
-            <div class="feed-controls">
-              <TrackTabs
-                active={filters.track}
-                counts={{ apis: stats.apis, products: stats.products }}
-              />
-              <FilterPanel filters={filters} facets={result.facets} />
-              <p class="feed-count">
-                {result.total} {result.total === 1 ? 'listing' : 'listings'}
-              </p>
-            </div>
-
-            {result.listings.length === 0 ? (
-              <div class="empty">
-                <p class="empty-title">Nothing matches.</p>
-                <p>
-                  If you know of something that belongs here,{' '}
-                  <a href="/submit">add it to the directory</a> — that's how the list grows.
-                </p>
-                <a
-                  class="btn btn-outline"
-                  href={buildQuery(filters, {
-                    pricing: [],
-                    kind: [],
-                    platform: [],
-                    category: [],
-                    lang: [],
-                    open_source: false,
-                    no_auth: false,
-                    q: '',
-                    page: 1,
-                  })}
-                >
-                  Clear filters
-                </a>
+              <div class="feed-controls">
+                <SortMenu filters={filters} />
+                <FilterPanel filters={filters} facets={result.facets} />
               </div>
-            ) : (
-              <ol class="listings">
-                {result.listings.map((listing, index) => (
-                  <ListingRow
-                    listing={listing}
-                    rank={(result.page - 1) * PAGE_SIZE + index + 1}
-                    rankNote={
-                      filters.sort === 'top' && result.page === 1 && index === 0
-                        ? '#1 most recommended'
-                        : undefined
-                    }
-                  />
-                ))}
-              </ol>
-            )}
+            </div>
 
-            <Pagination filters={filters} page={result.page} pageCount={result.pageCount} />
+            <Results result={result} filters={filters} />
           </section>
 
           {/* ------------------------------------------------------ rail --- */}
           <aside class="rail" aria-label="More from the directory">
-            {result.listings.length > 0 && <Spotlight listing={result.listings[0]} />}
+            {result.spotlight && <Spotlight listing={result.spotlight} />}
             <TrendingTopics filters={filters} categories={result.facets.categories} />
             <FeedPanel />
-
-            <section class="rail-panel rail-cross">
-              <p class="rail-title">
-                {filters.track === 'product' ? 'For builders' : 'For everyone else'}
-              </p>
-              <p>
-                {filters.track === 'product'
-                  ? `The other half of this directory is ${stats.apis} APIs, datasets and libraries — so you don't have to scrape a diocesan website at 2am.`
-                  : `The other half of this directory is ${stats.products} finished Catholic apps and services, ranked the same way.`}
-              </p>
-              <a class="rail-link" href={filters.track === 'product' ? '/apis' : '/'}>
-                {filters.track === 'product' ? 'Browse the APIs →' : 'Browse the products →'}
-              </a>
-            </section>
           </aside>
         </div>
 
         <p class="shell-note muted small">
-          Showing {result.total} of {stats.total} listings across both tracks.{' '}
-          <a href={root}>Clear everything</a> · <a href="/about">How ranking works</a>
+          {stats.total} listings across both tracks — {stats.products} products and {stats.apis}{' '}
+          APIs. <a href="/about">How ranking works</a>
         </p>
       </div>
     </>

@@ -38,24 +38,41 @@ function initials(name: string): string {
 }
 
 /**
+ * The eight tile gradients, defined once for the whole document.
+ *
+ * Each mark used to carry its own <defs> keyed on the listing's slug, so any
+ * listing rendered twice on a page — the leaderboard and the rail both drew
+ * the top row for a while — emitted two elements with the same id. There are
+ * only ever eight gradients, so they belong in one place and every tile points
+ * at them.
+ */
+export const MarkInks: FC = () => (
+  <svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+    <defs>
+      {MARK_INKS.map(([from, to], index) => (
+        <linearGradient id={`mark-ink-${index}`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color={from} />
+          <stop offset="100%" stop-color={to} />
+        </linearGradient>
+      ))}
+    </defs>
+  </svg>
+);
+
+/**
  * The coloured app tile from the reference. Real products have logos we cannot
  * host, so each listing gets a stable generated mark instead — same shape and
  * weight in the layout, no invented branding.
  */
 export const LogoMark: FC<{ name: string; slug: string }> = ({ name, slug }) => {
-  const [from, to] = MARK_INKS[hash(slug) % MARK_INKS.length];
-  const id = `mark-${slug}`;
+  const ink = hash(slug) % MARK_INKS.length;
 
   return (
     <span class="logo-mark" aria-hidden="true">
+      {/* rx 7.5 of 48, drawn at 64px, lands on the 10px --r-md the row uses.
+          At rx 12 the tile was rounder than the card holding it. */}
       <svg viewBox="0 0 48 48" focusable="false">
-        <defs>
-          <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color={from} />
-            <stop offset="100%" stop-color={to} />
-          </linearGradient>
-        </defs>
-        <rect width="48" height="48" rx="12" fill={`url(#${id})`} />
+        <rect width="48" height="48" rx="7.5" fill={`url(#mark-ink-${ink})`} />
         <text
           x="24"
           y="24"

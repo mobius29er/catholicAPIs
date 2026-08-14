@@ -108,21 +108,24 @@ describe('brand', () => {
     expect(read('wrangler.jsonc')).toContain(`"SITE_NAME": "${BRAND}"`);
   });
 
-  it('names the Worker and the package after the brand', () => {
-    expect(read('wrangler.jsonc')).toMatch(/"name":\s*"fideshunt"/);
-    expect(JSON.parse(read('package.json')).name).toBe('fideshunt');
-  });
-
   /*
-    The D1 database keeps its original name on purpose — databases cannot be
-    renamed and recreating one would mean migrating every listing and vote. The
-    two places that name it have to stay in step with each other and with the
-    database that actually exists.
+    Infrastructure names are NOT the brand, deliberately. The Worker, the
+    package and the D1 database all stay `catholic-apis`: databases cannot be
+    renamed at all, Workers can only be renamed by creating a new one and
+    orphaning the old, and none of the three is ever seen by a visitor. Keeping
+    them in step with each other is worth more than keeping them in step with
+    the marketing.
   */
-  it('keeps the D1 name consistent between config and deploy script', () => {
-    const configured = read('wrangler.jsonc').match(/"database_name":\s*"([^"]+)"/)?.[1];
+  it('keeps infrastructure names together, and separate from the brand', () => {
+    const config = read('wrangler.jsonc');
+    const worker = config.match(/"name":\s*"([^"]+)"/)?.[1];
+    const database = config.match(/"database_name":\s*"([^"]+)"/)?.[1];
     const scripted = read('scripts/deploy.mjs').match(/const DB_NAME = '([^']+)'/)?.[1];
-    expect(configured).toBe(scripted);
+
+    expect(worker).toBe('catholic-apis');
+    expect(database).toBe(worker);
+    expect(scripted).toBe(database);
+    expect(JSON.parse(read('package.json')).name).toBe(worker);
   });
 });
 

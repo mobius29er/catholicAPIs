@@ -214,15 +214,21 @@ describe('pendingMigrations', () => {
     ]);
   });
 
-  it('matches the migrations this repo actually ships', () => {
+  /*
+    Asserted as an invariant rather than a fixed list, because migrations get
+    added — a test that has to be edited every time one is added teaches people
+    to edit tests instead of reading them.
+  */
+  it('orders the migrations this repo actually ships', () => {
     const real = readdirSync(resolve(process.cwd(), 'migrations'));
-    expect(pendingMigrations(real, [])).toEqual([
-      '0001_init.sql',
-      '0002_seed.sql',
-      '0003_products.sql',
-      '0004_imported.sql',
-      '0005_cdcf.sql',
-    ]);
+    const pending = pendingMigrations(real, []);
+
+    expect(pending.length).toBeGreaterThanOrEqual(5);
+    expect(pending[0]).toBe('0001_init.sql');
+    expect(pending).toEqual([...pending].sort());
+    expect(pending.every((f) => /^\d{4}_[\w-]+\.sql$/.test(f))).toBe(true);
+    // Nothing may sort before the schema that everything else writes into.
+    expect(pending.filter((f) => f.startsWith('0001'))).toHaveLength(1);
   });
 });
 

@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "fideshunt",
+  "name": "catholic-apis",
   "main": "src/index.tsx",
   "compatibility_date": "2026-08-13",
   "compatibility_flags": ["nodejs_compat"],
@@ -31,6 +31,18 @@
     }
   ],
 
+  // The public address, declared here rather than clicked into the dashboard so
+  // it is reviewable and survives a rebuild of the account. Cloudflare creates
+  // and manages the DNS records for a custom_domain route.
+  //
+  // A hostname can belong to exactly one Worker. If a deploy fails here saying
+  // the domain is already in use, something else is holding it — remove that
+  // binding first rather than working around it.
+  "routes": [
+    { "pattern": "fideshunt.com", "custom_domain": true },
+    { "pattern": "www.fideshunt.com", "custom_domain": true }
+  ],
+
   // Uptime checks. Every six hours, offset off the hour so it does not land in
   // the same minute as everyone else's cron. Each run probes a batch of the
   // least-recently-checked listings; see src/health.ts.
@@ -39,15 +51,15 @@
   },
 
   "vars": {
-    // SITE_URL is deliberately unset. Without it the Worker uses the origin the
-    // request arrived on, so a `*.workers.dev` deploy is correct about itself —
-    // canonical tags, sitemap, feed and JSON-LD all point at the preview rather
-    // than at a domain that is not serving yet.
+    // Pinned now that fideshunt.com is attached and serving. Before that it was
+    // deliberately unset, so the Worker described itself using whatever origin
+    // the request arrived on — correct for a workers.dev preview, and better
+    // than pointing search engines at a domain that was not answering yet.
     //
-    // Set it once fideshunt.com is attached and serving, and is the ONE
-    // canonical hostname — at that point you WANT it pinned, so a request
-    // arriving on the workers.dev address still points search engines home:
-    //   "SITE_URL": "https://fideshunt.com",
+    // Pinned it must be, because `www.fideshunt.com` serves the same Worker.
+    // Left unset, www would canonicalise to www and the apex to the apex, and
+    // the two would split the ranking of every page between them.
+    "SITE_URL": "https://fideshunt.com",
     "SITE_NAME": "FidesHunt"
   }
 

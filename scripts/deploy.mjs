@@ -1,8 +1,14 @@
-#!/usr/bin/env node
 /*
   First deploy, end to end.
 
     npm run deploy:setup
+
+  NO SHEBANG on this file, unlike its siblings in this directory. It is the one
+  script the test suite imports, and Vitest's transform does not strip `#!` the
+  way Node does — so a shebang here fails at load with "SyntaxError: Invalid or
+  unexpected token", reported against the importing test rather than this file,
+  which is a genuinely horrible half hour. It is always run as
+  `node scripts/deploy.mjs` via npm, so the shebang bought nothing.
 
   All of this can be done by hand with five wrangler commands. Two things make
   it worth a script.

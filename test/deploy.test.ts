@@ -41,6 +41,27 @@ const INFO_OUTPUT = `
 └───────────────────┴──────────────────────────────────────┘
 `;
 
+/*
+  Guards the reason this file can import the script at all.
+
+  Node strips a leading `#!` from a module; Vitest's transform does not, so a
+  shebang on an imported script fails at load with "Invalid or unexpected
+  token" — reported against this file, at the import line, pointing nowhere
+  near the actual cause. The other scripts in that directory keep their
+  shebangs; this is the only one under import.
+*/
+describe('deploy.mjs is importable', () => {
+  const read = (p: string) => readFileSync(resolve(process.cwd(), p), 'utf8');
+
+  it('has no shebang', () => {
+    expect(read('scripts/deploy.mjs').startsWith('#!')).toBe(false);
+  });
+
+  it('still gets run through node by the npm script, which needs no shebang', () => {
+    expect(JSON.parse(read('package.json')).scripts['deploy:setup']).toMatch(/^node /);
+  });
+});
+
 describe('extractDatabaseId', () => {
   it('reads the id out of `d1 create` output', () => {
     expect(extractDatabaseId(CREATE_OUTPUT)).toBe('b1f0a9c2-3d4e-4f5a-8b6c-7d8e9f0a1b2c');

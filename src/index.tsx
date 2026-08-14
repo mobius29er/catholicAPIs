@@ -27,7 +27,7 @@ import {
 import { runHealthCheck } from './health';
 import { checkRateLimit, ipHash, pruneRateLimits, readVoterId, requireVoterId } from './voter';
 import { Layout } from './views/layout';
-import { Home } from './views/home';
+import { Home, ResultsPartial } from './views/home';
 import { Detail } from './views/detail';
 import type { DetailNotice } from './views/detail';
 import { Submit } from './views/submit';
@@ -191,6 +191,22 @@ function directoryRoute(track: Track) {
 
     const root = track === 'product' ? '/' : '/apis';
     const isLanding = url.search === '';
+
+    /*
+      The results region on its own, for app.js.
+
+      A facet click used to be a full document navigation: scroll position
+      thrown away, hero re-rendered, panel re-opened, reader deposited at the
+      top of a page that no longer matched the one they clicked in. The script
+      fetches this fragment and swaps it into #results instead. The links stay
+      ordinary <a href>s, so with scripting off the same URLs still render the
+      whole page.
+    */
+    if (url.searchParams.get('partial') === '1') {
+      return c.html(<ResultsPartial result={result} filters={filters} />, 200, {
+        'cache-control': 'no-store',
+      });
+    }
 
     /*
       The brand leads, but the searchable words stay: nobody types "FidesHunt"

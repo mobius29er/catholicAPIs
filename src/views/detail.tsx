@@ -75,13 +75,19 @@ export const Detail: FC<{ listing: Listing; related: Listing[]; notice?: DetailN
 
   return (
   <article class="wrap detail">
+    {/* The category crumb is only a crumb when there is a category. It used to
+        render regardless, linking to `?category=` under the label "Listing". */}
     <nav class="breadcrumb" aria-label="Breadcrumb">
       <a href={root}>{isApi ? 'APIs' : 'Products'}</a>
       <span aria-hidden="true">/</span>
-      <a href={`${root}?category=${encodeURIComponent(listing.categories[0] ?? '')}`}>
-        {listing.categories[0] ?? 'Listing'}
-      </a>
-      <span aria-hidden="true">/</span>
+      {listing.categories[0] && (
+        <>
+          <a href={`${root}?category=${encodeURIComponent(listing.categories[0])}`}>
+            {listing.categories[0]}
+          </a>
+          <span aria-hidden="true">/</span>
+        </>
+      )}
       <span aria-current="page">{listing.name}</span>
     </nav>
 

@@ -1,11 +1,21 @@
-# Catholic APIs
+# FidesHunt
 
-A community-ranked directory of Catholic software, in two tracks:
+**[fideshunt.com](https://fideshunt.com)** — a community-ranked directory of faith software, in
+two tracks:
 
-- **Products** (`/`) — what Catholics actually use: prayer apps, breviaries, formation
+- **Products** (`/`) — what believers actually use: prayer apps, breviaries, formation
   programmes, parish tools, journalism, AI assistants.
 - **APIs** (`/apis`) — what those get built from: liturgical calendars, scripture, the Catechism,
   canon law, datasets, libraries, MCP servers.
+
+> **On the name.** *Fides* is faith — the word both halves of the Western church kept. Catholics
+> have *fides et ratio*; the Reformation has *sola fide*. It is one of the few pieces of Latin
+> neither tradition concedes to the other. *Hunt* is the activity, and the nod to Product Hunt,
+> whose shape this borrows: ranked listings, upvotes, a launch feed.
+>
+> **On the scope.** The catalogue is deepest by far on the Catholic side — that is where the work
+> has gone, not a claim that nothing else belongs. The `/about` page says so in as many words
+> rather than letting anyone discover it and feel misled.
 
 Both are free and paid, both are upvoted and downvoted by the people who use them, and both run
 through one voting system, one moderation queue and one JSON API. A listing declares a `track`;
@@ -92,6 +102,7 @@ the first time you [deploy](#deploying).
 ## Deploying
 
 ```bash
+npm install
 npx wrangler login       # once, opens a browser
 npm run deploy:setup
 ```
@@ -107,28 +118,55 @@ On a machine with no browser, make an API token at
 **Edit Cloudflare Workers** template plus **D1:Edit**, then
 `export CLOUDFLARE_API_TOKEN=… CLOUDFLARE_ACCOUNT_ID=…` and run the same command.
 
-The five underlying steps are in [`scripts/deploy.mjs`](scripts/deploy.mjs) if you would rather
-run them yourself. The one worth knowing about is the second: `wrangler d1 create` prints a UUID
-that must be pasted into `wrangler.jsonc` before anything else works, and skipping it fails several
-steps later as an unrelated-looking binding error. The script does that pasting — commit the
-result.
+The five steps are in [`scripts/deploy.mjs`](scripts/deploy.mjs) if you would rather run them
+yourself. Three are worth knowing about:
 
-### Custom domain, later
+- **`wrangler d1 migrations apply --remote` cannot apply this schema.** It fails with
+  `incomplete input: SQLITE_ERROR` on `0001_init.sql`, because that migration contains
+  `CREATE TRIGGER`. Established by bisecting against a real database: all 19 of 0001's statements
+  apply individually, the trigger-free migrations 0002-0005 apply through that command fine, and
+  `d1 execute --file` applies the whole of 0001 without complaint. So the script drives migrations
+  itself through the path that works, keeping D1's own `d1_migrations` ledger so
+  `wrangler d1 migrations list` still tells the truth. Local development is unaffected —
+  `db:migrate:local` uses a different code path and has always worked.
 
-`SITE_URL` is deliberately **unset**. Without it the Worker uses whatever origin the request
-arrived on, so a `workers.dev` preview is correct about itself: canonical tags, the sitemap, the
-feed and the JSON-LD all point at the preview rather than at a domain that is not serving yet.
+- `wrangler d1 create` prints a UUID that must be pasted into `wrangler.jsonc` before anything else
+  works. Skipping it fails several steps later as an unrelated-looking binding error. The script
+  does that pasting — commit the result.
+- **Secrets have to come after the first deploy.** `wrangler secret put` against a Worker that does
+  not exist yet asks *"do you want to create a new Worker?"* on stdin — the same stdin the secret is
+  being piped into, so the prompt swallows the secret. Deploy first and the Worker is there to
+  receive them. This costs a few seconds where the site is live with a dev signing key and `/admin`
+  shut, which on a brand-new deployment with no visitors is harmless.
 
-When a custom domain is live and is the one canonical address, set it in `wrangler.jsonc` and
-redeploy — at that point you *want* it pinned, so a request arriving on the `workers.dev` hostname
-still points search engines home:
+### Attaching fideshunt.com
 
-```jsonc
-"vars": { "SITE_URL": "https://catholicapis.com", "SITE_NAME": "Catholic APIs" }
-```
+`SITE_URL` is **unset** until the domain is actually serving. Without it the Worker uses whatever
+origin the request arrived on, so the `workers.dev` address is correct about itself — canonical
+tags, sitemap, feed and JSON-LD all point at the live URL rather than at a domain that is not
+answering yet. **Do not pin it early**, or the deployed site spends the gap telling search engines
+to index a domain that 404s.
 
-Add the domain under **Workers & Pages → your worker → Settings → Domains & Routes**, then submit
-`https://yourdomain/sitemap.xml` to Search Console.
+Order matters:
+
+1. Add `fideshunt.com` to the account (Cloudflare dashboard → Add a domain), and point the
+   registrar's nameservers at Cloudflare if they are not already.
+2. **Workers & Pages → fideshunt → Settings → Domains & Routes → Add custom domain.** Add both
+   `fideshunt.com` and `www.fideshunt.com`.
+3. Confirm `https://fideshunt.com` serves the site.
+4. *Then* pin it and redeploy — at this point you want it fixed, so a request arriving on the
+   `workers.dev` hostname still points search engines home:
+
+   ```jsonc
+   "vars": { "SITE_URL": "https://fideshunt.com", "SITE_NAME": "FidesHunt" }
+   ```
+
+5. Submit `https://fideshunt.com/sitemap.xml` to Search Console.
+
+`fidehunt.com` (no *s*) and `catholicapis.com` are held as redirects. Point them at
+`fideshunt.com` with a Cloudflare Bulk Redirect rather than adding them as custom domains on the
+Worker — a custom domain would serve the site under a second hostname and split its ranking, which
+is the exact thing `SITE_URL` exists to prevent.
 
 ### Secrets
 
@@ -170,7 +208,7 @@ participation on a directory this size. Identity is a random UUID in an HMAC-sig
   impersonate an existing one, only become an anonymous new one, which the IP limit then governs.
 
 None of this is fraud-proof and it isn't trying to be. It makes ballot-stuffing tedious enough
-that it isn't worth doing to a list of Catholic APIs.
+that it is not worth doing to a directory this size.
 
 ## Data
 
@@ -284,10 +322,10 @@ loud. `POST /admin/health` runs a batch on demand.
 It would be a poor showing otherwise. No key, CORS open, docs at `/api/v1`.
 
 ```bash
-curl 'https://catholicapis.com/api/v1/apis?pricing=free&no_auth=1&sort=top'
-curl 'https://catholicapis.com/api/v1/products?platform=ios&sort=trending'
-curl 'https://catholicapis.com/api/v1/listings/church-calendar-api'
-curl 'https://catholicapis.com/api/v1/categories'
+curl 'https://fideshunt.com/api/v1/apis?pricing=free&no_auth=1&sort=top'
+curl 'https://fideshunt.com/api/v1/products?platform=ios&sort=trending'
+curl 'https://fideshunt.com/api/v1/listings/church-calendar-api'
+curl 'https://fideshunt.com/api/v1/categories'
 ```
 
 ## Moderation
@@ -359,7 +397,7 @@ npm run links:check      # check every seed URL still resolves
 
 ## Contributing a listing
 
-Either open the [submit form](https://catholicapis.com/submit) or send a pull request against
+Either open the [submit form](https://fideshunt.com/submit) or send a pull request against
 `data/products.json` or `data/seed.json`. On the product side, anything a Catholic actually uses
 that is software; on the developer side, anything you can build on — hosted APIs, open datasets,
 client libraries, MCP servers. Paid is welcome as long as the pricing is stated plainly: an honest

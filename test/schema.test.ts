@@ -80,18 +80,85 @@ describe('generated migrations', () => {
  * quietly wrong — a preview whose canonical tags point at production, or a
  * `database_id` placeholder that fails several steps after the mistake.
  */
+/**
+ * The brand, in the three places that must agree.
+ *
+ * A rename is easy to do 90% of. What survives is the 10%: a stale fallback
+ * that only appears when an env var is missing, or a config that disagrees
+ * with the code and only shows up in production. These are those spots.
+ */
+describe('brand', () => {
+  const BRAND = 'FidesHunt';
+
+  it('is what the masthead and footer render', () => {
+    const layout = read('src/views/layout.tsx');
+    expect(layout).toContain(`<strong>${BRAND}</strong>`);
+    expect(layout).not.toContain('Catholic APIs');
+  });
+
+  it('is the SITE_NAME fallback used when the env var is unset', () => {
+    // The fallback is the one that shows up on a misconfigured deploy, which is
+    // exactly when nobody is looking.
+    const app = read('src/index.tsx');
+    expect(app).toContain(`c.env.SITE_NAME ?? '${BRAND}'`);
+    expect(app).not.toMatch(/SITE_NAME \?\? 'Catholic APIs'/);
+  });
+
+  it('is the SITE_NAME the config actually ships', () => {
+    expect(read('wrangler.jsonc')).toContain(`"SITE_NAME": "${BRAND}"`);
+  });
+
+  /*
+    Infrastructure names are NOT the brand, deliberately. The Worker, the
+    package and the D1 database all stay `catholic-apis`: databases cannot be
+    renamed at all, Workers can only be renamed by creating a new one and
+    orphaning the old, and none of the three is ever seen by a visitor. Keeping
+    them in step with each other is worth more than keeping them in step with
+    the marketing.
+  */
+  it('keeps infrastructure names together, and separate from the brand', () => {
+    const config = read('wrangler.jsonc');
+    const worker = config.match(/"name":\s*"([^"]+)"/)?.[1];
+    const database = config.match(/"database_name":\s*"([^"]+)"/)?.[1];
+    const scripted = read('scripts/deploy.mjs').match(/const DB_NAME = '([^']+)'/)?.[1];
+
+    expect(worker).toBe('catholic-apis');
+    expect(database).toBe(worker);
+    expect(scripted).toBe(database);
+    expect(JSON.parse(read('package.json')).name).toBe(worker);
+  });
+});
+
 describe('deploy configuration', () => {
   const config = read('wrangler.jsonc');
 
-  it('does not pin SITE_URL, so a preview deploy describes itself', () => {
-    // Commented-out guidance is fine; an active setting is not. Without this,
-    // a *.workers.dev deploy emits canonical tags for a domain that may not be
-    // serving anything yet.
-    const active = config
-      .split('\n')
-      .filter((line) => !line.trim().startsWith('//'))
-      .join('\n');
-    expect(active).not.toMatch(/"SITE_URL"\s*:/);
+  const uncommented = config
+    .split('\n')
+    .filter((line) => !line.trim().startsWith('//'))
+    .join('\n');
+
+  const routes = [...uncommented.matchAll(/"pattern":\s*"([^"]+)"/g)].map((m) => m[1]);
+  const siteUrl = uncommented.match(/"SITE_URL":\s*"([^"]+)"/)?.[1];
+
+  /*
+    This started life as "never pin SITE_URL", which was right only while the
+    site lived on a workers.dev address and pinning would have advertised a
+    domain that answered nothing. Now fideshunt.com is attached, and the real
+    invariant — the one that was always underneath — is that SITE_URL may only
+    name a hostname this Worker actually serves. Unset stays legal: the Worker
+    then describes itself from the request, which is correct for a preview.
+  */
+  it('pins SITE_URL only to a hostname the Worker actually serves', () => {
+    if (!siteUrl) return;
+    expect(routes).toContain(new URL(siteUrl).host);
+  });
+
+  it('serves the apex it canonicalises to, not only www', () => {
+    if (!siteUrl) return;
+    const host = new URL(siteUrl).host;
+    expect(host.startsWith('www.')).toBe(false);
+    // www may also be routed — it just has to point home, which SITE_URL does.
+    expect(routes.some((r) => r === host)).toBe(true);
   });
 
   it('runs the uptime cron', () => {

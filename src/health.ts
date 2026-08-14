@@ -48,7 +48,7 @@ export async function probe(url: string): Promise<ProbeResult> {
         redirect: 'follow',
         signal: controller.signal,
         headers: {
-          'user-agent': 'catholicapis-healthcheck/1.0 (+https://catholicapis.com)',
+          'user-agent': 'fideshunt-healthcheck/1.0 (+https://fideshunt.com)',
           accept: '*/*',
         },
       });

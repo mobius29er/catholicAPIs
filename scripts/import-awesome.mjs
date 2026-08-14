@@ -147,7 +147,7 @@ function parse(markdown, source) {
 
 async function fetchList(source) {
   const response = await fetch(source.raw, {
-    headers: { 'user-agent': 'catholicapis-import/1.0 (+https://catholicapis.com)' },
+    headers: { 'user-agent': 'fideshunt-import/1.0 (+https://fideshunt.com)' },
   });
   if (!response.ok) throw new Error(`${source.id}: HTTP ${response.status}`);
   return parse(await response.text(), source);

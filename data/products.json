@@ -26,9 +26,19 @@
       "pricing_note": "Free daily selection; subscription for the full library.",
       "open_source": 0,
       "official": 0,
-      "categories": ["Prayer", "Devotionals"],
-      "languages": ["en", "es"],
-      "platforms": ["ios", "android", "web"]
+      "categories": [
+        "Prayer",
+        "Devotionals"
+      ],
+      "languages": [
+        "en",
+        "es"
+      ],
+      "platforms": [
+        "ios",
+        "android",
+        "web"
+      ]
     },
     {
       "slug": "universalis",
@@ -42,9 +52,20 @@
       "pricing_note": "Free on the web; one-time purchase for the apps and ebooks.",
       "open_source": 0,
       "official": 0,
-      "categories": ["Liturgy of the Hours", "Daily Readings"],
-      "languages": ["en", "la"],
-      "platforms": ["ios", "android", "web", "desktop"]
+      "categories": [
+        "Liturgy of the Hours",
+        "Daily Readings"
+      ],
+      "languages": [
+        "en",
+        "la"
+      ],
+      "platforms": [
+        "ios",
+        "android",
+        "web",
+        "desktop"
+      ]
     },
     {
       "slug": "ibreviary",
@@ -58,9 +79,23 @@
       "pricing_note": null,
       "open_source": 0,
       "official": 0,
-      "categories": ["Liturgy of the Hours", "Liturgy"],
-      "languages": ["it", "en", "es", "fr", "pt", "la"],
-      "platforms": ["ios", "android", "web"]
+      "categories": [
+        "Liturgy of the Hours",
+        "Liturgy"
+      ],
+      "languages": [
+        "it",
+        "en",
+        "es",
+        "fr",
+        "pt",
+        "la"
+      ],
+      "platforms": [
+        "ios",
+        "android",
+        "web"
+      ]
     },
     {
       "slug": "divine-office-app",
@@ -74,9 +109,18 @@
       "pricing_note": "Free podcast and web; paid apps support the apostolate.",
       "open_source": 0,
       "official": 0,
-      "categories": ["Liturgy of the Hours", "Prayer"],
-      "languages": ["en"],
-      "platforms": ["ios", "android", "web"]
+      "categories": [
+        "Liturgy of the Hours",
+        "Prayer"
+      ],
+      "languages": [
+        "en"
+      ],
+      "platforms": [
+        "ios",
+        "android",
+        "web"
+      ]
     },
     {
       "slug": "magnificat",
@@ -90,9 +134,21 @@
       "pricing_note": "Subscription; print and digital.",
       "open_source": 0,
       "official": 0,
-      "categories": ["Daily Readings", "Devotionals", "Prayer"],
-      "languages": ["en", "fr", "es"],
-      "platforms": ["ios", "android", "web"]
+      "categories": [
+        "Daily Readings",
+        "Devotionals",
+        "Prayer"
+      ],
+      "languages": [
+        "en",
+        "fr",
+        "es"
+      ],
+      "platforms": [
+        "ios",
+        "android",
+        "web"
+      ]
     },
     {
       "slug": "ascension",
@@ -106,9 +162,19 @@
       "pricing_note": "Podcasts free; books, courses and parish programmes paid.",
       "open_source": 0,
       "official": 0,
-      "categories": ["Bible & Study", "Formation", "Media"],
-      "languages": ["en"],
-      "platforms": ["ios", "android", "web"]
+      "categories": [
+        "Bible & Study",
+        "Formation",
+        "Media"
+      ],
+      "languages": [
+        "en"
+      ],
+      "platforms": [
+        "ios",
+        "android",
+        "web"
+      ]
     },
     {
       "slug": "formed",
@@ -122,9 +188,20 @@
       "pricing_note": "Parish subscriptions give parishioners free access; individual plans available.",
       "open_source": 0,
       "official": 0,
-      "categories": ["Media", "Formation", "Parish Tools"],
-      "languages": ["en", "es"],
-      "platforms": ["ios", "android", "web"]
+      "categories": [
+        "Media",
+        "Formation",
+        "Parish Tools"
+      ],
+      "languages": [
+        "en",
+        "es"
+      ],
+      "platforms": [
+        "ios",
+        "android",
+        "web"
+      ]
     },
     {
       "slug": "word-on-fire",
@@ -138,9 +215,19 @@
       "pricing_note": "Most video and writing free; membership and books paid.",
       "open_source": 0,
       "official": 0,
-      "categories": ["Media", "Formation", "Apologetics"],
-      "languages": ["en"],
-      "platforms": ["web", "ios", "android"]
+      "categories": [
+        "Media",
+        "Formation",
+        "Apologetics"
+      ],
+      "languages": [
+        "en"
+      ],
+      "platforms": [
+        "web",
+        "ios",
+        "android"
+      ]
     },
     {
       "slug": "exodus-90",
@@ -154,9 +241,20 @@
       "pricing_note": "Subscription per exercise season.",
       "open_source": 0,
       "official": 0,
-      "categories": ["Formation", "Prayer", "Community"],
-      "languages": ["en", "es"],
-      "platforms": ["ios", "android", "web"]
+      "categories": [
+        "Formation",
+        "Prayer",
+        "Community"
+      ],
+      "languages": [
+        "en",
+        "es"
+      ],
+      "platforms": [
+        "ios",
+        "android",
+        "web"
+      ]
     },
     {
       "slug": "catholic-answers",
@@ -170,9 +268,20 @@
       "pricing_note": "Free; donor supported.",
       "open_source": 0,
       "official": 0,
-      "categories": ["Apologetics", "Formation", "Media"],
-      "languages": ["en", "es"],
-      "platforms": ["web", "ios", "android"]
+      "categories": [
+        "Apologetics",
+        "Formation",
+        "Media"
+      ],
+      "languages": [
+        "en",
+        "es"
+      ],
+      "platforms": [
+        "web",
+        "ios",
+        "android"
+      ]
     },
     {
       "slug": "magisterium-ai",
@@ -186,9 +295,25 @@
       "pricing_note": "Free prompt allowance; subscription for unlimited use.",
       "open_source": 0,
       "official": 0,
-      "categories": ["AI & Search", "Formation", "Apologetics"],
-      "languages": ["en", "es", "fr", "it", "pt", "de", "pl"],
-      "platforms": ["web", "ios", "android"]
+      "categories": [
+        "AI & Search",
+        "Formation",
+        "Apologetics"
+      ],
+      "languages": [
+        "en",
+        "es",
+        "fr",
+        "it",
+        "pt",
+        "de",
+        "pl"
+      ],
+      "platforms": [
+        "web",
+        "ios",
+        "android"
+      ]
     },
     {
       "slug": "the-pillar",
@@ -202,9 +327,16 @@
       "pricing_note": "Free posts; paid subscription for the full archive.",
       "open_source": 0,
       "official": 0,
-      "categories": ["News", "Media"],
-      "languages": ["en"],
-      "platforms": ["web"]
+      "categories": [
+        "News",
+        "Media"
+      ],
+      "languages": [
+        "en"
+      ],
+      "platforms": [
+        "web"
+      ]
     },
     {
       "slug": "vatican-news",
@@ -218,9 +350,25 @@
       "pricing_note": null,
       "open_source": 0,
       "official": 1,
-      "categories": ["News", "Media"],
-      "languages": ["it", "en", "es", "fr", "de", "pt", "pl", "la"],
-      "platforms": ["web", "ios", "android"]
+      "categories": [
+        "News",
+        "Media"
+      ],
+      "languages": [
+        "it",
+        "en",
+        "es",
+        "fr",
+        "de",
+        "pt",
+        "pl",
+        "la"
+      ],
+      "platforms": [
+        "web",
+        "ios",
+        "android"
+      ]
     },
     {
       "slug": "ecatholic",
@@ -234,9 +382,17 @@
       "pricing_note": "Monthly plans by parish size.",
       "open_source": 0,
       "official": 0,
-      "categories": ["Parish Tools"],
-      "languages": ["en", "es"],
-      "platforms": ["web", "parish"]
+      "categories": [
+        "Parish Tools"
+      ],
+      "languages": [
+        "en",
+        "es"
+      ],
+      "platforms": [
+        "web",
+        "parish"
+      ]
     },
     {
       "slug": "laudate",
@@ -250,9 +406,19 @@
       "pricing_note": null,
       "open_source": 0,
       "official": 0,
-      "categories": ["Prayer", "Devotionals", "Daily Readings"],
-      "languages": ["en", "es"],
-      "platforms": ["ios", "android"]
+      "categories": [
+        "Prayer",
+        "Devotionals",
+        "Daily Readings"
+      ],
+      "languages": [
+        "en",
+        "es"
+      ],
+      "platforms": [
+        "ios",
+        "android"
+      ]
     },
     {
       "slug": "catholic-digital-commons",
@@ -266,9 +432,67 @@
       "pricing_note": null,
       "open_source": 1,
       "official": 0,
-      "categories": ["Developer Tools", "Community"],
-      "languages": ["en"],
-      "platforms": ["web"]
+      "categories": [
+        "Developer Tools",
+        "Community"
+      ],
+      "languages": [
+        "en"
+      ],
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "slug": "latinitas",
+      "name": "Latinitas: Learn Latin",
+      "tagline": "Church Latin taught through the prayers you already know.",
+      "description": "Teaches Latin in situ rather than as isolated vocabulary: you meet the genitive in the Sign of the Cross and the subjunctive in the petitions of the Our Father. Fifteen foundational prayers across four modules — Prayers of the Faith, Devotional Prayers, the Rosary and Sacred Liturgy — with translation, fill-the-blank, build-the-verse and grammar exercises, plus history and context for each text. Gamified with XP, streaks and ranks from Catechumen to Magister.",
+      "homepage_url": "https://latinitasapp.com/",
+      "docs_url": "https://apps.apple.com/us/app/latinitas-learn-latin/id6760790976",
+      "kind": "api",
+      "track": "product",
+      "pricing": "free",
+      "pricing_note": "Free on the App Store.",
+      "open_source": 0,
+      "official": 0,
+      "categories": [
+        "Formation",
+        "Prayer"
+      ],
+      "languages": [
+        "en",
+        "la"
+      ],
+      "platforms": [
+        "ios"
+      ],
+      "launched_at": "2026-04-13"
+    },
+    {
+      "slug": "woly-christian-goodnight",
+      "name": "Woly: Christian Goodnight",
+      "tagline": "Personalised bedtime stories built around the virtues.",
+      "description": "Generates a short, age-appropriate bedtime story around a child's name, age and a chosen virtue — faith, hope, charity, justice, prudence, temperance or fortitude — in under a minute, with recorded narration and optional ambient sound. Aimed at families who want the last thing said at night to be formative rather than incidental. Favourites can be saved and re-read.",
+      "homepage_url": "https://christiangoodnight.com/",
+      "docs_url": "https://apps.apple.com/us/app/woly-christian-goodnight/id6755414204",
+      "kind": "api",
+      "track": "product",
+      "pricing": "free",
+      "pricing_note": "Free on the App Store.",
+      "open_source": 0,
+      "official": 0,
+      "categories": [
+        "Formation",
+        "Devotionals"
+      ],
+      "languages": [
+        "en"
+      ],
+      "platforms": [
+        "ios"
+      ],
+      "launched_at": "2026-05-08"
     }
   ]
 }

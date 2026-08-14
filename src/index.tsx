@@ -192,10 +192,16 @@ function directoryRoute(track: Track) {
     const root = track === 'product' ? '/' : '/apis';
     const isLanding = url.search === '';
 
+    /*
+      The brand leads, but the searchable words stay: nobody types "FidesHunt"
+      until they already know it exists, and "Catholic apps" is what they
+      actually search. The track labels below stay descriptive for the same
+      reason — they describe the catalogue, not the company.
+    */
     const title = isLanding
       ? track === 'product'
-        ? 'Catholic APIs — Catholic apps and services, ranked by the people who use them'
-        : 'Catholic APIs — free and paid APIs for Catholic software, ranked by developers'
+        ? 'FidesHunt — Catholic apps and services, ranked by the people who use them'
+        : 'FidesHunt — free and paid APIs for Catholic software, ranked by developers'
       : `${filters.q ? `${filters.q} — ` : ''}${track === 'product' ? 'Catholic products' : 'Catholic APIs'}`;
 
     const description =
@@ -222,7 +228,7 @@ function directoryRoute(track: Track) {
         title={title}
         description={description}
         canonical={absolute(c, isLanding ? root : `${root}${url.search}`)}
-        siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
+        siteName={c.env.SITE_NAME ?? 'FidesHunt'}
         jsonLd={jsonLd}
         noindex={!isLanding && result.total === 0}
         active={root}
@@ -295,7 +301,7 @@ function detailRoute(track: Track) {
         title={`${listing.name} — ${listing.tagline}`}
         description={listing.tagline}
         canonical={absolute(c, listingPath(listing))}
-        siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
+        siteName={c.env.SITE_NAME ?? 'FidesHunt'}
         jsonLd={jsonLd}
       >
         <Detail listing={listing} related={related} notice={notice} />
@@ -405,10 +411,10 @@ app.get('/submit', (c) => {
 
   return c.html(
     <Layout
-      title="Submit to the Catholic APIs directory"
+      title="Submit to FidesHunt"
       description="Add an app, service, API, dataset or library to the directory. Reviewed by hand before publishing."
       canonical={absolute(c, '/submit')}
-      siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
+      siteName={c.env.SITE_NAME ?? 'FidesHunt'}
       active="/submit"
     >
       <Submit values={{ track }} turnstileSiteKey={c.env.TURNSTILE_SITEKEY} />
@@ -452,7 +458,7 @@ app.post('/submit', async (c) => {
         title="Thank you"
         description="Submission received."
         canonical={absolute(c, '/submit')}
-        siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
+        siteName={c.env.SITE_NAME ?? 'FidesHunt'}
         noindex
       >
         <Message title="Thank you" body="Your submission has been received for review." />
@@ -503,9 +509,9 @@ app.post('/submit', async (c) => {
     return c.html(
       <Layout
         title="Submit a Catholic API"
-        description="Add an API to the Catholic APIs directory."
+        description="Add an API to the FidesHunt directory."
         canonical={absolute(c, '/submit')}
-        siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
+        siteName={c.env.SITE_NAME ?? 'FidesHunt'}
         noindex
         active="/submit"
       >
@@ -551,7 +557,7 @@ app.post('/submit', async (c) => {
       title="Submission received"
       description="Thank you for adding to the directory."
       canonical={absolute(c, '/submit')}
-      siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
+      siteName={c.env.SITE_NAME ?? 'FidesHunt'}
       noindex
     >
       <Message
@@ -570,10 +576,10 @@ app.post('/submit', async (c) => {
 app.get('/about', (c) =>
   c.html(
     <Layout
-      title="About the Catholic APIs directory"
+      title="About FidesHunt"
       description="What gets listed, how the Wilson-score ranking works, how voting works, and how to correct a listing."
       canonical={absolute(c, '/about')}
-      siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
+      siteName={c.env.SITE_NAME ?? 'FidesHunt'}
       active="/about"
     >
       <About siteUrl={siteOrigin(c)} />
@@ -584,10 +590,10 @@ app.get('/about', (c) =>
 app.get('/api/v1', (c) =>
   c.html(
     <Layout
-      title="JSON API — Catholic APIs"
+      title="JSON API — FidesHunt"
       description="The directory is itself a free JSON API: list, filter and sort every Catholic API listing. No key, CORS open."
       canonical={absolute(c, '/api/v1')}
-      siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
+      siteName={c.env.SITE_NAME ?? 'FidesHunt'}
       active="/api/v1"
     >
       <ApiDocs siteUrl={siteOrigin(c)} />
@@ -697,7 +703,7 @@ app.get('/feed.xml', async (c) => {
   const body = html`<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Catholic APIs — newest listings</title>
+    <title>FidesHunt — newest listings</title>
     <link>${site}/</link>
     <atom:link href="${site}/feed.xml" rel="self" type="application/rss+xml" />
     <description>New Catholic apps, services, APIs and datasets, as they are added.</description>
@@ -837,7 +843,7 @@ app.get('/admin', async (c) => {
       title="Moderation"
       description="Moderation queue"
       canonical={absolute(c, '/admin')}
-      siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
+      siteName={c.env.SITE_NAME ?? 'FidesHunt'}
       noindex
     >
       <Admin
@@ -914,10 +920,10 @@ app.post('/admin/resolve', async (c) => {
 function notFound(c: Context<{ Bindings: Env }>) {
   return c.html(
     <Layout
-      title="Not found — Catholic APIs"
+      title="Not found — FidesHunt"
       description="That page doesn't exist."
       canonical={absolute(c, '/')}
-      siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
+      siteName={c.env.SITE_NAME ?? 'FidesHunt'}
       noindex
     >
       <Message
@@ -939,10 +945,10 @@ app.onError((err, c) => {
 
   return c.html(
     <Layout
-      title="Something went wrong — Catholic APIs"
+      title="Something went wrong — FidesHunt"
       description="An unexpected error occurred."
       canonical={absolute(c, '/')}
-      siteName={c.env.SITE_NAME ?? 'Catholic APIs'}
+      siteName={c.env.SITE_NAME ?? 'FidesHunt'}
       noindex
     >
       <Message

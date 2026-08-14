@@ -20,11 +20,27 @@
   "d1_databases": [
     {
       "binding": "DB",
+      // Still "catholic-apis" after the rename to FidesHunt, on purpose: D1
+      // databases cannot be renamed, and recreating one to change a label would
+      // mean migrating 237 listings and every vote cast against them for no
+      // user-visible gain. The binding is what the code sees, and that is `DB`.
       "database_name": "catholic-apis",
-      // Replace with the id printed by `wrangler d1 create catholic-apis`.
-      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID",
+      // Written by `npm run deploy:setup`; see scripts/deploy.mjs.
+      "database_id": "6b3c70bd-3424-4627-bc20-a6cc449f2848",
       "migrations_dir": "migrations"
     }
+  ],
+
+  // The public address, declared here rather than clicked into the dashboard so
+  // it is reviewable and survives a rebuild of the account. Cloudflare creates
+  // and manages the DNS records for a custom_domain route.
+  //
+  // A hostname can belong to exactly one Worker. If a deploy fails here saying
+  // the domain is already in use, something else is holding it — remove that
+  // binding first rather than working around it.
+  "routes": [
+    { "pattern": "fideshunt.com", "custom_domain": true },
+    { "pattern": "www.fideshunt.com", "custom_domain": true }
   ],
 
   // Uptime checks. Every six hours, offset off the hour so it does not land in
@@ -35,14 +51,16 @@
   },
 
   "vars": {
-    // SITE_URL is deliberately unset. Without it the Worker uses the origin the
-    // request arrived on, so a `*.workers.dev` deploy is correct about itself —
-    // canonical tags, sitemap, feed and JSON-LD all point at the preview rather
-    // than at a domain that is not serving yet.
+    // Pinned now that fideshunt.com is attached and serving. Before that it was
+    // deliberately unset, so the Worker described itself using whatever origin
+    // the request arrived on — correct for a workers.dev preview, and better
+    // than pointing search engines at a domain that was not answering yet.
     //
-    // Set it once a custom domain is live and is the ONE canonical hostname:
-    //   "SITE_URL": "https://catholicapis.com",
-    "SITE_NAME": "Catholic APIs"
+    // Pinned it must be, because `www.fideshunt.com` serves the same Worker.
+    // Left unset, www would canonicalise to www and the apex to the apex, and
+    // the two would split the ranking of every page between them.
+    "SITE_URL": "https://fideshunt.com",
+    "SITE_NAME": "FidesHunt"
   }
 
   // Secrets (set with `wrangler secret put <NAME>`), all optional:

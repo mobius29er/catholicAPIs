@@ -5,12 +5,25 @@ import type { DeprecationSignal, OpenReport, Stats } from '../db';
 
 export const About: FC<{ siteUrl: string }> = ({ siteUrl }) => (
   <div class="wrap narrow page prose">
-    <h1>About this directory</h1>
+    <h1>About FidesHunt</h1>
 
     <p class="lede">
-      Catholic software gets built over and over by people who never find out that the thing they
+      Faith software gets built over and over by people who never find out that the thing they
       need already exists. This is a list of what exists, ranked by the people who have actually
       used it.
+    </p>
+
+    <h2>The name</h2>
+    <p>
+      <em>Fides</em> is faith — the word both halves of the Western church kept. Catholics have{' '}
+      <em>fides et ratio</em>, faith and reason; the Reformation has <em>sola fide</em>, faith
+      alone. It is one of the few pieces of Latin neither tradition concedes to the other, which
+      makes it the right word for a directory that would like to be useful to both.
+    </p>
+    <p>
+      And <em>hunt</em> because that is the actual activity. Anselm called it{' '}
+      <em>fides quaerens intellectum</em> — faith seeking understanding — about a thousand years
+      before anyone had a search box.
     </p>
 
     <h2>Two tracks</h2>
@@ -29,11 +42,24 @@ export const About: FC<{ siteUrl: string }> = ({ siteUrl }) => (
 
     <h2>What gets listed</h2>
     <p>
-      On the product side: anything a Catholic actually uses that is software. On the developer
+      On the product side: anything a believer actually uses that is software. On the developer
       side: anything you can build on. Free and paid both qualify — a service that charges
       honestly is more useful than an abandoned free one. What doesn't qualify: scrapers of sites
       that forbid scraping, endpoints that quietly re-serve someone else's copyrighted
       translation, and anything whose only real feature is a landing page.
+    </p>
+
+    {/*
+      Said plainly rather than left for someone to discover and feel misled by.
+      The catalogue is what it is today; the name does not overclaim it.
+    */}
+    <p>
+      <strong>Where the catalogue actually stands:</strong> it is deepest by far on the Catholic
+      side — liturgical calendars, the Catechism, canon law, the Roman Martyrology, canonical
+      identifier registries. That is where the work has gone so far, and it is not a claim that
+      nothing else belongs here. Anything a Christian builds or uses is in scope, and if the
+      Protestant and Orthodox shelves look thin it is because nobody has filled them yet.{' '}
+      <a href="/submit">Fix that</a>.
     </p>
 
     <h2>How ranking works</h2>
@@ -158,7 +184,7 @@ export const About: FC<{ siteUrl: string }> = ({ siteUrl }) => (
 
 export const ApiDocs: FC<{ siteUrl: string }> = ({ siteUrl }) => (
   <div class="wrap narrow page prose">
-    <h1>The Catholic APIs API</h1>
+    <h1>The FidesHunt API</h1>
     <p class="lede">
       A directory of APIs ought to be one. Read-only, no authentication, CORS open, JSON
       throughout.

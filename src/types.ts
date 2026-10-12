@@ -102,6 +102,10 @@ export const listingPath = (listing: Pick<Listing, 'track' | 'slug'>): string =>
   listing.track === 'product' ? `/products/${listing.slug}` : `/apis/${listing.slug}`;
 
 export interface Env {
+  /** Local-only maker preview. Also requires a loopback request hostname. */
+  LOCAL_PREVIEW?: string;
+  /** Test-only local admin access key. Never uses production ADMIN_TOKEN. */
+  LOCAL_ADMIN_TOKEN?: string;
   DB: D1Database;
   ASSETS: Fetcher;
   /** Canonical origin. Unset is fine: the site falls back to the request's own

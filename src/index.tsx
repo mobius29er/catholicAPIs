@@ -1,4 +1,6 @@
 import { Hono } from 'hono';
+import { makerApp, makerCsrf } from './maker';
+import { listActiveAds } from './maker-db';
 import type { Context } from 'hono';
 import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
@@ -57,6 +59,9 @@ app.use(
     xFrameOptions: 'DENY',
   }),
 );
+
+// Maker test workflows are explicitly gated to a local-only preview.
+app.route('/', makerApp);
 
 // The public JSON API is meant to be called from other people's pages.
 app.use('/api/v1/*', cors({ origin: '*', allowMethods: ['GET', 'OPTIONS'], maxAge: 86_400 }));
@@ -250,7 +255,7 @@ function directoryRoute(track: Track) {
         active={root}
         searchAction={root}
       >
-        <Home result={result} filters={filters} stats={counts} />
+        <Home result={result} filters={filters} stats={counts} sponsors={await listActiveAds(c.env)} sponsorCsrf={makerCsrf(c)} />
       </Layout>,
     );
   };

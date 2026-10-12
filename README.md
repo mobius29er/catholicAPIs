@@ -1,3 +1,5 @@
+> **Preview branch:** `codex/fideshunt-launch-redesign` is a local-only redesign rebuilt from the repository. Nothing on this branch is a production billing, mailing, or publishing integration. See [LOCAL_PREVIEW.md](LOCAL_PREVIEW.md) to run it and [PREVIEW_QA.md](PREVIEW_QA.md) for verification. The product-first UI uses `public/clean.css`; the older design notes below describe the original production design.
+
 # FidesHunt
 
 **[fideshunt.com](https://fideshunt.com)** — a community-ranked directory of faith software, in

@@ -2,7 +2,7 @@ import type { FC } from 'hono/jsx';
 import type { Filters, HealthState, Listing, Sort, Track } from '../types';
 import { listingPath } from '../types';
 import type { FacetCount } from '../db';
-import { LogoMark, Monogram, SpotlightBeam, TopicIcon } from './art';
+import { LogoMark, SpotlightBeam, TopicIcon } from './art';
 
 export const KIND_LABELS: Record<string, string> = {
   api: 'Hosted API',
@@ -298,7 +298,6 @@ export const ListingRow: FC<{ listing: Listing; rank: number; rankNote?: string 
   rankNote,
 }) => {
   const href = listingPath(listing);
-  const publisher = publisherOf(listing.homepage_url);
 
   /*
     `is-top` rather than `:first-child`. The rank-1 treatment was keyed to
@@ -338,6 +337,7 @@ export const ListingRow: FC<{ listing: Listing; rank: number; rankNote?: string 
         <p class="row-tagline">{listing.tagline}</p>
 
         <ul class="pills">
+          <li class="pill pill-price">{PRICING_LABELS[listing.pricing]}</li>
           {listing.categories.slice(0, 2).map((category) => (
             <li class="pill">{category}</li>
           ))}
@@ -348,19 +348,6 @@ export const ListingRow: FC<{ listing: Listing; rank: number; rankNote?: string 
         </ul>
       </div>
 
-      <div class="row-by">
-        <Monogram label={publisher} />
-        <span>
-          <small>from</small>
-          <a href={listing.homepage_url} rel="nofollow noopener" target="_blank">
-            {publisher}
-          </a>
-          <small class={`row-price price-${listing.pricing}`}>
-            {PRICING_LABELS[listing.pricing]}
-            <HealthDot listing={listing} />
-          </small>
-        </span>
-      </div>
 
       <VoteWidget listing={listing} />
     </li>

@@ -1,4 +1,4 @@
-> **Preview branch:** `codex/fideshunt-launch-redesign` is a local-only redesign rebuilt from the repository. Nothing on this branch is a production billing, mailing, or publishing integration. See [LOCAL_PREVIEW.md](LOCAL_PREVIEW.md) to run it and [PREVIEW_QA.md](PREVIEW_QA.md) for verification. The product-first UI uses `public/clean.css`; the older design notes below describe the original production design.
+> **Preview branch:** `codex/fideshunt-launch-redesign` preserves the original noir design and adds local-only maker features. Nothing on this branch is a production billing, mailing, or publishing integration. See [LOCAL_PREVIEW.md](LOCAL_PREVIEW.md) to run it and [PREVIEW_QA.md](PREVIEW_QA.md) for verification. Original assets and directory styles stay intact; new maker styles are scoped in `public/maker.css`.
 
 # FidesHunt
 

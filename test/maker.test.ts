@@ -123,6 +123,21 @@ describe('local maker boundary and validation',()=>{
 });
 
 describe('launch flow',()=>{
+  it('describes the listing and newsletter launch bundle without promising live delivery',async()=>{
+    const b=new Browser();const html=await(await b.get('/launch')).text();
+    expect(html).toContain('A directory listing and a newsletter feature');
+    expect(html).toContain('Billing cadence is still undecided');
+    expect(html).toContain('Christian makers and products');
+    expect(html).toContain('/maker.css');
+    expect(html).toContain('data-theme-toggle');
+    const path=await b.draft();await b.post(`${path}/checkout`,{simulation:'1'});
+    await b.post(`${path}/schedule`,{launch_date:today()});
+    const scheduled=await(await b.get(path)).text();
+    expect(scheduled).toContain('Directory listing and newsletter feature scheduled together');
+    expect(scheduled).toContain('Nothing is published and no email is sent');
+    expect(scheduled).toContain(today());
+  });
+
   it('shows the draft without login and creates one idempotent draft',async()=>{
     const b=new Browser();const response=await b.get('/launch');expect(response.status).toBe(200);expect(await response.text()).toContain('name="homepage_url"');expect(count('maker_accounts')).toBe(0);
     const actionKey=crypto.randomUUID();const firstPath=await b.draft(actionKey);const secondPath=await b.draft(actionKey);

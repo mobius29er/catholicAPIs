@@ -1,47 +1,231 @@
 import type { FC, PropsWithChildren } from 'hono/jsx';
-import { MarkInks } from './art';
+import { Burst, MarkInks } from './art';
 
 export interface SeoProps {
-  title: string; description: string; canonical: string; siteName: string;
-  jsonLd?: unknown; noindex?: boolean;
+  title: string;
+  description: string;
+  /** Absolute canonical URL for this page. */
+  canonical: string;
+  siteName: string;
+  /** Extra structured data, serialised into a JSON-LD script tag. */
+  jsonLd?: unknown;
+  noindex?: boolean;
 }
-export type LayoutProps = PropsWithChildren<SeoProps & { active?: string; searchAction?: string }>;
 
-export const Layout: FC<LayoutProps> = ({ title, description, canonical, siteName, jsonLd, active, searchAction = '/', children }) => (
+export type LayoutProps = PropsWithChildren<
+  SeoProps & {
+    active?: string;
+    /** Shows only explicitly enabled loopback maker previews. */
+    localPreview?: boolean;
+    /** Where the masthead search posts. Defaults to the product track. */
+    searchAction?: string;
+  }
+>;
+
+const NAV = [
+  { href: '/', label: 'Products' },
+  { href: '/apis', label: 'APIs' },
+  { href: '/about', label: 'About' },
+  { href: '/api/v1', label: 'JSON API' },
+];
+
+export const Layout: FC<LayoutProps> = ({
+  title,
+  description,
+  canonical,
+  siteName,
+  jsonLd,
+  noindex,
+  active,
+  localPreview = false,
+  searchAction = '/',
+  children,
+}) => (
   <html lang="en">
     <head>
-      <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-      <title>{title}</title><meta name="description" content={description} />
-      <meta name="robots" content="noindex, nofollow" /><link rel="canonical" href={canonical} />
-      <meta property="og:title" content={title} /><meta property="og:description" content={description} />
-      <meta property="og:site_name" content={siteName} /><meta property="og:url" content={canonical} />
-      <meta name="theme-color" content="#faf9f6" />
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>{title}</title>
+      <meta name="description" content={description} />
+      <link rel="canonical" href={canonical} />
+      {(noindex || localPreview) && <meta name="robots" content={localPreview ? "noindex, nofollow" : "noindex"} />}
+
+      <meta property="og:type" content="website" />
+      <meta property="og:site_name" content={siteName} />
+      <meta property="og:title" content={title} />
+      <meta property="og:description" content={description} />
+      <meta property="og:url" content={canonical} />
+      <meta name="twitter:card" content="summary_large_image" />
+
+      <meta name="theme-color" content="#f3ecdd" media="(prefers-color-scheme: light)" />
+      <meta name="theme-color" content="#0a0f16" media="(prefers-color-scheme: dark)" />
+
       <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-      <link rel="alternate" type="application/rss+xml" title={`${siteName} — newest listings`} href="/feed.xml" />
-      <link rel="stylesheet" href="/styles.css" /><link rel="stylesheet" href="/clean.css" />
-      {jsonLd != null && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />}
+      <link
+        rel="alternate"
+        type="application/rss+xml"
+        title={`${siteName} — newest listings`}
+        href="/feed.xml"
+      />
+      {/* The headline is the first thing painted, so fetch its face alongside
+          the stylesheet rather than after it. */}
+      <link
+        rel="preload"
+        href="/fonts/anton-latin.woff2"
+        as="font"
+        type="font/woff2"
+        crossorigin="anonymous"
+      />
+      {/* Earlier design directions are kept at /styles-v1.css and /styles-v2.css. */}
+      <link rel="stylesheet" href="/styles.css" />
+      {localPreview && <link rel="stylesheet" href="/maker.css" />}
+
+      {/*
+        Applies the saved theme before first paint. Inline and synchronous on
+        purpose: deferring it means a flash of the wrong theme.
+      */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `try{var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}`,
+        }}
+      />
+
+      {jsonLd != null && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
+        />
+      )}
     </head>
+
     <body>
-      <a class="skip-link" href="#main">Skip to content</a><MarkInks />
+      <a class="skip-link" href="#main">
+        Skip to content
+      </a>
+
+      <MarkInks />
+
+      {/* Masthead: brand · nav · search · actions, all on one line. */}
       <header class="masthead">
         <div class="masthead-inner">
-          <a class="brand" href="/" aria-label="FidesHunt home"><span class="brand-mark" aria-hidden="true">f.</span><strong>FidesHunt</strong></a>
+          <a class="brand" href="/">
+            <span class="brand-mark" aria-hidden="true">
+              FH
+            </span>
+            <span class="brand-text">
+              <strong>FidesHunt</strong>
+              <small>Find what's already built</small>
+            </span>
+          </a>
+
           <nav class="masthead-nav" aria-label="Main">
-            <a href="/" aria-current={active === '/' ? 'page' : undefined}>Discover</a>
-            <a href="/apis" aria-current={active === '/apis' ? 'page' : undefined}>For developers</a>
+            {NAV.map((item) => (
+              <a href={item.href} aria-current={active === item.href ? 'page' : undefined}>
+                {item.label}
+              </a>
+            ))}
+            {localPreview && <a href="/maker" aria-current={["maker", "launch", "advertise", "feedback"].includes(active ?? "") ? "page" : undefined}>Maker tools</a>}
           </nav>
+
           <form class="masthead-search" method="get" action={searchAction} role="search">
-            <label class="visually-hidden" for="masthead-q">Search the directory</label>
-            <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="1.6" /><path d="m13 13 4 4" stroke="currentColor" stroke-width="1.6" /></svg>
-            <input type="search" id="masthead-q" name="q" placeholder="Search Catholic products…" autocomplete="off" data-search /><kbd>/</kbd>
+            <label class="visually-hidden" for="masthead-q">
+              Search the directory
+            </label>
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+              <circle cx="9" cy="9" r="6" fill="none" stroke="currentColor" stroke-width="2" />
+              <line
+                x1="13.5"
+                y1="13.5"
+                x2="18"
+                y2="18"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+            <input
+              type="search"
+              id="masthead-q"
+              name="q"
+              placeholder="Search apps, APIs, or topics"
+              autocomplete="off"
+              data-search
+            />
+            <kbd aria-hidden="true">/</kbd>
           </form>
-          <div class="masthead-actions"><a class="maker-link" href="/maker">Maker dashboard</a><a class="btn btn-primary" href="/launch">Launch a product <span aria-hidden="true">→</span></a></div>
+
+          <div class="masthead-actions">
+            <button
+              type="button"
+              class="theme-toggle"
+              data-theme-toggle
+              aria-label="Switch between light and dark theme"
+              title="Switch theme"
+            >
+              <span class="theme-toggle-icon" aria-hidden="true" />
+            </button>
+            <a class="btn btn-primary" href="/submit">
+              Submit
+            </a>
+          </div>
         </div>
       </header>
+
       <main id="main">{children}</main>
-      <footer class="site-footer"><div class="footer-simple"><span>FidesHunt <span class="footer-dot">·</span> Good tools. Shared faith.</span><nav aria-label="Footer"><a href="/about">About</a><a href="/submit">Suggest a listing</a><a href="/feed.xml">RSS</a><a href="/api/v1">API</a><a href="/maker/admin">Admin</a></nav></div></footer>
-      <span class="preview-badge">Local preview</span>
-      <div class="toast" data-toast role="status" aria-live="polite" hidden /><script src="/app.js" defer />
+
+      <footer class="site-footer">
+        <div class="footer-inner">
+          <div class="footer-brand">
+            <span class="footer-mark" aria-hidden="true">
+              FH
+            </span>
+            <p class="muted small">
+              FidesHunt
+              <br />
+              An open, community-ranked directory.
+            </p>
+          </div>
+
+          <div class="footer-links">
+            <p class="footer-title">Browse</p>
+            <a href="/">Apps &amp; products</a>
+            <a href="/apis">Developer APIs</a>
+            <a href="/apis?pricing=free&amp;no_auth=1">Free, no key needed</a>
+            <a href="/?sort=new">Recently added</a>
+          </div>
+
+          <div class="footer-links">
+            <p class="footer-title">Developers</p>
+            <a href="/api/v1">JSON API</a>
+            <a href="/feed.xml">RSS feed</a>
+            <a href="/submit">Submit a listing</a>
+            <a href="/about#data">Data &amp; corrections</a>
+            {localPreview && <a href="/maker">Maker tools</a>}
+          </div>
+
+          <div class="footer-links">
+            <p class="footer-title">About</p>
+            <a href="/about">What this is</a>
+            <a href="/about">How ranking works</a>
+            <a href="/about#data">Report a problem</a>
+          </div>
+
+          <div class="footer-burst">
+            <Burst>Vote honestly.</Burst>
+          </div>
+        </div>
+
+        <div class="footer-legal">
+          <p class="muted">
+            Not affiliated with the Holy See, any bishops' conference, or any diocese. Every
+            listing links to its own publisher — check their terms before shipping.
+          </p>
+        </div>
+      </footer>
+
+      {localPreview && <span class="preview-badge">Local preview</span>}
+      <div class="toast" data-toast role="status" aria-live="polite" hidden />
+      <script src="/app.js" defer />
     </body>
   </html>
 );

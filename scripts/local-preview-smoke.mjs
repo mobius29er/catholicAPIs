@@ -6,13 +6,13 @@ export async function runSmoke(runtime, database, origin) {
   const checks = [];
   const fetch = (path, options) => runtime.dispatchFetch(origin + path, options);
   const pass = label => { checks.push({ label, passed: true }); console.log(`[PASS] ${label}`); };
-  for (const path of ['/', '/apis', '/styles.css', '/clean.css', '/app.js', '/launch', '/maker', '/advertise', '/feedback', '/maker/admin', '/maker/newsletter']) {
+  for (const path of ['/', '/apis', '/styles.css', '/maker.css', '/app.js', '/launch', '/maker', '/advertise', '/feedback', '/maker/admin', '/maker/newsletter']) {
     const response = await fetch(path);
     assert.equal(response.status, 200, `${path} should return 200`);
     const text = await response.text();
     assert.ok(text.length > 100, `${path} must have content`);
     if (path === '/') {
-      assert.match(text, /clean\.css/);
+      assert.match(text, /maker\.css/);
       assert.match(text, /Local preview/);
       await writeFile('.wrangler/local-preview/home.html', text);
     }

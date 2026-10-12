@@ -230,11 +230,7 @@
     var currentParams = new URL(window.location.href).searchParams;
     var searchInput = document.querySelector('[data-search]');
     if (searchInput && document.activeElement !== searchInput) searchInput.value = currentParams.get('q') || '';
-    document.querySelectorAll('.category-rail .category-link').forEach(function(link) {
-      var candidate = new URL(link.href, window.location.href);
-      var category = candidate.searchParams.get('category');
-      link.classList.toggle('selected', category ? currentParams.getAll('category').indexOf(category) !== -1 : !candidate.search && !currentParams.has('category'));
-    });
+
 
     // Replace the popover's *contents*, never the <details> around them, so a
     // reader part-way through ticking boxes keeps the panel open.

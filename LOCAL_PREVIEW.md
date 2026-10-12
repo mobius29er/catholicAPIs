@@ -1,6 +1,6 @@
 # FidesHunt local preview
 
-This checkout is an independent rebuild of the repository source. All preview data stays in the local SQLite/D1 store. Nothing in these instructions deploys or connects to the live Cloudflare database.
+This checkout preserves the original FidesHunt noir directory and adds local-only maker features. All preview data stays in the local SQLite/D1 store. Nothing in these instructions deploys or connects to the live Cloudflare database.
 
 ## Run
 

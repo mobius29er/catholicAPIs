@@ -1,0 +1,62 @@
+/* Additive maker tools only. The original directory stylesheet and tokens are unchanged. */
+.preview-badge {
+  position: fixed; right: var(--space-3); bottom: var(--space-2); z-index: 20;
+  color: var(--faint); background: var(--panel); border: 1px solid var(--line);
+  border-radius: var(--r-sm); padding: var(--space-1) var(--space-2);
+  font-size: var(--text-2xs); pointer-events: none;
+}
+.maker-shell { max-width: 1100px; }
+.maker-shell h1 { font-family: var(--display); font-weight: 400; text-transform: uppercase; font-size: var(--text-3xl); }
+.maker-shell h2 { font-size: var(--text-xl); }
+.maker-shell h3 { font-size: var(--text-lg); }
+.maker-shell .lede { margin-bottom: var(--space-5); }
+.maker-tabs { display: flex; gap: var(--space-5); overflow-x: auto; white-space: nowrap; border-bottom: 1px solid var(--line); margin-bottom: var(--space-6); }
+.maker-tabs a { color: var(--muted); text-decoration: none; font-size: var(--text-md); padding: var(--space-3) 0; border-bottom: 2px solid transparent; }
+.maker-tabs a[aria-current="page"] { color: var(--cream); border-bottom-color: var(--orange); }
+.maker-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: var(--space-5); align-items: start; }
+.maker-card { min-width: 0; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--space-5); margin-bottom: var(--space-5); }
+.maker-card h2, .maker-card h3 { margin-top: 0; }
+.maker-card > :last-child { margin-bottom: 0; }
+.maker-shell .form { display: grid; max-width: none; gap: var(--space-4); margin-top: var(--space-4); }
+.maker-shell form > .btn { justify-self: start; min-height: var(--tap); white-space: normal; }
+.maker-shell .hint { line-height: 1.6; margin-top: var(--space-3); }
+.maker-shell .field { margin: 0; padding: 0; border: 0; }
+.maker-shell .field textarea { min-height: 80px; }
+.maker-shell label.field:has(input[type="checkbox"]) { flex-direction: row; align-items: flex-start; gap: var(--space-3); font-size: var(--text-md); margin-block: var(--space-4); }
+.maker-shell input[type="checkbox"] { width: auto; accent-color: var(--orange); flex: none; margin-top: var(--space-1); }
+.maker-steps { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-5); list-style: none; padding: 0 0 var(--space-4); margin: var(--space-5) 0; border-bottom: 1px solid var(--line); font-size: var(--text-sm); color: var(--faint); }
+.maker-steps [aria-current="step"] { color: var(--amber-ink); font-weight: 700; }
+.maker-list { list-style: none; padding: 0; margin: 0 0 var(--space-5); }
+.maker-list li { border-bottom: 1px solid var(--line-soft); padding: var(--space-3) 0; }
+.maker-list span { display: block; color: var(--muted); font-size: var(--text-sm); margin-top: var(--space-1); }
+.maker-service { border-top: 1px solid var(--line); padding-top: var(--space-4); margin-top: var(--space-5); }
+.maker-footer { font-size: var(--text-sm); color: var(--muted); border-top: 1px solid var(--line); padding-top: var(--space-5); margin-top: var(--space-5); }
+.maker-footer details { margin-top: var(--space-5); }
+.maker-shell summary { cursor: pointer; font-weight: 600; }
+.maker-shell code, .maker-shell a { overflow-wrap: anywhere; }
+.maker-shell table { display: block; overflow-x: auto; border-collapse: collapse; font-size: var(--text-sm); max-width: 100%; }
+.maker-shell th, .maker-shell td { border-bottom: 1px solid var(--line); padding: var(--space-3); text-align: left; }
+.maker-sponsored { border-color: var(--amber-ink); }
+.maker-sponsored h3 { font-size: var(--text-lg); }
+@media (max-width: 680px) {
+  .maker-grid { grid-template-columns: minmax(0, 1fr); }
+  .maker-shell { padding-inline: var(--space-4); }
+  .maker-card { padding: var(--space-4); }
+  .maker-tabs { gap: var(--space-4); }
+}
+/* A compact launch form; shared directory typography remains untouched. */
+.maker-shell.page { padding-top: var(--space-5); }
+.maker-shell .maker-tabs { margin-bottom: var(--space-5); }
+.maker-shell form[action="/maker/launch"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.maker-shell form[action="/maker/launch"] .field:has(#name) { grid-column: 1; grid-row: 1; }
+.maker-shell form[action="/maker/launch"] .field:has(#homepage_url) { grid-column: 2; grid-row: 1; }
+.maker-shell form[action="/maker/launch"] .field:has(#tagline),
+.maker-shell form[action="/maker/launch"] .field:has(#description),
+.maker-shell form[action="/maker/launch"] .btn,
+.maker-shell form[action="/maker/launch"] .hint { grid-column: 1 / -1; }
+.maker-shell form[action="/maker/launch"] .hint { margin-top: 0; }
+@media (max-width: 680px) {
+  .maker-shell form[action="/maker/launch"] { grid-template-columns: minmax(0, 1fr); }
+  .maker-shell form[action="/maker/launch"] .field:has(#name),
+  .maker-shell form[action="/maker/launch"] .field:has(#homepage_url) { grid-column: 1; grid-row: auto; }
+}

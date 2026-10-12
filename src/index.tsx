@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { makerApp, makerCsrf } from './maker';
-import { listActiveAds } from './maker-db';
+import { listActiveAds, localMakerEnabled } from './maker-db';
 import type { Context } from 'hono';
 import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
@@ -246,6 +246,7 @@ function directoryRoute(track: Track) {
 
     return c.html(
       <Layout
+        localPreview={localMakerEnabled(c.env.LOCAL_PREVIEW, c.req.url)}
         title={title}
         description={description}
         canonical={absolute(c, isLanding ? root : `${root}${url.search}`)}
@@ -255,7 +256,7 @@ function directoryRoute(track: Track) {
         active={root}
         searchAction={root}
       >
-        <Home result={result} filters={filters} stats={counts} sponsors={await listActiveAds(c.env)} sponsorCsrf={makerCsrf(c)} />
+        <Home result={result} filters={filters} stats={counts} sponsors={localMakerEnabled(c.env.LOCAL_PREVIEW, c.req.url) ? await listActiveAds(c.env) : []} sponsorCsrf={makerCsrf(c)} />
       </Layout>,
     );
   };
@@ -319,6 +320,7 @@ function detailRoute(track: Track) {
 
     return c.html(
       <Layout
+        localPreview={localMakerEnabled(c.env.LOCAL_PREVIEW, c.req.url)}
         title={`${listing.name} — ${listing.tagline}`}
         description={listing.tagline}
         canonical={absolute(c, listingPath(listing))}
@@ -432,6 +434,7 @@ app.get('/submit', (c) => {
 
   return c.html(
     <Layout
+      localPreview={localMakerEnabled(c.env.LOCAL_PREVIEW, c.req.url)}
       title="Submit to FidesHunt"
       description="Add an app, service, API, dataset or library to the directory. Reviewed by hand before publishing."
       canonical={absolute(c, '/submit')}
@@ -476,6 +479,7 @@ app.post('/submit', async (c) => {
   if (values.website) {
     return c.html(
       <Layout
+        localPreview={localMakerEnabled(c.env.LOCAL_PREVIEW, c.req.url)}
         title="Thank you"
         description="Submission received."
         canonical={absolute(c, '/submit')}
@@ -529,6 +533,7 @@ app.post('/submit', async (c) => {
   if (errors.length > 0) {
     return c.html(
       <Layout
+        localPreview={localMakerEnabled(c.env.LOCAL_PREVIEW, c.req.url)}
         title="Submit a Catholic API"
         description="Add an API to the FidesHunt directory."
         canonical={absolute(c, '/submit')}
@@ -575,6 +580,7 @@ app.post('/submit', async (c) => {
 
   return c.html(
     <Layout
+      localPreview={localMakerEnabled(c.env.LOCAL_PREVIEW, c.req.url)}
       title="Submission received"
       description="Thank you for adding to the directory."
       canonical={absolute(c, '/submit')}
@@ -597,6 +603,7 @@ app.post('/submit', async (c) => {
 app.get('/about', (c) =>
   c.html(
     <Layout
+      localPreview={localMakerEnabled(c.env.LOCAL_PREVIEW, c.req.url)}
       title="About FidesHunt"
       description="What gets listed, how the Wilson-score ranking works, how voting works, and how to correct a listing."
       canonical={absolute(c, '/about')}
@@ -611,6 +618,7 @@ app.get('/about', (c) =>
 app.get('/api/v1', (c) =>
   c.html(
     <Layout
+      localPreview={localMakerEnabled(c.env.LOCAL_PREVIEW, c.req.url)}
       title="JSON API — FidesHunt"
       description="The directory is itself a free JSON API: list, filter and sort every Catholic API listing. No key, CORS open."
       canonical={absolute(c, '/api/v1')}
@@ -861,6 +869,7 @@ app.get('/admin', async (c) => {
 
   return c.html(
     <Layout
+      localPreview={localMakerEnabled(c.env.LOCAL_PREVIEW, c.req.url)}
       title="Moderation"
       description="Moderation queue"
       canonical={absolute(c, '/admin')}
@@ -941,6 +950,7 @@ app.post('/admin/resolve', async (c) => {
 function notFound(c: Context<{ Bindings: Env }>) {
   return c.html(
     <Layout
+      localPreview={localMakerEnabled(c.env.LOCAL_PREVIEW, c.req.url)}
       title="Not found — FidesHunt"
       description="That page doesn't exist."
       canonical={absolute(c, '/')}
@@ -966,6 +976,7 @@ app.onError((err, c) => {
 
   return c.html(
     <Layout
+      localPreview={localMakerEnabled(c.env.LOCAL_PREVIEW, c.req.url)}
       title="Something went wrong — FidesHunt"
       description="An unexpected error occurred."
       canonical={absolute(c, '/')}

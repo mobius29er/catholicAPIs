@@ -18,7 +18,7 @@ Opening a form creates random browser cookies but no account. The first draft, a
 
 ## State and scope
 
-- Launch: `draft → paid_mock → scheduled`. The simulated amount is **USD 29**. Billing cadence is undecided. Scheduling records a UTC date from today through 180 days; it never creates or publishes a directory listing. Checkout replay cannot duplicate a receipt or rewind a scheduled launch.
+- Launch: `draft → paid_mock → scheduled`. The simulated amount is **USD 29**. Billing cadence is undecided. Scheduling records a shared UTC plan for the directory listing and newsletter feature from today through 180 days; it never creates or publishes a live listing or sends an email. Checkout replay cannot duplicate a receipt or rewind a scheduled launch.
 - Manual help: editorial and video requests are optional, unique per launch, and reviewed by a local admin. Availability, inclusion, pricing and delivery timing are not promised.
 - Ads: monthly directory/newsletter inventory defaults to one slot per placement. Requests do not reserve inventory. Admin approval atomically checks capacity. Prices are unset, with no subscriptions or charges. Approval is only a local test record.
 - Sponsor clicks: `/maker/ad-click/:id` GET shows a sponsor handoff; POST records an idempotent placement click then redirects to the validated active destination. `/maker/advertise/:id/click` records a test click without leaving the preview. Neither route touches organic votes.
@@ -32,3 +32,7 @@ Opening a form creates random browser cookies but no account. The first draft, a
 ## Validation
 
 `npm test -- test/maker.test.ts` runs actual SQLite constraints behind a D1 adapter. It covers origin/CSRF enforcement, local gates, session/admin isolation and expiry, ownership, safe URLs/dates, concurrent first-save idempotency, duplicate checkout/action behavior, inventory capacity, click deduplication, opt-in consent, invite acceptance/revocation, review/useful/closure rules, and report moderation. No network access is used by these tests.
+
+## Original design contract
+
+The original directory CSS, Anton font, FH mark, noir illustration, listing components, and light/dark behavior are preserved. Maker screens inherit those tokens and use only scoped styles in `public/maker.css`. `test/design.test.ts` pins the original assets and guards the public rendering. Live identity, payment, email delivery, pricing decisions and release approval remain separate prerequisites.

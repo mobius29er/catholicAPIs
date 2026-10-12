@@ -1,20 +1,55 @@
 import type { FC } from 'hono/jsx';
-import type { Filters } from '../types';
+import type { Filters, Track } from '../types';
 import type { AdRequest } from '../maker-db';
 import { PAGE_SIZE } from '../db';
 import type { DirectoryResult, Stats } from '../db';
 import {
   AppliedFilters,
   CLEARED,
+  FeedPanel,
   FilterBody,
   FilterPanel,
   ListingRow,
   Pagination,
   SortMenu,
+  Spotlight,
+  TrendingTopics,
   activeFilterCount,
   buildQuery,
   sortLabel,
 } from './components';
+import { NoirScene } from './art';
+
+interface Copy {
+  /** The yellow caption box above the headline. */
+  caption: string;
+  headline: string;
+  sub: string;
+  /** The angled stamp across the corner of the art. */
+  stamp: string;
+  listHeading: string;
+  secondary: { href: string; label: string };
+}
+
+const COPY: Record<Track, Copy> = {
+  product: {
+    caption: 'New is worth finding.',
+    headline: 'Discover the software\nCatholics actually use',
+    sub: 'FidesHunt is a directory of the apps, services and tools people pray, study and run parishes with — ranked by the people who use them.',
+    stamp: 'Good work deserves users.',
+    listHeading: 'Top products',
+    secondary: { href: '/submit?track=product', label: 'Submit a product' },
+  },
+  api: {
+    caption: 'Stop rebuilding the calendar.',
+    headline: 'Every Catholic API\nin one place',
+    sub: 'Liturgical calendars, daily readings, scripture, the Catechism, canon law, prayers and saints — free and paid, rated by the developers who ship on them.',
+    stamp: 'Someone already solved this.',
+    listHeading: 'Top APIs',
+    secondary: { href: '/submit', label: 'Submit an API' },
+  },
+};
+
 /**
  * The part of the page a filter change replaces.
  *
@@ -43,7 +78,11 @@ export const Results: FC<{ result: DirectoryResult; filters: Filters }> = ({ res
           <ListingRow
             listing={listing}
             rank={(result.page - 1) * PAGE_SIZE + index + 1}
-
+            rankNote={
+              filters.sort === 'top' && result.page === 1 && index === 0
+                ? '#1 most recommended'
+                : undefined
+            }
           />
         ))}
       </ol>
@@ -74,7 +113,7 @@ export const ResultsPartial: FC<{ result: DirectoryResult; filters: Filters }> =
 
       <div hidden data-fresh>
         <span data-fresh-sort>{sortLabel(filters.sort)}</span>
-        <span data-fresh-heading>{filters.q ? `Results for “${filters.q}”` : filters.categories.length ? filters.categories.join(', ') : filters.track === 'product' ? 'Explore products' : 'Explore APIs'}</span>
+        <span data-fresh-heading>{filters.q ? `Results for ${filters.q}` : COPY[filters.track].listHeading}</span>
         <span data-fresh-count>{count}</span>
         <div data-fresh-facets>
           <FilterBody filters={filters} facets={result.facets} />
@@ -84,36 +123,107 @@ export const ResultsPartial: FC<{ result: DirectoryResult; filters: Filters }> =
   );
 };
 
-export const Home: FC<{ result: DirectoryResult; filters: Filters; stats: Stats; sponsors?: AdRequest[]; sponsorCsrf?: string }> = ({ result, filters, stats, sponsors = [], sponsorCsrf = '' }) => {
-  const isProduct = filters.track === 'product';
-  const root = isProduct ? '/' : '/apis';
-  const topics = isProduct ? ['Prayer', 'Bible & Study', 'Formation', 'Parish Tools', 'Media', 'Community', 'AI & Search'] : ['Liturgical Calendar', 'Bible', 'Daily Readings', 'Prayers', 'Saints', 'Developer Tools'];
+export const Home: FC<{
+  result: DirectoryResult;
+  filters: Filters;
+  stats: Stats;
+  sponsors?: AdRequest[];
+  sponsorCsrf?: string;
+}> = ({ result, filters, stats, sponsors = [], sponsorCsrf = "" }) => {
+  const copy = COPY[filters.track];
+
   return (
-    <div class="discovery-shell">
-      <aside class="category-rail" aria-label="Browse categories">
-        <p class="rail-label">EXPLORE</p>
-        <a class={`category-link ${!filters.categories.length ? 'selected' : ''}`} href={root}><span aria-hidden="true">◈</span> All {isProduct ? 'products' : 'APIs'}</a>
-        <a class="category-link" href={`${root}?sort=new`}><span aria-hidden="true">✧</span> Recently added</a>
-        <p class="rail-label categories-label">CATEGORIES</p>
-        {topics.map((topic, i) => <a class={`category-link ${filters.categories.includes(topic) ? 'selected' : ''}`} href={`${root}?category=${encodeURIComponent(topic)}`}><span class="category-symbol" aria-hidden="true">{['♡', '▤', '◎', '⌂', '▷', '◉', '✳'][i]}</span>{topic}</a>)}
-        <div class="rail-bottom"><span class="small muted">Made something good?</span><a href="/launch">Share it with Catholics →</a></div>
-      </aside>
-      <div class="discover-content">
-        <header class="discover-intro"><p class="eyebrow">THE CATHOLIC PRODUCT COMMUNITY</p><h1>{isProduct ? 'Discover products for Catholic life.' : 'Build something that matters.'}</h1><p>{isProduct ? 'Apps, tools, and resources to help you pray, learn, and build.' : 'Catholic APIs, datasets, and libraries, recommended by the developers who use them.'}</p></header>
-        <div class="discovery-columns">
-          <section class="feed" aria-label="Listings" id="listings">
-            <div class="feed-head"><h2 class="feed-title" data-feed-heading>{filters.q ? `Results for “${filters.q}”` : filters.categories.length ? filters.categories.join(', ') : isProduct ? 'Explore products' : 'Explore APIs'}</h2><div class="feed-controls"><SortMenu filters={filters} /><FilterPanel filters={filters} facets={result.facets} /></div></div>
+    <>
+      {/*
+        The hero stays put in every state.
+
+        It used to be gated on "no filters set", so the first facet click
+        deleted ~400px from above the list and the page the reader landed on
+        was not the page they had clicked in. Filtering narrows the list; it is
+        not a different destination.
+      */}
+      <section class="hero">
+        <div class="hero-art" aria-hidden="true">
+          <NoirScene />
+        </div>
+
+        <div class="hero-inner">
+          <p class="caption-box">{copy.caption}</p>
+
+          <h1>
+            {copy.headline.split('\n').map((line, i) => (
+              <>
+                {i > 0 && <br />}
+                {line}
+              </>
+            ))}
+          </h1>
+
+          <p class="hero-sub">{copy.sub}</p>
+
+          <div class="hero-cta">
+            <a class="btn btn-primary btn-lg" href="#listings">
+              Explore top listings
+            </a>
+            <a class="btn btn-outline btn-lg" href={copy.secondary.href}>
+              {copy.secondary.label}
+            </a>
+          </div>
+        </div>
+
+        <p class="stamp">{copy.stamp}</p>
+      </section>
+
+      <div class="shell" id="listings">
+        <div class="columns">
+          {/* ------------------------------------------------------ list --- */}
+          <section class="feed" aria-label="Listings">
+            {/*
+              The mockup's whole control row: the heading, and two menus that
+              open over the page. Nothing here changes height, so nothing below
+              it moves.
+            */}
+            <div class="feed-head">
+              <h2 class="feed-title" data-feed-heading>
+                {filters.q ? (
+                  <>
+                    Results for <em>{filters.q}</em>
+                  </>
+                ) : (
+                  copy.listHeading
+                )}
+              </h2>
+
+              <div class="feed-controls">
+                <SortMenu filters={filters} />
+                <FilterPanel filters={filters} facets={result.facets} />
+              </div>
+            </div>
+
             <Results result={result} filters={filters} />
-            <p class="feed-footnote">Community votes shape the rankings. <a href="/about">How it works</a></p>
           </section>
-          <aside class="discovery-aside" aria-label="From FidesHunt">
-            {sponsors.map(ad => <section class="sponsor-card"><span class="sponsor-label">Sponsored</span><h2>{ad.name}</h2><p>{ad.tagline}</p><form method="post" action={`/maker/ad-click/${ad.id}`}><input type="hidden" name="csrf" value={sponsorCsrf} /><input type="hidden" name="action_key" value={crypto.randomUUID()} /><button type="submit">Discover product →</button></form></section>)}
-            <section class="newsletter-card"><span class="newsletter-icon" aria-hidden="true">✉</span><h2>A little discovery.<br />A lot of purpose.</h2><p>New Catholic products and useful finds, in your inbox.</p><form action="/maker/newsletter" method="get"><label for="newsletter-email" class="visually-hidden">Email address</label><input type="email" id="newsletter-email" name="email" placeholder="Your email address" required /><button class="btn btn-primary" type="submit">Join the newsletter</button></form><small>Choose your email preferences next.</small></section>
-            <section class="maker-note"><span class="eyebrow">FOR THE BUILDERS</span><h2>Your work belongs here.</h2><p>Introduce your product to people who care about what you’re building.</p><a href="/launch">Plan your launch <span aria-hidden="true">→</span></a><span class="small muted">$29 launch · preview checkout</span></section>
-            <p class="aside-meta">{stats.products} products · {stats.apis} developer tools<br /><a href="/about">A community built around faith.</a></p>
+
+          {/* ------------------------------------------------------ rail --- */}
+          <aside class="rail" aria-label="More from the directory">
+            {result.spotlight && <Spotlight listing={result.spotlight} />}
+            <TrendingTopics filters={filters} categories={result.facets.categories} />
+            <FeedPanel />
+            {sponsors.map(ad => <section class="rail-panel maker-sponsored">
+              <h2 class="rail-title">Sponsored</h2><h3>{ad.name}</h3><p>{ad.tagline}</p>
+              <form method="post" action={`/maker/ad-click/${ad.id}`}>
+                <input type="hidden" name="csrf" value={sponsorCsrf} />
+                <input type="hidden" name="action_key" value={crypto.randomUUID()} />
+                <button class="btn btn-outline" type="submit">Visit sponsored product</button>
+              </form>
+            </section>)}
           </aside>
         </div>
+
+        <p class="shell-note muted small">
+          {stats.total} listings across both tracks — {stats.products} products and {stats.apis}{' '}
+          APIs. <a href="/about">How ranking works</a>
+        </p>
       </div>
-    </div>
+    </>
   );
 };

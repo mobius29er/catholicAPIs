@@ -93,7 +93,7 @@ export const Home: FC<{ result: DirectoryResult; filters: Filters; stats: Stats;
       <aside class="category-rail" aria-label="Browse categories">
         <p class="rail-label">EXPLORE</p>
         <a class={`category-link ${!filters.categories.length ? 'selected' : ''}`} href={root}><span aria-hidden="true">◈</span> All {isProduct ? 'products' : 'APIs'}</a>
-        <a class="category-link" href={buildQuery(filters, { sort: 'new', page: 1 })}><span aria-hidden="true">✧</span> Recently added</a>
+        <a class="category-link" href={`${root}?sort=new`}><span aria-hidden="true">✧</span> Recently added</a>
         <p class="rail-label categories-label">CATEGORIES</p>
         {topics.map((topic, i) => <a class={`category-link ${filters.categories.includes(topic) ? 'selected' : ''}`} href={`${root}?category=${encodeURIComponent(topic)}`}><span class="category-symbol" aria-hidden="true">{['♡', '▤', '◎', '⌂', '▷', '◉', '✳'][i]}</span>{topic}</a>)}
         <div class="rail-bottom"><span class="small muted">Made something good?</span><a href="/launch">Share it with Catholics →</a></div>

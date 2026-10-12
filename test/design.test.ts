@@ -53,6 +53,11 @@ describe('compact product-first layout', () => {
     expect(html).toContain('action="/maker/newsletter" method="get"');
     expect(html).toContain('Choose your email preferences next.');
   });
+  it('keeps sidebar discovery links independent of stale search state', () => {
+    const html=render(jsx(Home,{result,filters:{...filters,q:'Hallow'},stats}));
+    expect(html).toContain('class="category-link" href="/?sort=new"');
+    expect(html.slice(0, html.indexOf('</aside>'))).not.toContain('q=Hallow');
+  });
   it('escapes product text and search queries', () => {
     const html=render(jsx(Home,{result:{...result,listings:[{...listing,name:'<script>alert(1)</script>'}]},filters:{...filters,q:'<img src=x>'},stats}));
     expect(html).not.toContain('<script>alert');

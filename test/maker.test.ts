@@ -22,12 +22,17 @@ function database() {
       async run() { const result = sqlite.prepare(sql).run(...args); return { success: true, results: [], meta: { changes: Number(result.changes), last_row_id: Number(result.lastInsertRowid) } }; },
     };
   }
+  let transactionTail: Promise<unknown> = Promise.resolve();
   const DB = {
     prepare: prepared,
     async batch(statements: ReturnType<typeof prepared>[]) {
-      sqlite.exec('BEGIN');
-      try { const results = []; for (const statement of statements) results.push(await statement.run()); sqlite.exec('COMMIT'); return results; }
-      catch (error) { sqlite.exec('ROLLBACK'); throw error; }
+      const pending = transactionTail.then(async () => {
+        sqlite.exec('BEGIN');
+        try { const results = []; for (const statement of statements) results.push(await statement.run()); sqlite.exec('COMMIT'); return results; }
+        catch (error) { sqlite.exec('ROLLBACK'); throw error; }
+      });
+      transactionTail = pending.catch(() => undefined);
+      return pending;
     },
   } as unknown as D1Database;
   return { sqlite, DB };
@@ -122,6 +127,13 @@ describe('launch flow',()=>{
     const b=new Browser();const response=await b.get('/launch');expect(response.status).toBe(200);expect(await response.text()).toContain('name="homepage_url"');expect(count('maker_accounts')).toBe(0);
     const actionKey=crypto.randomUUID();const firstPath=await b.draft(actionKey);const secondPath=await b.draft(actionKey);
     expect(firstPath).toBe(secondPath);expect(count('maker_accounts')).toBe(1);expect(count('maker_launches')).toBe(1);
+  });
+  it('deduplicates simultaneous first saves before any account exists',async()=>{
+    const b=new Browser();await b.get('/launch');
+    const values={action_key:crypto.randomUUID(),name:'New maker',tagline:'A prayer app for families',homepage_url:'https://example.com',description:'Daily guided prayer for families and friends.'};
+    const responses=await Promise.all([b.post('/maker/launch',values),b.post('/maker/launch',values)]);
+    expect(responses.map(r=>r.status)).toEqual([303,303]);expect(responses[0].headers.get('location')).toBe(responses[1].headers.get('location'));
+    expect(count('maker_accounts')).toBe(1);expect(count('maker_sessions')).toBe(1);expect(count('maker_launches')).toBe(1);
   });
   it('enforces checkout before schedule and keeps repeated checkout/scheduling safe',async()=>{
     const b=new Browser();const path=await b.draft();

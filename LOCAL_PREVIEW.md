@@ -8,10 +8,10 @@ Requires Node 22+ and the dependencies installed by `npm ci`.
 
 ```sh
 npx wrangler d1 migrations apply catholic-apis --local --config wrangler.local.jsonc
-node scripts/local-preview.mjs
+npm run dev
 ```
 
-Open `http://127.0.0.1:8787/` in a browser on the same computer/network namespace as the process. The optional `bash scripts/local-preview.sh` wrapper locates the installed Node runtime on this task computer when Node is absent from the desktop terminal PATH.
+Open `http://localhost:8787/` in a browser on the same computer/network namespace as the process. The server remains bound to loopback `127.0.0.1`; use the `localhost` hostname for the supported cloud browser. The optional `bash scripts/local-preview.sh` wrapper locates the installed Node runtime on this task computer when Node is absent from the desktop terminal PATH.
 
 The script runs the real Worker using Miniflare/workerd, binds only to `127.0.0.1`, and watches `src` and `public` changes. Refresh the browser after a rebuild. Restart the process after changing the preview runner itself. `LOCAL_PREVIEW_PORT` can choose another loopback port.
 
@@ -29,7 +29,7 @@ The local store is `.wrangler/state/v3`; migrations 0001–0008 are applied in t
 ## Verification
 
 ```sh
-node scripts/local-preview.mjs --smoke
+npm run preview:smoke
 npm run typecheck
 npm test
 ```

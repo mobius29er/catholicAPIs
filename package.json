@@ -3,20 +3,22 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "FidesHunt — a community-ranked directory of faith software: apps, tools and APIs.",
+  "description": "FidesHunt \u2014 a community-ranked directory of faith software: apps, tools and APIs.",
   "scripts": {
-    "dev": "wrangler dev",
+    "dev": "node scripts/local-preview.mjs",
     "deploy": "wrangler deploy",
     "deploy:setup": "node scripts/deploy.mjs",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "db:migrate:local": "wrangler d1 migrations apply catholic-apis --local",
+    "db:migrate:local": "wrangler d1 migrations apply catholic-apis --local --config wrangler.local.jsonc",
     "db:migrate:remote": "wrangler d1 migrations apply catholic-apis --remote",
     "db:reset:local": "rm -rf .wrangler/state/v3/d1 && npm run db:migrate:local",
     "seed:build": "node scripts/build-seed.mjs",
     "links:check": "node scripts/check-links.mjs",
-    "cf-typegen": "wrangler types"
+    "cf-typegen": "wrangler types",
+    "dev:worker": "wrangler dev",
+    "preview:smoke": "node scripts/local-preview.mjs --smoke"
   },
   "dependencies": {
     "hono": "^4.9.10"
